@@ -16,7 +16,7 @@ from utils.constants import HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH, VETO_THRE
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
 
-from utils.selectors import get_branch_names, passes_veto
+from utils.selectors import get_branch_names, get_mcp_pulse_window_ns, passes_veto
 from utils.waveforms import subtract_baseline
 
 # --- Branch names ---
@@ -28,10 +28,9 @@ LG_THRESHOLD = 229
 DRS_THRESHOLD = -13.6
 
 # --- MCP pulse finding (matches mcp_studies.py) ---
+# Pulse window (ns) is run-dependent; see utils.selectors.get_mcp_pulse_window_ns.
 MCP_NOISE_SAMPLES = 50
 MCP_NOISE_MARGIN_ADC = 20
-MCP_PULSE_WINDOW_NS = (84.0, 100.0)
-#MCP_PULSE_WINDOW_NS = (34.0, 44.0) #for FERS runs
 MCP_MIN_PULSE_FWHM_NS = 1.0
 
 # --- Geometry ---
@@ -110,10 +109,10 @@ def plot_effhist1d(x_ref, y_ref, x_sel, y_sel, xlabel, ylabel, title, filename):
     plt.show()
 
 
-def _mcp_hit_mask(mcp_bs):
+def _mcp_hit_mask(mcp_bs, pulse_window_ns):
     """True for events with a pulse minimum below dynamic threshold inside the window."""
-    w_start = int(MCP_PULSE_WINDOW_NS[0] / SAMPLE_NS)
-    w_end = int(MCP_PULSE_WINDOW_NS[1] / SAMPLE_NS)
+    w_start = int(pulse_window_ns[0] / SAMPLE_NS)
+    w_end = int(pulse_window_ns[1] / SAMPLE_NS)
     noise_avg = np.mean(np.abs(mcp_bs[:, :MCP_NOISE_SAMPLES]), axis=1)
     thresh = -(noise_avg + MCP_NOISE_MARGIN_ADC)
     return mcp_bs[:, w_start:w_end + 1].min(axis=1) < thresh
@@ -139,9 +138,9 @@ def get_intrinsic_efficiency(x_ref, y_ref, x_sel, y_sel, return_uncertainty=True
         return intrinsic_efficiency
 
 def process_single_run(run_data):
-    run_id, file = run_data
-    file_path = file["file"]
+    run_id, file_path = run_data
     VETO, MCP1, MCP2 = get_branch_names(run_id)
+    pulse_window_ns = get_mcp_pulse_window_ns(run_id)
     try:
         with uproot.open(file_path) as f:
             tree = f["EventTree"]
@@ -156,11 +155,11 @@ def process_single_run(run_data):
         )
 
         veto_sel = passes_veto(veto, threshold=VETO_THRESHOLD)
-        mcp1_hit = _mcp_hit_mask(mcp1)
-        mcp2_hit = _mcp_hit_mask(mcp2)
+        mcp1_hit = _mcp_hit_mask(mcp1, pulse_window_ns)
+        mcp2_hit = _mcp_hit_mask(mcp2, pulse_window_ns)
 
-        w_start = int(MCP_PULSE_WINDOW_NS[0] / SAMPLE_NS)
-        w_end = int(MCP_PULSE_WINDOW_NS[1] / SAMPLE_NS)
+        w_start = int(pulse_window_ns[0] / SAMPLE_NS)
+        w_end = int(pulse_window_ns[1] / SAMPLE_NS)
         noise_avg = np.mean(np.abs(mcp1[:, :MCP_NOISE_SAMPLES]), axis=1)
         intrinsic_efficiency_mcp1, uncertainty_mcp1 = get_intrinsic_efficiency(xh[good_hodo], yh[good_hodo],
                                                                                xh[good_hodo & mcp1_hit], yh[good_hodo & mcp1_hit])
@@ -223,14 +222,17 @@ def main():
     plot_effhist2d(X_ref, Y_ref, X1_sel, Y1_sel, 64,
                    "X Position [mm]", "Y Position [mm]", f"MCP1 — {runs_label}",
                    os.path.join(OUTPUT_DIR, f"hodo_mcp1effmap_{runs_label}.pdf"))
+    print(f"Efficiency map for MCP1 saved to {os.path.join(OUTPUT_DIR, f'hodo_mcp1effmap_{runs_label}.pdf')}")
 
     plot_effhist2d(X_ref, Y_ref, X2_sel, Y2_sel, 64,
                    "X Position [mm]", "Y Position [mm]", f"MCP2 — {runs_label}",
                    os.path.join(OUTPUT_DIR, f"hodo_mcp2effmap_{runs_label}.pdf"))
+    print(f"Efficiency map for MCP2 saved to {os.path.join(OUTPUT_DIR, f'hodo_mcp2effmap_{runs_label}.pdf')}")
 
     plot_effhist2d(X_ref, Y_ref, Xv, Yv, 64,
                    "X Position [mm]", "Y Position [mm]", f"Veto — {runs_label}",
                    os.path.join(OUTPUT_DIR, f"hodo_vetoeffmap_{runs_label}.pdf"))
+    print(f"Efficiency map for Veto saved to {os.path.join(OUTPUT_DIR, f'hodo_vetoeffmap_{runs_label}.pdf')}")
 
     print("Aggregation complete. Generating plots...")
     print("Done.")

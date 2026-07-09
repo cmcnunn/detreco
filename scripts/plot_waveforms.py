@@ -68,7 +68,9 @@ def main():
         fig.suptitle(f"{args.branch}  |  {os.path.basename(args.file)}")
 
     plt.tight_layout()
-    plt.show()
+    os.makedirs("/lustre/work/colnunn/detreco/plot_waveforms_output", exist_ok=True)
+    plt.savefig("/lustre/work/colnunn/detreco/plot_waveforms_output/waveforms.png", dpi=300)
+    print("Waveform plot saved to /lustre/work/colnunn/detreco/plot_waveforms_output/waveforms.png")
 
 
 if __name__ == "__main__":

@@ -41,9 +41,30 @@ def get_branch_names(run_id):
         veto = "DRS_Brg1_Board0_Group0_Channel7"
         if run_id <= TB2026_FERS_PHASE_LAST_RUN:
             return veto, "DRS_Brg1_Board0_Group0_Channel5", "DRS_Brg1_Board0_Group0_Channel6"
-        return veto, "DRS_Brg1_Board3_Group0_Channel6", "DRS_Brg1_Board3_Group0_Channel7"
+        return veto, "DRS_Brg1_Board3_Group3_Channel6", "DRS_Brg1_Board3_Group3_Channel7"
 
     raise ValueError(f"No veto/MCP branch mapping for run {run_id} (runtype={runtype!r})")
+
+
+def get_mcp_pulse_window_ns(run_id):
+    """Return the ``(start, end)`` ns window in which the MCP pulse falls for ``run_id``.
+
+    The MCP pulse arrival time shifts with the readout electronics: TB2025's
+    DRS setup, TB2026's FERS-phase digitizer, and TB2026's later DRS phase
+    (run 1821+) each introduce a different cable/digitizer delay.
+    """
+    runtype = get_runtype(run_id)
+    run_id = int(run_id)
+
+    if runtype == "TB2025":
+        return (100.0, 130.0)
+
+    if runtype == "TB2026":
+        if run_id <= TB2026_FERS_PHASE_LAST_RUN:
+            return (34.0, 44.0)
+        return (84.0, 100.0)
+
+    raise ValueError(f"No MCP pulse window mapping for run {run_id} (runtype={runtype!r})")
 
 
 def passes_veto(veto_wf, threshold=VETO_THRESHOLD, n_baseline=DEFAULT_N_BASELINE):
