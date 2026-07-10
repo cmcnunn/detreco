@@ -10,7 +10,7 @@ import json
 
 from utils.hodo import reconstruct_hodoscope
 from utils.constants import (HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH)
-from utils.plotting import get_runtype
+from utils.plotting import get_runtype, plot_profile
 from utils.data import load_run_list
 
 global OUTPUTDIR
@@ -34,19 +34,6 @@ def hodoreco(run_data):
         print(f"Error processing run {run_id}: {e}")
         return None
     
-def plot_hodoprofile(xh, yh, run_id, runtype=""):
-    if runtype == "":
-        runtype = get_runtype(run_id)
-    plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(xh, yh, bins=64)
-    cb = mh.hist2dplot(*H, ax=ax, cmin=0)
-    cb.cbar.set_label("Events", loc='top')
-    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=r"Hodoscope Profile 2D", data=True)
-    ax.set_xlabel("Hodo X [cm]", loc='right')
-    ax.set_ylabel("Hodo Y [cm]", loc='top')
-    plt.savefig(os.path.join(OUTPUTDIR, f"hodo_profile2d_{run_id}.png"), dpi=300)
-    print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"hodo_profile2d_{run_id}.png"))
 
 def main(): 
     parser = argparse.ArgumentParser(description="Hodoscope Reconstruction")
@@ -61,7 +48,7 @@ def main():
     result = hodoreco((args.run, run_list[args.run]))
     if result is not None:
         xh, yh, n_events = result
-        plot_hodoprofile(xh, yh, args.run)
+        plot_profile(xh, yh, args.run, OUTPUTDIR=OUTPUTDIR)
         print(f"Processed {n_events} events for run {args.run}.")
     else:
         print(f"Failed to process run {args.run}.")

@@ -9,6 +9,8 @@ the scripts with a single vectorised version.
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
+import mplhep as mh
 
 
 # ---------------------------------------------------------------------------
@@ -230,3 +232,17 @@ def get_runtype(run_id):
         return "TB2026"
     else:
         return "RUNTYPE ERROR"
+    
+def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/detreco", label="Profile 2D", fname="profile2d"):
+    if runtype == "":
+        runtype = get_runtype(run_id)
+    plt.style.use(mh.style.ROOT)
+    fig, ax = plt.subplots(figsize=(12, 12))
+    H = np.histogram2d(xh, yh, bins=64)
+    cb = mh.hist2dplot(*H, ax=ax, cmin=0)
+    cb.cbar.set_label("Events", loc='top')
+    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
+    ax.set_xlabel("Hodo X [cm]", loc='right')
+    ax.set_ylabel("Hodo Y [cm]", loc='top')
+    plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
+    print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
