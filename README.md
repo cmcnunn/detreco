@@ -23,8 +23,6 @@ Run IDs are resolved to converted ROOT file paths via `data/run_list.json`.
 
 Scripts are run from the repo root so they can import the `utils` package:
 
-source ~/.bashrc 
-
 ```bash
 python scripts/hodoreco.py --run <run_id>
 python scripts/sitrackreco.py --run <run_id>
