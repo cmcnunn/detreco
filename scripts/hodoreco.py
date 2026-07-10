@@ -14,7 +14,7 @@ from utils.plotting import get_runtype, plot_profile
 from utils.data import load_run_list
 
 global OUTPUTDIR
-OUTPUTDIR = "/lustre/work/colnunn/detreco/hodoreco_output"
+OUTPUTDIR = "/lustre/work/colnunn/detreco/output/hodoreco"
 os.makedirs(OUTPUTDIR, exist_ok=True)
 
 Y_HG = "FERS_Board0_energyHG"

@@ -2,3 +2,4 @@ detreco/
 __pycache__/
 *.pyc
 hodoreco_output/
+output/
