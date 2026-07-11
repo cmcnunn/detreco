@@ -27,4 +27,4 @@ def get_run_filepath(run_id, path=RUN_LIST_PATH):
     run_id = str(run_id)
     if run_id not in run_list:
         raise KeyError(f"Run {run_id} not found in {path}")
-    return run_list[run_id]["file"]
+    return run_list[run_id]

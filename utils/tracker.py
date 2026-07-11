@@ -85,3 +85,81 @@ def station1_hit_mask(data: np.ndarray) -> np.ndarray:
 def station2_hit_mask(data: np.ndarray) -> np.ndarray:
     """Events where station 2 actually recorded a hit (no sentinel)."""
     return (data["x2"] != SENTINEL_X2) & (data["y2"] != SENTINEL_Y2)
+
+
+def align_tracker_to_root(tracker: np.ndarray, root_key, search_range: int = 50,
+                          min_match_frac: float = 0.95):
+    """Match tracker events to a DREAM ROOT ntuple's event counter branch.
+
+    The tracker's ``run_event_nr`` counts continuously from the start of the
+    tracker's own DAQ run (which spans many physics runs), so it's related to
+    DREAM's per-physics-run event counter by a run-specific constant offset:
+
+        tracker["run_event_nr"] - offset == root_key
+
+    The offset is found by a brute-force search near the naive guess (the
+    difference of the two arrays' minimums), picking whichever offset within
+    +/- ``search_range`` matches the most events.
+
+    IMPORTANT: pass ``root_key = tree["trigger_n"].array(...)``, not
+    ``event_n``. ``event_n`` is a perfectly dense 0..N-1 range with zero
+    gaps, so *any* offset that keeps the shifted values in-bounds "matches"
+    100% of the time regardless of whether it's the right offset -- it can't
+    discriminate at all. ``trigger_n`` has a handful of real gaps, which
+    genuinely constrains the search, but on run 1771 there were only 3 gaps
+    across 113k events, giving a match-rate curve that's a broad, nearly
+    flat plateau (99.97%-99.99%) across roughly +/-30 events rather than a
+    sharp peak. In other words: this pins the offset down to within maybe a
+    few dozen events, good enough for bulk/statistical comparisons (e.g.
+    correlating tracker vs. hodoscope hit positions across many events), but
+    NOT reliable for exact event-by-event matching. For that, use the
+    tracker's timestamp fields (not currently exposed by this loader)
+    against DREAM's ``FERS_Board*_tstamp_us`` branches instead -- real
+    timestamps are far less ambiguous than these near-dense counters.
+
+    Very short/aborted runs (e.g. run 1864) can fall well short of even this
+    loose match rate, because the tracker's own spill boundaries don't land
+    on the physics-run boundary in that case -- ``min_match_frac`` guards
+    against silently trusting a bad offset for runs like that.
+
+    Returns
+    -------
+    tracker_mask : ndarray of bool, shape (len(tracker),)
+        True for tracker events that found a matching ROOT event.
+    root_idx : ndarray of int
+        Row index into ``root_key`` for each True entry of ``tracker_mask``,
+        in the same order -- so ``root_array[root_idx]`` lines up with
+        ``tracker[tracker_mask]``.
+    offset : int
+    match_frac : float
+    """
+    root_key = np.asarray(root_key)
+    naive_offset = int(tracker["run_event_nr"].min() - root_key.min())
+
+    best_offset, best_n = naive_offset, -1
+    for delta in range(-search_range, search_range + 1):
+        offset = naive_offset + delta
+        n = np.isin(tracker["run_event_nr"] - offset, root_key).sum()
+        if n > best_n:
+            best_offset, best_n = offset, n
+
+    match_frac = best_n / len(tracker) if len(tracker) else 0.0
+    if match_frac < min_match_frac:
+        raise ValueError(
+            f"Only {match_frac:.1%} of tracker events matched a ROOT event "
+            f"at the best offset found ({best_offset}); refusing to align "
+            f"(min_match_frac={min_match_frac:.1%}). This run's tracker spill "
+            f"boundaries likely don't line up with the physics run boundary "
+            f"(seen e.g. on very short runs)."
+        )
+
+    shifted = tracker["run_event_nr"] - best_offset
+    key_lookup = {}
+    for i, v in enumerate(root_key):
+        key_lookup.setdefault(v, i)
+    tracker_mask = np.isin(shifted, root_key)
+    root_idx = np.fromiter(
+        (key_lookup[v] for v in shifted[tracker_mask]),
+        dtype=np.int64, count=int(tracker_mask.sum()),
+    )
+    return tracker_mask, root_idx, best_offset, match_frac

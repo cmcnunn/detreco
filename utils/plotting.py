@@ -11,6 +11,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as mh
+from scipy.optimize import curve_fit
+
+from utils.fit_funcs import line
 
 
 # ---------------------------------------------------------------------------
@@ -242,7 +245,68 @@ def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/det
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
-    ax.set_xlabel("Hodo X [cm]", loc='right')
-    ax.set_ylabel("Hodo Y [cm]", loc='top')
+    ax.set_xlabel("X [cm]", loc='right')
+    ax.set_ylabel("Y [cm]", loc='top')
     plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
     print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
+
+def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3):
+    """Bin ``x`` and take the most-probable (peak) ``y`` value in each bin.
+
+    A raw event-by-event fit gets dragged off the visible ridge by the wide,
+    low-density halo of mismatched/background combinations -- that halo has
+    far more points than any single fine y-bin, but the true correlation
+    shows up as the *peak* of y within each x-slice, not its mean.
+
+    Two things make a slice's "peak" untrustworthy, and both are checked:
+
+    - Too few events: bins are only kept if their event count is at least
+      ``min_frac`` of the busiest bin's count, which adapts to each run's
+      statistics rather than assuming a fixed absolute cutoff. This mostly
+      drops the x-range where the beam barely illuminates the detector.
+    - No clear winner: even with enough events, the tallest y-bin can be a
+      coin-flip away from the runner-up (e.g. counts of 64 vs. 57 vs. 55) --
+      that's noise, not a real peak. ``min_prominence`` requires the top bin
+      to beat the second-highest by at least that factor.
+    """
+    x_edges = np.linspace(x.min(), x.max(), bins + 1)
+    x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_edges = np.linspace(y.min(), y.max(), bins + 1)
+    y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
+
+    x_bin = np.digitize(x, x_edges) - 1
+    counts_per_bin = np.array([(x_bin == i).sum() for i in range(bins)])
+    min_count = max(5, min_frac * counts_per_bin.max())
+
+    prof_x, prof_y = [], []
+    for i in range(bins):
+        sel = x_bin == i
+        if counts_per_bin[i] < min_count:
+            continue
+        counts, _ = np.histogram(y[sel], bins=y_edges)
+        top2 = np.argsort(counts)[-2:][::-1]
+        if counts[top2[1]] > 0 and counts[top2[0]] < min_prominence * counts[top2[1]]:
+            continue
+        prof_x.append(x_centers[i])
+        prof_y.append(y_centers[top2[0]])
+    return np.array(prof_x), np.array(prof_y)
+
+_FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
+
+def draw_fit(ax, x, y):
+    """Overlay a straight-line fit (through the per-bin peak, not raw events) and
+    its equation/correlation directly on the plot."""
+    prof_x, prof_y = profile_mode(x, y)
+    ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
+
+    (m, b), cov = curve_fit(line, prof_x, prof_y)
+    m_err, b_err = np.sqrt(np.diag(cov))
+    r = np.corrcoef(prof_x, prof_y)[0, 1]
+
+    xs = np.array([prof_x.min(), prof_x.max()])
+    ax.plot(xs, line(xs, m, b), color="white", lw=2, path_effects=_FIT_OUTLINE)
+    ax.text(0.97, 0.05,
+            f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n$r$ = {r:.5f}",
+            transform=ax.transAxes, ha="right", va="bottom",
+            color="white", fontsize=20, path_effects=_FIT_OUTLINE)
+

@@ -7,19 +7,20 @@ LG_THRESHOLD = 229
 HG_THRESHOLD = 4000
 VETO_THRESHOLD = -1000
 
-# Z-Positions (cm)
-DWC1Z, DWC2Z, HODOZ = -332.74, -170.18, -132.08
-
+# Position i in the reindexed HG array is read from raw channel X_MAPPING[i],
+# so reversing the array's order (not its values) mirrors the physical X
+# axis to match the silicon tracker's X direction (confirmed against tracker
+# data in run 1771).
 X_MAPPING = np.array([
-    63,55,47,39,31,23,15,7, 
+    63,55,47,39,31,23,15,7,
     3,11,19,27,35,43,51,59,
-    61,53,45,37,29,21,13,5, 
+    61,53,45,37,29,21,13,5,
     1,9,17,25,33,41,49,57,
-    62,54,46,38,30,22,14,6, 
+    62,54,46,38,30,22,14,6,
     2,10,18,26,34,42,50,58,
-    60,52,44,36,28,20,12,4, 
+    60,52,44,36,28,20,12,4,
     0,8,16,24,32,40,48,56
-], dtype=np.int64)
+], dtype=np.int64)[::-1]
 
 Y_MAPPING = np.array([
     7,15,23,31,39,47,55,63,
