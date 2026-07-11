@@ -10,6 +10,7 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 import mplhep as mh
 from scipy.optimize import curve_fit
 
