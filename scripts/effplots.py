@@ -134,7 +134,7 @@ def main():
             raise SystemExit(f"Run '{args.run}' not found in run_list.json")
         run_files = {args.run: run_files[args.run]}
 
-    runs = list(run_files.items())
+    runs = [(run_id, entry["file"]) for run_id, entry in run_files.items()]
     runs_label = ", ".join(r[0] for r in runs)
 
     print(f"Processing {len(runs)} run(s) sequentially...")

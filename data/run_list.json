@@ -1,404 +1,3232 @@
 {
-    "1091": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1091_250806080748_converted.root",
-    "1092": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1092_250806101039_converted.root",
-    "1094": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1094_250806102057_converted.root",
-    "1095": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1095_250808042626_converted.root",
-    "1166": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1166_250812081218_converted.root",
-    "1169": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1169_250814052350_converted.root",
-    "1170": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1170_250814092630_converted.root",
-    "1172": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1172_250814093102_converted.root",
-    "1173": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1173_250814094312_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1173_250814100008_converted.root"
-    ],
-    "1175": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1175_250814120545_converted.root",
-    "1176": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1176_250814122352_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1176_250814123957_converted.root"
-    ],
-    "1177": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1177_250814153349_converted.root",
-    "1178": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1178_250814184132_converted.root",
-    "1179": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1179_250815025910_converted.root",
-    "1180": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1180_250815031507_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1180_250815052343_converted.root"
-    ],
-    "1182": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1182_250815052801_converted.root",
-    "1183": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1183_250815055422_converted.root",
-    "1184": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1184_250815064035_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1184_250815064555_converted.root"
-    ],
-    "1185": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1185_250815074805_converted.root",
-    "1186": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1186_250815083427_converted.root",
-    "1187": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1187_250815085026_converted.root",
-    "1188": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1188_250815090622_converted.root",
-    "1189": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1189_250815103048_converted.root",
-    "1190": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1190_250815103818_converted.root",
-    "1191": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1191_250815112137_converted.root",
-    "1192": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1192_250815120955_converted.root",
-    "1193": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1193_250815131006_converted.root",
-    "1194": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1194_250815133713_converted.root",
-    "1195": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1195_250815141201_converted.root",
-    "1196": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1196_250815150406_converted.root",
-    "1197": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1197_250815155544_converted.root",
-    "1198": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1198_250815163005_converted.root",
-    "1199": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1199_250815175751_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1199_250928103402_converted.root"
-    ],
-    "1200": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1200_250815182809_converted.root",
-    "1201": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1201_250815183221_converted.root",
-    "1202": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1202_250815183703_converted.root",
-    "1204": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1204_250815191315_converted.root",
-    "1205": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1205_250815201425_converted.root",
-    "1206": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1206_250816014112_converted.root",
-    "1207": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1207_250816024634_converted.root",
-    "1208": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1208_250816035116_converted.root",
-    "1209": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1209_250816035831_converted.root",
-    "1210": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1210_250816041324_converted.root",
-    "1211": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1211_250816044602_converted.root",
-    "1212": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1212_250816051616_converted.root",
-    "1213": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1213_250816052133_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1213_250816052621_converted.root"
-    ],
-    "1214": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1214_250816055607_converted.root",
-    "1215": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1215_250816062202_converted.root",
-    "1216": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1216_250816065005_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1216_250816065607_converted.root"
-    ],
-    "1217": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1217_250816072557_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1217_250816073109_converted.root"
-    ],
-    "1218": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1218_250816074550_converted.root",
-    "1219": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1219_250816082008_converted.root",
-    "1220": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1220_250816082538_converted.root",
-    "1221": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1221_250816085625_converted.root",
-    "1222": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1222_250816092914_converted.root",
-    "1223": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1223_250816093511_converted.root",
-    "1224": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1224_250816100246_converted.root",
-    "1225": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1225_250816110220_converted.root",
-    "1226": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1226_250816114027_converted.root",
-    "1227": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1227_250816114530_converted.root",
-    "1228": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1228_250816121418_converted.root",
-    "1229": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1229_250816124251_converted.root",
-    "1230": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1230_250816124757_converted.root",
-    "1231": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1231_250816132401_converted.root",
-    "1232": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1232_250816135241_converted.root",
-    "1233": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1233_250816141808_converted.root",
-    "1234": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1234_250816143012_converted.root",
-    "1235": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1235_250816150037_converted.root",
-    "1236": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1236_250816152942_converted.root",
-    "1237": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1237_250816160815_converted.root",
-    "1238": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1238_250816163651_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1238_250816164306_converted.root"
-    ],
-    "1239": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816171139_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816171754_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816172323_converted.root"
-    ],
-    "1240": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1240_250816175032_converted.root",
-    "1241": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1241_250816181723_converted.root",
-    "1242": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1242_250816184528_converted.root",
-    "1243": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1243_250816185420_converted.root",
-    "1245": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1245_250816192536_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1245_250816193232_converted.root"
-    ],
-    "1246": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1246_250816195942_converted.root",
-    "1247": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1247_250816202549_converted.root",
-    "1248": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1248_250816205632_converted.root",
-    "1249": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1249_250816213106_converted.root",
-    "1250": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1250_250816215953_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1250_250816220414_converted.root"
-    ],
-    "1251": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1251_250816223246_converted.root",
-    "1252": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1252_250816233625_converted.root",
-    "1254": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1254_250817000930_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1254_250817005908_converted.root"
-    ],
-    "1255": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1255_250817011508_converted.root",
-    "1256": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1256_250817012101_converted.root",
-    "1257": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1257_250817015909_converted.root",
-    "1258": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1258_250817033314_converted.root",
-    "1259": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1259_250817041755_converted.root",
-    "1260": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1260_250817051715_converted.root",
-    "1261": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1261_250817080234_converted.root",
-    "1262": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1262_250817095148_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1262_250817113431_converted.root"
-    ],
-    "1263": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1263_250817135704_converted.root",
-    "1264": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1264_250817143432_converted.root",
-    "1265": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1265_250817150445_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1265_250817151002_converted.root"
-    ],
-    "1266": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1266_250817154016_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1266_250817165900_converted.root"
-    ],
-    "1267": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1267_250817171045_converted.root",
-    "1268": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1268_250817181520_converted.root",
-    "1269": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1269_250817191925_converted.root",
-    "1270": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1270_250817192623_converted.root",
-    "1271": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1271_250817202636_converted.root",
-    "1272": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1272_250817214727_converted.root",
-    "1273": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1273_250817233236_converted.root",
-    "1274": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1274_250818003152_converted.root",
-    "1275": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1275_250818013737_converted.root",
-    "1276": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1276_250818022509_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1276_250818023026_converted.root"
-    ],
-    "1277": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1277_250818025253_converted.root",
-    "1278": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1278_250818045200_converted.root",
-    "1279": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1279_250818052608_converted.root",
-    "1280": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1280_250818055831_converted.root",
-    "1281": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1281_250818063305_converted.root",
-    "1282": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1282_250818070859_converted.root",
-    "1283": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1283_250818074659_converted.root",
-    "1284": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1284_250818082148_converted.root",
-    "1285": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1285_250818085547_converted.root",
-    "1286": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1286_250818134629_converted.root",
-    "1287": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1287_250818135043_converted.root",
-    "1288": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1288_250818142419_converted.root",
-    "1289": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1289_250818153551_converted.root",
-    "1290": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1290_250818154345_converted.root",
-    "1291": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1291_250818172038_converted.root",
-    "1292": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1292_250818172545_converted.root",
-    "1293": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1293_250818190208_converted.root",
-    "1295": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1295_250818190703_converted.root",
-    "1296": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1296_250818195045_converted.root",
-    "1297": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1297_250818203402_converted.root",
-    "1298": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1298_250818205643_converted.root",
-    "1299": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1299_250818214037_converted.root",
-    "1300": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1300_250818222252_converted.root",
-    "1301": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1301_250818222657_converted.root",
-    "1302": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1302_250818223306_converted.root",
-    "1303": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1303_250818225938_converted.root",
-    "1304": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1304_250818234302_converted.root",
-    "1305": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1305_250819002553_converted.root",
-    "1306": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1306_250819011136_converted.root",
-    "1307": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1307_250819021858_converted.root",
-    "1308": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1308_250819023106_converted.root",
-    "1309": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1309_250819035544_converted.root",
-    "1310": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1310_250819065700_converted.root",
-    "1311": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1311_250819081517_converted.root",
-    "1312": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1312_250819083452_converted.root",
-    "1313": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1313_250819092737_converted.root",
-    "1314": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1314_250819100840_converted.root",
-    "1315": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1315_250819104808_converted.root",
-    "1316": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1316_250819111733_converted.root",
-    "1317": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1317_250819121146_converted.root",
-    "1318": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1318_250819133128_converted.root",
-    "1319": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1319_250819150323_converted.root",
-    "1320": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1320_250819162224_converted.root",
-    "1321": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1321_250819174052_converted.root",
-    "1322": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1322_250819200438_converted.root",
-    "1323": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1323_250819234353_converted.root",
-    "1324": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1324_250820002632_converted.root",
-    "1325": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1325_250820010303_converted.root",
-    "1326": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1326_250820010716_converted.root",
-    "1342": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1342_250923135705_converted.root",
-    "1343": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1343_250924024213_converted.root",
-    "1344": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1344_250924070913_converted.root",
-    "1345": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1345_250924101017_converted.root",
-    "1346": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1346_250924102044_converted.root",
-    "1347": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924131019_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924132556_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924133236_converted.root"
-    ],
-    "1348": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1348_250924133738_converted.root",
-    "1349": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1349_250924134338_converted.root",
-    "1350": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1350_250924144338_converted.root",
-    "1351": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1351_250924154352_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1351_250924154757_converted.root"
-    ],
-    "1352": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1352_250924161249_converted.root",
-    "1353": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1353_250924162007_converted.root",
-    "1354": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1354_250924162929_converted.root",
-    "1355": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1355_250924165834_converted.root",
-    "1357": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1357_250924173948_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1357_250924175021_converted.root"
-    ],
-    "1358": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1358_250924182300_converted.root",
-    "1359": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1359_250924185444_converted.root",
-    "1360": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1360_250924192806_converted.root",
-    "1361": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1361_250924195943_converted.root",
-    "1362": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1362_250924203518_converted.root",
-    "1363": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1363_250924210528_converted.root",
-    "1364": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1364_250924213612_converted.root",
-    "1365": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1365_250924220613_converted.root",
-    "1366": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1366_250924223703_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1366_250924224129_converted.root"
-    ],
-    "1367": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1367_250924231548_converted.root",
-    "1368": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1368_250924235007_converted.root",
-    "1369": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1369_250925002509_converted.root",
-    "1370": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1370_250925005738_converted.root",
-    "1371": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1371_250925013138_converted.root",
-    "1372": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1372_250925014223_converted.root",
-    "1373": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1373_250925030221_converted.root",
-    "1374": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1374_250925045654_converted.root",
-    "1388": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1388_250925061744_converted.root",
-    "1389": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1389_250925065801_converted.root",
-    "1390": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1390_250925075556_converted.root",
-    "1391": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1391_250925093028_converted.root",
-    "1393": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1393_250925093616_converted.root",
-    "1395": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1395_250925094255_converted.root",
-    "1397": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1397_250925111222_converted.root",
-    "1398": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1398_250925111851_converted.root",
-    "1399": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1399_250925114126_converted.root",
-    "1400": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1400_250925115505_converted.root",
-    "1402": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1402_250925120743_converted.root",
-    "1404": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1404_250925124442_converted.root",
-    "1405": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1405_250925130825_converted.root",
-    "1406": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1406_250925132245_converted.root",
-    "1407": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1407_250925133835_converted.root",
-    "1408": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1408_250925134309_converted.root",
-    "1409": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1409_250925135843_converted.root",
-    "1410": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1410_250925145231_converted.root",
-    "1411": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1411_250925154340_converted.root",
-    "1412": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1412_250925174602_converted.root",
-    "1413": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1413_250925191757_converted.root",
-    "1414": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1414_250925192538_converted.root",
-    "1415": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1415_250925192957_converted.root",
-    "1416": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1416_250925230347_converted.root",
-    "1417": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1417_250926090212_converted.root",
-    "1418": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1418_250926091725_converted.root",
-    "1419": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1419_250926092318_converted.root",
-    "1420": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1420_250926092845_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1420_250926093800_converted.root"
-    ],
-    "1422": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1422_250926102502_converted.root",
-    "1423": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1423_250926105310_converted.root",
-    "1424": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1424_250926124313_converted.root",
-    "1425": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1425_250926145836_converted.root",
-    "1426": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1426_250926155735_converted.root",
-    "1427": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1427_250926172019_converted.root",
-    "1428": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1428_250926181815_converted.root",
-    "1429": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1429_250926183919_converted.root",
-    "1430": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1430_250926193109_converted.root",
-    "1431": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1431_250926195104_converted.root",
-    "1432": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1432_250926203416_converted.root",
-    "1433": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1433_250926213442_converted.root",
-    "1434": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1434_250926222520_converted.root",
-    "1435": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1435_250926232256_converted.root",
-    "1436": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1436_250926233134_converted.root",
-    "1437": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1437_250926235032_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1437_250927003120_converted.root"
-    ],
-    "1438": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1438_250927012632_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1438_250927020803_converted.root"
-    ],
-    "1439": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1439_250927023319_converted.root",
-    "1440": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1440_250927033022_converted.root",
-    "1441": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1441_250927033539_converted.root",
-    "1442": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1442_250927050218_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1442_250927050848_converted.root"
-    ],
-    "1443": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1443_250927064754_converted.root",
-    "1445": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1445_250927074156_converted.root",
-    "1446": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1446_250927083301_converted.root",
-    "1447": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1447_250927084726_converted.root",
-    "1452": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1452_250927102123_converted.root",
-    "1459": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1459_250927131956_converted.root",
-    "1465": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1465_250927135722_converted.root",
-    "1468": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1468_250927145556_converted.root",
-    "1469": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1469_250927150756_converted.root",
-    "1470": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1470_250927160406_converted.root",
-    "1471": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1471_250927165806_converted.root",
-    "1472": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1472_250927174703_converted.root",
-    "1473": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1473_250927183856_converted.root",
-    "1474": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1474_250927193729_converted.root",
-    "1475": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1475_250927200644_converted.root",
-    "1476": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1476_250927203550_converted.root",
-    "1477": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1477_250927213519_converted.root",
-    "1478": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1478_250927222528_converted.root",
-    "1479": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1479_250927231829_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1479_250927234342_converted.root"
-    ],
-    "1480": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1480_250928004120_converted.root",
-    "1483": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1483_250928032625_converted.root",
-    "1484": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1484_250928035649_converted.root",
-    "1485": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1485_250928042455_converted.root",
-    "1486": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1486_250928044409_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1486_250928045928_converted.root"
-    ],
-    "1487": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1487_250928050908_converted.root",
-    "1488": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1488_250928053930_converted.root",
-    "1489": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1489_250928060945_converted.root",
-    "1490": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1490_250928062325_converted.root",
-    "1491": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1491_250928063610_converted.root",
-    "1492": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1492_250928070037_converted.root",
-    "1493": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1493_250928071808_converted.root",
-    "1494": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1494_250928073203_converted.root",
-    "1495": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1495_250928075213_converted.root",
-    "1496": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1496_250928081125_converted.root",
-    "1497": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1497_250928082618_converted.root",
-    "1498": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1498_250928090958_converted.root",
-    "1499": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1499_250928094112_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1499_250928103402_converted.root"
-    ],
-    "1500": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1500_250928104710_converted.root",
-    "1501": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1501_250928105227_converted.root",
-    "1502": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1502_250928113749_converted.root",
-    "1504": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1504_250928133854_converted.root",
-    "1505": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1505_250928141538_converted.root",
-    "1506": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1506_250928143030_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1506_250928145724_converted.root"
-    ],
-    "1507": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1507_250928152053_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1507_250928160030_converted.root"
-    ],
-    "1508": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1508_250928161049_converted.root",
-    "1509": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1509_250928164817_converted.root",
-    "1510": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1510_250928172949_converted.root",
-    "1511": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1511_250928180741_converted.root",
-    "1512": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1512_250928183645_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1512_250928185722_converted.root"
-    ],
-    "1513": [
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1513_250928192918_converted.root",
-        "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1513_250928194230_converted.root"
-    ],
-    "1514": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1514_250928200533_converted.root",
-    "1515": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1515_250928202053_converted.root",
-    "1516": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1516_250928203337_converted.root",
-    "1517": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1517_250928204844_converted.root",
-    "1518": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1518_250928210134_converted.root",
-    "1519": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1519_250928212957_converted.root",
-    "1520": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1520_250928220558_converted.root",
-    "1521": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1521_250928221909_converted.root",
-    "1522": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1522_250928223626_converted.root",
-    "1523": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1523_250928224938_converted.root",
-    "1524": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1524_250928230236_converted.root",
-    "1525": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1525_250928232144_converted.root",
-    "1526": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1526_250928235028_converted.root",
-    "1527": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1527_250929010928_converted.root", 
-    "1771": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1771_260622212532.root", 
-    "1899": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1899_260626174752.root", 
-    "1973": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1973_260628025759.root"
+    "1091": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1091_250806080748_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1092": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1092_250806101039_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1094": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1094_250806102057_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1095": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1095_250808042626_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1166": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1166_250812081218_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1169": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1169_250814052350_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1170": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1170_250814092630_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1172": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1172_250814093102_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1173": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1173_250814094312_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1173_250814100008_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1175": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1175_250814120545_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1176": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1176_250814122352_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1176_250814123957_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1177": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1177_250814153349_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1178": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1178_250814184132_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1179": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1179_250815025910_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1180": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1180_250815031507_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1180_250815052343_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1182": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1182_250815052801_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1183": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1183_250815055422_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1184": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1184_250815064035_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1184_250815064555_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1185": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1185_250815074805_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1186": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1186_250815083427_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1187": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1187_250815085026_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1188": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1188_250815090622_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1189": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1189_250815103048_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1190": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1190_250815103818_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1191": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1191_250815112137_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1192": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1192_250815120955_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1193": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1193_250815131006_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1194": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1194_250815133713_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1195": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1195_250815141201_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1196": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1196_250815150406_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1197": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1197_250815155544_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1198": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1198_250815163005_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1199": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1199_250815175751_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1200": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1200_250815182809_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1201": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1201_250815183221_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1202": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1202_250815183703_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1204": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1204_250815191315_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1205": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1205_250815201425_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1206": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1206_250816014112_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1207": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1207_250816024634_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1208": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1208_250816035116_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1209": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1209_250816035831_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1210": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1210_250816041324_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1211": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1211_250816044602_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1212": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1212_250816051616_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1213": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1213_250816052133_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1213_250816052621_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1214": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1214_250816055607_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1215": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1215_250816062202_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1216": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1216_250816065005_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1216_250816065607_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1217": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1217_250816072557_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1217_250816073109_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1218": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1218_250816074550_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1219": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1219_250816082008_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1220": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1220_250816082538_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1221": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1221_250816085625_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1222": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1222_250816092914_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1223": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1223_250816093511_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1224": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1224_250816100246_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1225": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1225_250816110220_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1226": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1226_250816114027_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1227": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1227_250816114530_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1228": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1228_250816121418_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1229": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1229_250816124251_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1230": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1230_250816124757_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1231": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1231_250816132401_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1232": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1232_250816135241_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1233": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1233_250816141808_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1234": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1234_250816143012_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1235": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1235_250816150037_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1236": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1236_250816152942_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1237": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1237_250816160815_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1238": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1238_250816163651_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1238_250816164306_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1239": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816171139_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816171754_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1239_250816172323_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1240": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1240_250816175032_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1241": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1241_250816181723_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1242": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1242_250816184528_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1243": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1243_250816185420_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1245": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1245_250816192536_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1245_250816193232_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1246": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1246_250816195942_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1247": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1247_250816202549_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1248": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1248_250816205632_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1249": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1249_250816213106_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1250": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1250_250816215953_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1250_250816220414_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1251": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1251_250816223246_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1252": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1252_250816233625_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1254": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1254_250817000930_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1254_250817005908_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1255": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1255_250817011508_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1256": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1256_250817012101_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1257": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1257_250817015909_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1258": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1258_250817033314_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1259": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1259_250817041755_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1260": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1260_250817051715_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1261": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1261_250817080234_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1262": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1262_250817095148_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1262_250817113431_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1263": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1263_250817135704_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1264": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1264_250817143432_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1265": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1265_250817150445_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1265_250817151002_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1266": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1266_250817154016_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1266_250817165900_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1267": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1267_250817171045_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1268": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1268_250817181520_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1269": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1269_250817191925_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1270": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1270_250817192623_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1271": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1271_250817202636_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1272": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1272_250817214727_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1273": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1273_250817233236_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1274": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1274_250818003152_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1275": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1275_250818013737_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1276": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1276_250818022509_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1276_250818023026_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1277": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1277_250818025253_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1278": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1278_250818045200_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1279": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1279_250818052608_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1280": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1280_250818055831_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1281": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1281_250818063305_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1282": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1282_250818070859_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1283": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1283_250818074659_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1284": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1284_250818082148_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1285": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1285_250818085547_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1286": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1286_250818134629_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1287": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1287_250818135043_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1288": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1288_250818142419_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1289": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1289_250818153551_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1290": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1290_250818154345_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1291": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1291_250818172038_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1292": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1292_250818172545_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1293": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1293_250818190208_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1295": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1295_250818190703_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1296": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1296_250818195045_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1297": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1297_250818203402_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1298": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1298_250818205643_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1299": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1299_250818214037_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1300": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1300_250818222252_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1301": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1301_250818222657_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1302": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1302_250818223306_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1303": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1303_250818225938_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1304": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1304_250818234302_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1305": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1305_250819002553_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1306": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1306_250819011136_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1307": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1307_250819021858_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1308": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1308_250819023106_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1309": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1309_250819035544_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1310": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1310_250819065700_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1311": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1311_250819081517_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1312": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1312_250819083452_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1313": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1313_250819092737_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1314": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1314_250819100840_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1315": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1315_250819104808_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1316": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1316_250819111733_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1317": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1317_250819121146_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1318": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1318_250819133128_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1319": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1319_250819150323_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1320": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1320_250819162224_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1321": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1321_250819174052_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1322": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1322_250819200438_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1323": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1323_250819234353_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1324": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1324_250820002632_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1325": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1325_250820010303_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1326": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1326_250820010716_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1342": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1342_250923135705_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1343": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1343_250924024213_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1344": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1344_250924070913_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1345": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1345_250924101017_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1346": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1346_250924102044_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1347": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924131019_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924132556_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1347_250924133236_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1348": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1348_250924133738_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1349": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1349_250924134338_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1350": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1350_250924144338_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1351": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1351_250924154352_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1351_250924154757_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1352": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1352_250924161249_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1353": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1353_250924162007_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1354": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1354_250924162929_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1355": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1355_250924165834_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1357": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1357_250924173948_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1357_250924175021_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1358": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1358_250924182300_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1359": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1359_250924185444_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1360": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1360_250924192806_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1361": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1361_250924195943_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1362": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1362_250924203518_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1363": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1363_250924210528_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1364": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1364_250924213612_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1365": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1365_250924220613_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1366": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1366_250924223703_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1366_250924224129_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1367": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1367_250924231548_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1368": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1368_250924235007_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1369": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1369_250925002509_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1370": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1370_250925005738_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1371": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1371_250925013138_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1372": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1372_250925014223_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1373": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1373_250925030221_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1374": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1374_250925045654_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1375": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1375_250925053942_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1376": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1376_250925055158_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1378": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1378_250925055357_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1380": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1380_250925060033_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1381": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1381_250925060544_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1382": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1382_250925060709_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1384": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1384_250925060851_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1386": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1386_250925061027_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1388": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1388_250925061744_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1389": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1389_250925065801_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1390": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1390_250925075556_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1391": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1391_250925093028_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1393": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1393_250925093616_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1395": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1395_250925094255_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1397": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1397_250925111222_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1398": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1398_250925111851_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1399": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1399_250925114126_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1400": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1400_250925115505_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1401": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1401_250925115953_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1402": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1402_250925120743_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1403": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1403_250925123933_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1404": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1404_250925124442_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1405": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1405_250925130825_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1406": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1406_250925132245_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1407": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1407_250925133835_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1408": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1408_250925134309_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1409": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1409_250925135843_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1410": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1410_250925145231_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1411": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1411_250925154340_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1412": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1412_250925174602_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1413": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1413_250925191757_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1414": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1414_250925192538_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1415": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1415_250925192957_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1416": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1416_250925230347_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1417": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1417_250926090212_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1418": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1418_250926091725_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1419": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1419_250926092318_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1420": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1420_250926092845_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1420_250926093800_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1421": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1421_250926101552_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1422": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1422_250926102502_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1423": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1423_250926105310_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1424": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1424_250926124313_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1425": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1425_250926145836_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1426": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1426_250926155735_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1427": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1427_250926172019_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1428": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1428_250926181815_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1429": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1429_250926183919_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1430": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1430_250926193109_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1431": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1431_250926195104_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1432": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1432_250926203416_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1433": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1433_250926213442_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1434": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1434_250926222520_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1435": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1435_250926232256_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1436": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1436_250926233134_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1437": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1437_250926235032_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1437_250927003120_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1438": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1438_250927012632_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1438_250927020803_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1439": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1439_250927023319_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1440": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1440_250927033022_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1441": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1441_250927033539_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1442": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1442_250927050218_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1442_250927050848_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1443": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1443_250927064754_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1445": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1445_250927074156_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1446": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1446_250927083301_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1447": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1447_250927084726_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1448": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1448_250927100333_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1449": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1449_250927100811_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1450": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1450_250927101250_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1452": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1452_250927102123_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1457": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1457_250927130326_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1458": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1458_250927131519_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1459": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1459_250927131956_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1460": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1460_250927132836_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1461": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1461_250927133503_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1463": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1463_250927134006_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1464": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1464_250927135249_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1465": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1465_250927135722_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1468": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1468_250927145556_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1469": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1469_250927150756_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1470": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1470_250927160406_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1471": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1471_250927165806_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1472": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1472_250927174703_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1473": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1473_250927183856_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1474": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1474_250927193729_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1475": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1475_250927200644_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1476": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1476_250927203550_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1477": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1477_250927213519_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1478": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1478_250927222528_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1479": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1479_250927231829_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1479_250927234342_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1480": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1480_250928004120_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1483": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1483_250928032625_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1484": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1484_250928035649_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1485": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1485_250928042455_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1486": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1486_250928044409_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1486_250928045928_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1487": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1487_250928050908_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1488": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1488_250928053930_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1489": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1489_250928060945_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1490": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1490_250928062325_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1491": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1491_250928063610_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1492": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1492_250928070037_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1493": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1493_250928071808_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1494": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1494_250928073203_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1495": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1495_250928075213_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1496": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1496_250928081125_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1497": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1497_250928082618_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1498": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1498_250928090958_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1499": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1499_250928094112_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1499_250928103402_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1500": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1500_250928104710_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1501": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1501_250928105227_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1502": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1502_250928113749_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1504": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1504_250928133854_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1505": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1505_250928141538_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1506": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1506_250928143030_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1506_250928145724_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1507": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1507_250928152053_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1507_250928160030_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1508": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1508_250928161049_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1509": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1509_250928164817_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1510": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1510_250928172949_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1511": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1511_250928180741_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1512": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1512_250928183645_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1512_250928185722_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1513": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1513_250928192918_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1513_250928194230_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1514": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1514_250928200533_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1515": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1515_250928202053_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1516": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1516_250928203337_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1517": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1517_250928204844_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1518": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1518_250928210134_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1519": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1519_250928212957_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1520": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1520_250928220558_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1521": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1521_250928221909_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1521_250928222816_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1522": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1522_250928223626_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1523": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1523_250928224938_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1524": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1524_250928230236_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1525": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1525_250928232144_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1526": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1526_250928235028_converted.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1527": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1527_250929001555_converted.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1527_250929010928_converted.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1728": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1728_260617043533.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1729": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1729_260617070109.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1730": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1730_260617070633.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1733": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1733_260617073616.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1734": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1734_260617091924.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1735": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1735_260617102147.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1736": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1736_260617105745.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1737": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1737_260617110414.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1738": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1738_260617112501.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1739": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1739_260618034904.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1739_260618035448.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1740": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1740_260618035906.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1740_260618040354.root"
+        ],
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1741": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1741_260618063117.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1744": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1744_260618094555.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1745": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1745_260618100322.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1747": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1747_260621070530.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1748": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1748_260621070852.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1749": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1749_260621085458.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1751": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1751_260622114540.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1752": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1752_260622115210.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1753": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1753_260622122237.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1754": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1754_260622122717.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1755": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1755_260622123531.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1756": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1756_260622125029.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1757": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1757_260622130329.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1758": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1758_260622131639.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1760": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1760_260622144422.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1762": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1762_260622145543.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 120
+    },
+    "1763": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1763_260622151203.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1764": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1764_260622154219.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1765": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1765_260622165225.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1766": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1766_260622180409.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 160
+    },
+    "1767": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1767_260622184259.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 140
+    },
+    "1768": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1768_260622193339.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 140
+    },
+    "1769": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1769_260622200351.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 120
+    },
+    "1770": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1770_260622203018.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 120
+    },
+    "1771": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1771_260622212532.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 100
+    },
+    "1772": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1772_260622214544.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 100
+    },
+    "1773": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1773_260622222207.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1774": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1774_260622230235.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 60
+    },
+    "1775": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1775_260622233450.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "1776": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1776_260623003435.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1777": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1777_260623010656.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1778": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1778_260623011513.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1779": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1779_260623011959.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1780": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1780_260623020052.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1781": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1781_260623021317.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1781_260623022228.root"
+        ],
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1783": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1783_260623022947.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1784": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1784_260623023842.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1785": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1785_260623025118.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1786": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1786_260623025747.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1787": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1787_260623030349.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1788": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1788_260623030823.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1789": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1789_260623040618.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1790": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1790_260623041107.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1791": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1791_260623042034.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1792": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1792_260623050223.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1793": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1793_260623051020.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1794": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1794_260623051636.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1795": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1795_260623052352.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1796": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1796_260623053140.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1797": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1797_260623063036.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1798": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1798_260623072127.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 20
+    },
+    "1799": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1799_260623083651.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 20
+    },
+    "1800": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1800_260623090926.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1801": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1801_260623092423.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1802": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1802_260623095207.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1803": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1803_260623102229.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1804": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1804_260623102546.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1806": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1806_260623122456.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1807": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1807_260623145156.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1808": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1808_260623153512.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1809": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1809_260623161142.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 160
+    },
+    "1810": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1810_260623164929.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 120
+    },
+    "1811": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1811_260623173421.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 60
+    },
+    "1812": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1812_260623180920.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 160
+    },
+    "1813": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1813_260623190605.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1814": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1814_260623200609.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 20
+    },
+    "1815": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1815_260623203938.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 20
+    },
+    "1816": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1816_260623212741.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 10
+    },
+    "1817": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1817_260623222626.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 160
+    },
+    "1818": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1818_260623231926.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 150
+    },
+    "1819": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1819_260624001112.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 140
+    },
+    "1820": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1820_260624003638.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 130
+    },
+    "1824": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1824_260624200414.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 160
+    },
+    "1826": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1826_260624203237.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1826_260624215217.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1826_260624235440.root"
+        ],
+        "beam_type": "mu+",
+        "beam_energy_gev": 160
+    },
+    "1827": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1827_260625004039.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 160
+    },
+    "1828": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1828_260625010547.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 160
+    },
+    "1829": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1829_260625012533.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1830": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1830_260625025712.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 100
+    },
+    "1831": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1831_260625032658.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 120
+    },
+    "1832": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1832_260625042702.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 120
+    },
+    "1833": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1833_260625071513.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 120
+    },
+    "1834": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1834_260625082743.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1835": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1835_260625092007.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1836": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1836_260625092442.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1837": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1837_260625104154.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1838": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1838_260625105642.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1839": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1839_260625130122.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1840": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1840_260625133837.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1841": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1841_260625140334.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1842": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1842_260625154403.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1843": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1843_260625160223.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1844": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1844_260625160633.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1845": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1845_260625162716.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1846": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1846_260625165857.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1847": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1847_260625172854.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1848": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1848_260625175452.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 120
+    },
+    "1849": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1849_260625191614.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1850": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1850_260625203434.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1851": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1851_260625204636.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1852": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1852_260625210450.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1853": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1853_260625212236.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1854": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1854_260625214104.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1855": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1855_260625220004.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1856": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1856_260625221804.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1857": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1857_260625231127.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1858": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1858_260625234116.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1859": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1859_260625235705.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1860": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1860_260626001437.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1861": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1861_260626002948.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1862": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1862_260626004602.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1863": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1863_260626013317.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1864": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1864_260626020024.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1864_260626020331.root"
+        ],
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1865": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1865_260626022004.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1866": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1866_260626023526.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1867": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1867_260626025214.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1868": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1868_260626030916.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1869": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1869_260626032438.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1870": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1870_260626034112.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1871": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1871_260626035800.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1872": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1872_260626041321.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1873": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1873_260626042832.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1874": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1874_260626044531.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1875": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1875_260626050205.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1876": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1876_260626051712.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1877": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1877_260626053219.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1878": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1878_260626054740.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1879": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1879_260626060603.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1880": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1880_260626063255.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1881": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1881_260626070049.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1882": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1882_260626072730.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1883": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1883_260626074451.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1884": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1884_260626080008.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1885": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1885_260626082207.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1886": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1886_260626084003.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1887": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1887_260626085622.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1888": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1888_260626092617.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1889": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1889_260626100425.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1890": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1890_260626100719.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1891": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1891_260626102650.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1892": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1892_260626110231.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1893": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1893_260626114101.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1894": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1894_260626120641.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1895": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1895_260626131053.root",
+        "beam_type": null,
+        "beam_energy_gev": 0
+    },
+    "1896": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1896_260626152036.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "1897": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1897_260626162250.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1898": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1898_260626170621.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1899": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1899_260626174752.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1900": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1900_260626181855.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1901": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1901_260626183519.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1902": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1902_260626185152.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1903": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1903_260626193837.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1904": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1904_260626201653.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1905": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1905_260626205633.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1906": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1906_260626213606.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1907": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1907_260626221342.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1908": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1908_260626230118.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1909": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1909_260626235343.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1910": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1910_260627003340.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1911": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1911_260627005850.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1912": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1912_260627011552.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1913": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1913_260627013801.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1914": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1914_260627023454.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1915": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1915_260627025651.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1916": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1916_260627033454.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1917": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1917_260627040620.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1918": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1918_260627043020.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1919": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1919_260627045642.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1920": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1920_260627051245.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1921": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1921_260627052807.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1922": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1922_260627055032.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1923": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1923_260627060710.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1924": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1924_260627062420.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1925": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1925_260627064249.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1926": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1926_260627070049.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1927": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1927_260627073345.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1928": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1928_260627074856.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1929": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1929_260627080555.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1930": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1930_260627082257.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1931": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1931_260627092432.root",
+        "beam_type": "pedestal",
+        "beam_energy_gev": 40
+    },
+    "1932": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1932_260627094559.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1933": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1933_260627095355.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1934": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1934_260627101712.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1935": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1935_260627103256.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1936": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1936_260627104841.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1937": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1937_260627110512.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1938": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1938_260627112100.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1939": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1939_260627113707.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1940": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1940_260627115452.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1941": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1941_260627121144.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1942": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1942_260627123443.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1943": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1943_260627125828.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1944": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1944_260627131516.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1945": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1945_260627133331.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1946": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1946_260627143213.root",
+        "beam_type": "pedestal",
+        "beam_energy_gev": 0
+    },
+    "1947": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1947_260627184520.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1948": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1948_260627192505.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1949": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1949_260627195121.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1950": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1950_260627200633.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1951": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1951_260627202131.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1952": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1952_260627204527.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1953": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1953_260627210027.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1954": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1954_260627211716.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1955": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1955_260627213349.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1956": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1956_260627215502.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1957": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1957_260627222102.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1958": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1958_260627223849.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1959": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1959_260627225523.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1960": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1960_260627231129.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1961": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1961_260627232958.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1962": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1962_260627234950.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1963": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1963_260628000811.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1964": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1964_260628002348.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1965": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1965_260628004028.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1966": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1966_260628005718.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1967": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1967_260628011422.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1968": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1968_260628014223.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1969": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1969_260628015731.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1970": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1970_260628021336.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1971": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1971_260628022814.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1972": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1972_260628024339.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1973": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1973_260628025759.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1974": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1974_260628031431.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1975": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1975_260628032928.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1976": {
+        "file": [
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1976_260628034824.root",
+            "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1976_260628035052.root"
+        ],
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1977": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1977_260628040512.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1978": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1978_260628042116.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1979": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1979_260628043638.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1980": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1980_260628045116.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1981": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1981_260628050523.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1982": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1982_260628052327.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1983": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1983_260628053804.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1984": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1984_260628055228.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1985": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1985_260628060719.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1986": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1986_260628062146.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1987": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1987_260628063621.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1988": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1988_260628065102.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1989": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1989_260628070513.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1990": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1990_260628071950.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1991": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1991_260628073609.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1992": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1992_260628075102.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 80
+    },
+    "1993": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1993_260628115107.root",
+        "beam_type": null,
+        "beam_energy_gev": null
+    },
+    "1994": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1994_260628150821.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1995": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1995_260628162558.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1996": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1996_260628165139.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1997": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1997_260628165725.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 80
+    },
+    "1998": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1998_260628171506.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "1999": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run1999_260628173046.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2000": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2000_260628175028.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2001": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2001_260628180522.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2002": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2002_260628181958.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2003": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2003_260628183506.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2004": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2004_260628185041.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2005": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2005_260628190534.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2006": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2006_260628192026.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2007": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2007_260628193506.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2008": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2008_260628194945.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2009": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2009_260628200441.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2010": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2010_260628202041.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2011": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2011_260628203632.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2012": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2012_260628212808.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2013": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2013_260628214315.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2014": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2014_260628220032.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2015": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2015_260628221702.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2016": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2016_260628223158.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 40
+    },
+    "2017": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2017_260628225638.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2018": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2018_260628231624.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2019": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2019_260628233131.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2020": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2020_260628234637.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2021": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2021_260629000216.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2022": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2022_260629001749.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2023": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2023_260629003550.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2024": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2024_260629005306.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2025": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2025_260629011424.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 40
+    },
+    "2026": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2026_260629013832.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2027": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2027_260629015834.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2028": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2028_260629021947.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 60
+    },
+    "2029": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2029_260629023743.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2030": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2030_260629025410.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2031": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2031_260629031344.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2032": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2032_260629033145.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2033": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2033_260629035338.root",
+        "beam_type": "pi+",
+        "beam_energy_gev": 60
+    },
+    "2034": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2034_260629041037.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2035": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2035_260629042710.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2036": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2036_260629045027.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2037": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2037_260629050857.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2038": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2038_260629053130.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2039": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2039_260629055110.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2040": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2040_260629061344.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    },
+    "2041": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2041_260629063339.root",
+        "beam_type": "mu+",
+        "beam_energy_gev": 120
+    },
+    "2042": {
+        "file": "/lustre/research/hep/yofeng/HG-DREAM/CERN/ROOT/run2042_260629065110.root",
+        "beam_type": "e+",
+        "beam_energy_gev": 60
+    }
 }

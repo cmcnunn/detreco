@@ -45,7 +45,7 @@ def main():
         print(f"Run ID {args.run} not found in run list.")
         sys.exit(1)
 
-    result = hodoreco((args.run, run_list[args.run]))
+    result = hodoreco((args.run, run_list[args.run]["file"]))
     if result is not None:
         xh, yh, n_events = result
         plot_profile(xh, yh, args.run, OUTPUTDIR=OUTPUTDIR)
