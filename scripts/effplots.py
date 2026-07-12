@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.constants import HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH, VETO_THRESHOLD
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
-
+from utils.plotting import plot_effhist2d
 from utils.selectors import get_branch_names, get_mcp_pulse_window_ns, passes_veto
 from utils.waveforms import subtract_baseline
 
@@ -38,75 +38,6 @@ SAMPLE_NS = 0.2
 
 OUTPUT_DIR = ensure_output_dir("effplots")
 
-
-# ==============================
-# Plotting helpers
-# ==============================
-def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename):
-    x_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
-    y_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
-
-    h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[x_bins, y_bins])
-    h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[x_bins, y_bins])
-
-    eff = np.divide(h_sel, h_ref, out=np.zeros_like(h_sel, dtype=float), where=h_ref > 0)
-
-    fig, ax = plt.subplots(figsize=(10, 10))
-    pc = mh.hist2dplot(eff, xedges, yedges, ax=ax, cmin=0, cmax=1, rasterized=True)
-    cb = pc.cbar
-    if cb:
-        cb.set_label("Efficiency", loc='top')
-    mh.label.exp_label(exp="CaloX", data=True, rlabel=title, ax=ax)
-    ax.set_xlabel(xlabel, loc='right')
-    ax.set_ylabel(ylabel, loc='top')
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.close()
-
-
-def plot_effhist1d(x_ref, y_ref, x_sel, y_sel, xlabel, ylabel, title, filename):
-    x_bins = np.linspace(-30, 50, 200)
-    y_bins = np.linspace(-30, 50, 200)
-
-    h_ref_x, xedges = np.histogram(x_ref, bins=x_bins)
-    h_sel_x, _ = np.histogram(x_sel, bins=x_bins)
-    eff_x = np.divide(h_sel_x, h_ref_x,
-                      out=np.zeros_like(h_sel_x, dtype=float), where=h_ref_x > 0)
-
-    h_ref_y, yedges = np.histogram(y_ref, bins=y_bins)
-    h_sel_y, _ = np.histogram(y_sel, bins=y_bins)
-    eff_y = np.divide(h_sel_y, h_ref_y,
-                      out=np.zeros_like(h_sel_y, dtype=float), where=h_ref_y > 0)
-
-    x_centers = 0.5 * (xedges[:-1] + xedges[1:])
-    y_centers = 0.5 * (yedges[:-1] + yedges[1:])
-
-    eff_x_mean = np.mean(eff_x[h_ref_x > 0])
-    eff_y_mean = np.mean(eff_y[h_ref_y > 0])
-
-    fig, ax = plt.subplots(2, 1, figsize=(7, 6), sharex=False)
-
-    ax[0].step(x_centers, eff_x, where="mid")
-    ax[0].set_xlabel("X [mm]")
-    ax[0].set_ylabel("Efficiency")
-    ax[0].set_title("Efficiency vs X")
-    ax[0].text(0.02, 0.95,
-               f"Mean efficiency: {eff_x_mean:.3f}\nEntries: {np.sum(h_ref_x)}",
-               transform=ax[0].transAxes, verticalalignment="top",
-               bbox=dict(facecolor="white", alpha=0.8))
-
-    ax[1].step(y_centers, eff_y, where="mid")
-    ax[1].set_xlabel("Y [mm]")
-    ax[1].set_ylabel("Efficiency")
-    ax[1].set_title("Efficiency vs Y")
-    ax[1].text(0.02, 0.95,
-               f"Mean efficiency: {eff_y_mean:.3f}\nEntries: {np.sum(h_ref_y)}",
-               transform=ax[1].transAxes, verticalalignment="top",
-               bbox=dict(facecolor="white", alpha=0.8))
-
-    fig.suptitle(title)
-    plt.tight_layout()
-    plt.show()
 
 
 def _mcp_hit_mask(mcp_bs, pulse_window_ns):

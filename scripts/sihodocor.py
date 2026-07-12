@@ -1,4 +1,3 @@
-import sys
 import os
 import argparse
 
@@ -10,10 +9,9 @@ from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
 from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root
-from utils.plotting import get_runtype, profile_mode, draw_fit
+from utils.plotting import get_runtype, draw_fit
 from utils.constants import X_MAPPING, Y_MAPPING
 from utils.hodo import reconstruct_hodoscope
-from utils.fit_funcs import line
 from utils.selectors import get_branch_names, passes_veto
 
 global OUTPUTDIR
