@@ -18,6 +18,11 @@ DEFAULT_MCP_THRESHOLD = -40.0
 # once the DRS readout takes over (runs 1821+).
 TB2026_FERS_PHASE_LAST_RUN = 1820
 
+# The 1cm/3cm test counters were only added to the DAQ starting this run;
+# reading their branches for an earlier run would KeyError on a branch that
+# doesn't exist yet, so gate on this explicitly instead.
+COUNTER_1CM_3CM_FIRST_RUN = 1825
+
 
 def get_branch_names(run_id):
     """Return the ``(veto, mcp1, mcp2)`` branch names for ``run_id``.
@@ -67,6 +72,21 @@ def get_mcp_pulse_window_ns(run_id):
     raise ValueError(f"No MCP pulse window mapping for run {run_id} (runtype={runtype!r})")
 
 
+def get_counter_branch_names(run_id):
+    """Return the ``(counter_1cm, counter_3cm)`` branch names for ``run_id``.
+
+    These two small test counters were only added to the DAQ starting run
+    ``COUNTER_1CM_3CM_FIRST_RUN``; raises for any earlier run.
+    """
+    run_id = int(run_id)
+    if run_id < COUNTER_1CM_3CM_FIRST_RUN:
+        raise ValueError(
+            f"No 1cm/3cm counter branches for run {run_id}: only present "
+            f"from run {COUNTER_1CM_3CM_FIRST_RUN} onward."
+        )
+    return "DRS_Brg1_Board0_Group1_Channel0", "DRS_Brg1_Board0_Group1_Channel1"
+
+
 def passes_veto(veto_wf, threshold=VETO_THRESHOLD, n_baseline=DEFAULT_N_BASELINE):
     """True for events whose veto channel did NOT dip below ``threshold``.
 
@@ -107,5 +127,27 @@ def mcp_hit_mask(mcp_wf, amplitude_threshold=DEFAULT_MCP_THRESHOLD,
         mask &= (min_idx > 0) & (min_idx < n_samples - 1)
 
     return mask
+
+
+def counter_1cm_hit_mask(wf, amplitude_threshold, **kwargs):
+    """True for events where the 1 cm test counter shows a real pulse.
+
+    Same pulse-finding criteria as ``mcp_hit_mask`` (see there for
+    ``shoulder_threshold``/``require_interior_peak``/``n_baseline``).
+    ``amplitude_threshold`` has no established default yet for this
+    counter -- pass one explicitly.
+    """
+    return mcp_hit_mask(wf, amplitude_threshold=amplitude_threshold, **kwargs)
+
+
+def counter_3cm_hit_mask(wf, amplitude_threshold, **kwargs):
+    """True for events where the 3 cm test counter shows a real pulse.
+
+    Same pulse-finding criteria as ``mcp_hit_mask`` (see there for
+    ``shoulder_threshold``/``require_interior_peak``/``n_baseline``).
+    ``amplitude_threshold`` has no established default yet for this
+    counter -- pass one explicitly.
+    """
+    return mcp_hit_mask(wf, amplitude_threshold=amplitude_threshold, **kwargs)
 
 

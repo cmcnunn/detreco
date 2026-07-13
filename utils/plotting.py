@@ -266,7 +266,7 @@ def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/det
     plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
     print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
 
-def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3):
+def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=5):
     """Bin ``x`` and take the most-probable (peak) ``y`` value in each bin.
 
     A raw event-by-event fit gets dragged off the visible ridge by the wide,
@@ -280,51 +280,148 @@ def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3):
       ``min_frac`` of the busiest bin's count, which adapts to each run's
       statistics rather than assuming a fixed absolute cutoff. This mostly
       drops the x-range where the beam barely illuminates the detector.
-    - No clear winner: even with enough events, the tallest y-bin can be a
-      coin-flip away from the runner-up (e.g. counts of 64 vs. 57 vs. 55) --
-      that's noise, not a real peak. ``min_prominence`` requires the top bin
-      to beat the second-highest by at least that factor.
+    - No clear winner: a *distant*, separately-peaked y-bin rivaling the top
+      bin (within ``min_prominence``) means the slice is genuinely
+      ambiguous -- e.g. two real, resolvable clusters. "Distant" is found by
+      walking outward from the top bin while the count keeps falling (or
+      stays flat), i.e. the peak's own basin, and only searching for a
+      rival outside it -- on a ``smooth_window``-moving-average of the raw
+      counts, not the raw counts themselves. A real peak can be many bins
+      wide (multiple scattering / strip-pitch smearing, not just one or two
+      bins) and, being real data, its interior is not perfectly monotonic --
+      a single-count Poisson uptick partway down its shoulder would
+      otherwise look like the start of a second peak and stop the walk
+      early, splitting one broad peak into a "peak" plus a phantom "rival"
+      right next to it.
+
+    If ``x`` only takes a handful of distinct values (e.g. hodoscope bar
+    positions, spaced exactly one pitch apart), it's binned on those exact
+    values instead of an equal-width ``linspace`` division -- the latter's
+    bin width generally doesn't match the true spacing, so some bins
+    straddle two positions and others fall empty, producing unevenly
+    spaced profile points and sometimes a visible "kink" that isn't real.
     """
-    x_edges = np.linspace(x.min(), x.max(), bins + 1)
-    x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    unique_x = np.unique(x)
+    if len(unique_x) <= bins:
+        x_centers = unique_x
+        x_bin = np.searchsorted(unique_x, x)
+        n_x_bins = len(unique_x)
+    else:
+        x_edges = np.linspace(x.min(), x.max(), bins + 1)
+        x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+        x_bin = np.digitize(x, x_edges) - 1
+        n_x_bins = bins
+
     y_edges = np.linspace(y.min(), y.max(), bins + 1)
     y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
 
-    x_bin = np.digitize(x, x_edges) - 1
-    counts_per_bin = np.array([(x_bin == i).sum() for i in range(bins)])
+    counts_per_bin = np.array([(x_bin == i).sum() for i in range(n_x_bins)])
     min_count = max(5, min_frac * counts_per_bin.max())
 
-    prof_x, prof_y = [], []
-    for i in range(bins):
+    kernel = np.ones(smooth_window) / smooth_window
+
+    prof_x, prof_y, prof_weight = [], [], []
+    for i in range(n_x_bins):
         sel = x_bin == i
         if counts_per_bin[i] < min_count:
             continue
         counts, _ = np.histogram(y[sel], bins=y_edges)
-        top2 = np.argsort(counts)[-2:][::-1]
-        if counts[top2[1]] > 0 and counts[top2[0]] < min_prominence * counts[top2[1]]:
+        smoothed = np.convolve(counts, kernel, mode="same")
+        top = np.argmax(smoothed)
+
+        # Walk outward from the peak while the (smoothed) count is
+        # non-increasing -- that's the peak's own basin, not a competing
+        # mode. Stop at the first step back uphill (a real valley), which
+        # marks where a separate peak could start.
+        left = top
+        while left > 0 and smoothed[left - 1] <= smoothed[left]:
+            left -= 1
+        right = top
+        while right < len(smoothed) - 1 and smoothed[right + 1] <= smoothed[right]:
+            right += 1
+
+        rival_mask = np.ones(len(smoothed), dtype=bool)
+        rival_mask[left:right + 1] = False
+        rival_max = smoothed[rival_mask].max() if rival_mask.any() else 0
+
+        if rival_max > 0 and smoothed[top] < min_prominence * rival_max:
             continue
+
+        # Report the raw-count peak within the basin, not the smoothed
+        # one -- smoothing can shift "top" onto a bin with fewer (or zero)
+        # raw events, which would give this profile point a misleadingly
+        # low (or zero) weight in draw_fit's weighted fit.
+        top_raw = left + np.argmax(counts[left:right + 1])
+
         prof_x.append(x_centers[i])
-        prof_y.append(y_centers[top2[0]])
-    return np.array(prof_x), np.array(prof_y)
+        prof_y.append(y_centers[top_raw])
+        prof_weight.append(counts[top_raw])
+    return np.array(prof_x), np.array(prof_y), np.array(prof_weight)
 
 _FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
 
-def draw_fit(ax, x, y):
+def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
     """Overlay a straight-line fit (through the per-bin peak, not raw events) and
-    its equation/correlation directly on the plot."""
-    prof_x, prof_y = profile_mode(x, y)
+    its equation/correlation directly on the plot.
+
+    The fit is weighted by each profile point's own event count (a point
+    built from 500 events is trusted more than one built from 6) and
+    iteratively sigma-clipped: after each fit, points more than
+    ``n_sigma_clip`` robust-scatter-widths (MAD-based, so a couple of bad
+    points can't inflate the very spread used to judge them) from the line
+    are dropped for good and the line is refit, so a handful of stray
+    profile points -- e.g. from a still-misaligned segment upstream --
+    can't drag the whole line off the real ridge. Rejected points are
+    marked with a red X.
+
+    ``tag`` (e.g. a run number/selection string) is prepended as the first
+    line of the fit line's legend entry, if given.
+    """
+    prof_x, prof_y, prof_w = profile_mode(x, y)
     ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
 
-    (m, b), cov = curve_fit(line, prof_x, prof_y)
-    m_err, b_err = np.sqrt(np.diag(cov))
-    r = np.corrcoef(prof_x, prof_y)[0, 1]
+    if len(prof_x) < 2:
+        # A line fit needs at least 2 points; a low-statistics selection
+        # (e.g. a tight/unvalidated cut) can leave profile_mode with 0 or 1
+        # surviving bins, which would otherwise crash curve_fit.
+        ax.text(0.97, 0.05, f"Not enough data for a fit ({len(prof_x)} profile point(s))",
+                transform=ax.transAxes, ha="right", va="bottom",
+                color="white", fontsize=20, path_effects=_FIT_OUTLINE)
+        return
 
-    xs = np.array([prof_x.min(), prof_x.max()])
-    ax.plot(xs, line(xs, m, b), color="white", lw=2, path_effects=_FIT_OUTLINE)
-    ax.text(0.97, 0.05,
-            f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n$r$ = {r:.5f}",
-            transform=ax.transAxes, ha="right", va="bottom",
-            color="white", fontsize=20, path_effects=_FIT_OUTLINE)
+    keep = np.ones(len(prof_x), dtype=bool)
+    m, b, cov = None, None, None
+    for _ in range(max_iter):
+        sigma = 1.0 / np.sqrt(prof_w[keep])
+        (m, b), cov = curve_fit(line, prof_x[keep], prof_y[keep], sigma=sigma, absolute_sigma=False)
+        residuals = prof_y - line(prof_x, m, b)
+        mad = np.median(np.abs(residuals[keep] - np.median(residuals[keep])))
+        scale = mad * 1.4826 if mad > 0 else (np.std(residuals[keep]) or 1e-9)
+        outlier = keep & (np.abs(residuals) > n_sigma_clip * scale)
+        if not outlier.any() or keep.sum() - outlier.sum() < 2:
+            break
+        keep &= ~outlier
+
+    m_err, b_err = np.sqrt(np.diag(cov))
+    r = np.corrcoef(prof_x[keep], prof_y[keep])[0, 1]
+    n_rejected = int((~keep).sum())
+
+    label = f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n$r$ = {r:.5f}"
+    if n_rejected:
+        label += f"\n({n_rejected} outlier{'s' if n_rejected != 1 else ''} excluded)"
+    if tag:
+        label = f"{tag}\n{label}"
+
+    xs = np.array([prof_x[keep].min(), prof_x[keep].max()])
+    ax.plot(xs, line(xs, m, b), color="white", lw=2, path_effects=_FIT_OUTLINE, label=label)
+    if n_rejected:
+        ax.plot(prof_x[~keep], prof_y[~keep], "x", color="red", ms=12, mew=2.5)
+
+    ax.legend(loc="lower right", fontsize=16, facecolor="black", edgecolor="white",
+              labelcolor="white", framealpha=0.75)
 
 def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64):
     """Per-bin selected/reference ratio on the standard detector-plane grid
