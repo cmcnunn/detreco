@@ -26,8 +26,7 @@ def calculate_bar_position(bar_index, pitch=PITCH):
     return (np.asarray(bar_index) - BAR_CENTER_OFFSET) * pitch
 
 
-def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD,
-                   min_hits=1, max_hits=2, max_span=1):
+def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD):
     """Boolean mask of events with a well-formed hodoscope hit pattern.
 
     An event is "good" when each plane has between ``min_hits`` and
@@ -46,10 +45,12 @@ def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD,
         span_x = np.nanmax(x_idx, axis=1) - np.nanmin(x_idx, axis=1)
         span_y = np.nanmax(y_idx, axis=1) - np.nanmin(y_idx, axis=1)
 
+        # Contiguity requirement (no gaps): span == n_hits - 1
+        contiguous_x = span_x == (n_hit_x - 1)
+        contiguous_y = span_y == (n_hit_y - 1)
+
     return (
-        (n_hit_x >= min_hits) & (n_hit_x <= max_hits)
-        & (n_hit_y >= min_hits) & (n_hit_y <= max_hits)
-        & (span_x <= max_span) & (span_y <= max_span)
+        (n_hit_x >= 1) & (n_hit_y >= 1) & contiguous_x & contiguous_y
     )
 
 

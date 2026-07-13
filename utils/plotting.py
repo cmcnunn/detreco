@@ -312,7 +312,14 @@ def draw_fit(ax, x, y):
             transform=ax.transAxes, ha="right", va="bottom",
             color="white", fontsize=20, path_effects=_FIT_OUTLINE)
 
-def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename, runtype=""):
+def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64):
+    """Per-bin selected/reference ratio on the standard detector-plane grid
+    (+/- 32 strip pitches, matching ``plot_effhist2d``).
+
+    Returns ``(eff, h_ref, xedges, yedges)``. ``h_ref`` is returned alongside
+    ``eff`` so callers can distinguish "0% efficiency" from "no reference
+    hits landed in this bin" without recomputing the histograms.
+    """
     x_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
     y_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
 
@@ -320,6 +327,26 @@ def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, file
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[x_bins, y_bins])
 
     eff = np.divide(h_sel, h_ref, out=np.zeros_like(h_sel, dtype=float), where=h_ref > 0)
+    return eff, h_ref, xedges, yedges
+
+
+def intrinsic_efficiency(eff, h_ref, min_eff=0.5):
+    """Mean efficiency (and binomial uncertainty) over bins with real acceptance.
+
+    ``min_eff`` excludes bins outside the detector's geometric footprint,
+    which sit at eff == 0 because they have no reference hits at all.
+    """
+    geometric_mask = (h_ref > 0) & (eff > min_eff)
+    vals = eff[geometric_mask]
+    if vals.size == 0:
+        return 0.0, None
+    mean = float(np.mean(vals))
+    uncertainty = float(np.sqrt(mean * (1 - mean) / vals.size))
+    return mean, uncertainty
+
+
+def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename, runtype=""):
+    eff, h_ref, xedges, yedges = compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins)
 
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -334,6 +361,7 @@ def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, file
     plt.savefig(filename)
     print("Efficiency Plot Saved " + filename)
     plt.close()
+    return eff, h_ref, xedges, yedges
 
 
 def plot_effhist1d(x_ref, y_ref, x_sel, y_sel, title, filename):

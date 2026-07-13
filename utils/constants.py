@@ -4,7 +4,7 @@ ADC_TO_MV = 0.222
 PITCH = 0.6
 NS_MM = 0.2
 LG_THRESHOLD = 229
-HG_THRESHOLD = 4000
+HG_THRESHOLD = 6500
 VETO_THRESHOLD = -1000
 
 # Position i in the reindexed HG array is read from raw channel X_MAPPING[i],
