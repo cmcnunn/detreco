@@ -16,6 +16,7 @@ from scipy.optimize import curve_fit
 
 from utils.fit_funcs import line
 from utils.constants import PITCH
+from utils.data import get_run_beam
 
 
 # ---------------------------------------------------------------------------
@@ -237,16 +238,29 @@ def get_runtype(run_id):
         return "TB2026"
     else:
         return "RUNTYPE ERROR"
-    
+
+
+def get_beam_label(run_id):
+    """Return a display label combining run type with beam type/energy, e.g. ``"TB2026 pi+ 80 GeV"``.
+
+    Falls back to just the run type when beam metadata isn't known for this
+    run (e.g. TB2025, or a gap in the elog CSV's coverage).
+    """
+    runtype = get_runtype(run_id)
+    beam_type, beam_energy_gev = get_run_beam(run_id)
+    if beam_type and beam_energy_gev is not None:
+        return f"{runtype} {beam_type} {beam_energy_gev} GeV"
+    return runtype
+
 def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/detreco", label="Profile 2D", fname="profile2d"):
     if runtype == "":
-        runtype = get_runtype(run_id)
+        runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
     H = np.histogram2d(xh, yh, bins=64)
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
-    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
+    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
     ax.set_xlabel("X [cm]", loc='right')
     ax.set_ylabel("Y [cm]", loc='top')
     plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)

@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
 from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root
-from utils.plotting import get_runtype, draw_fit
+from utils.plotting import get_beam_label, draw_fit
 from utils.constants import X_MAPPING, Y_MAPPING
 from utils.hodo import reconstruct_hodoscope
 from utils.selectors import get_branch_names, passes_veto
@@ -23,14 +23,14 @@ os.makedirs(OUTPUTDIR, exist_ok=True)
 
 def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, runtype="", OUTPUTDIR=OUTPUTDIR):
     if runtype == "":
-        runtype = get_runtype(run_id)
+        runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
     H = np.histogram2d(xh, x1, bins=64)
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     draw_fit(ax, xh, x1)
-    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoX vs Tracker{trackern}", data=True)
+    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoX vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo X [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker X [mm]", loc='top')
     plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_x_{run_id}.png"), dpi=300)
@@ -42,7 +42,7 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, runtype="", OUTPUTDIR=OUTPU
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     draw_fit(ax, yh, y1)
-    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoY vs Tracker{trackern}", data=True)
+    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoY vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo Y [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker Y [mm]", loc='top')
     plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_y_{run_id}.png"), dpi=300)

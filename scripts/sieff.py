@@ -5,7 +5,7 @@ import uproot
 
 from utils.data import get_run_filepath
 from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root
-from utils.plotting import get_runtype, plot_effhist2d, intrinsic_efficiency
+from utils.plotting import get_beam_label, plot_effhist2d, intrinsic_efficiency
 from utils.selectors import passes_veto, get_branch_names
 from utils.hodo import reconstruct_hodoscope
 from utils.constants import HG_THRESHOLD, PITCH, VETO_THRESHOLD, X_MAPPING, Y_MAPPING
@@ -121,7 +121,7 @@ def main():
         print(f"Error processing run {args.run}: {e}")
         return
 
-    runtype = get_runtype(args.run)
+    runtype = get_beam_label(args.run)
     sub_outdir = os.path.join(OUTPUTDIR, args.run)
     os.makedirs(sub_outdir, exist_ok=True)
 

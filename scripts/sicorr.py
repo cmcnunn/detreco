@@ -26,7 +26,7 @@ from scipy.optimize import curve_fit
 from scripts.sieff import load_si_hit_masks
 from utils.fit_funcs import line
 from utils.io import ensure_output_dir
-from utils.plotting import get_runtype
+from utils.plotting import get_beam_label
 
 OUTPUT_DIR = ensure_output_dir("sicorr")
 _FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
@@ -82,7 +82,7 @@ def plot_hit_correlation(hit1, hit2, run_id, filename):
     x, y = hit1.astype(float), hit2.astype(float)
 
     plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(12, 12))
     edges = np.array([-0.5, 0.5, 1.5])
     H = np.histogram2d(x, y, bins=[edges, edges])
     # cmin/cmax can't be passed alongside norm (pcolormesh forwards both as
@@ -100,8 +100,8 @@ def plot_hit_correlation(hit1, hit2, run_id, filename):
             transform=ax.transAxes, ha="center", va="center",
             color="white", fontsize=20, path_effects=_FIT_OUTLINE)
 
-    runtype = get_runtype(run_id)
-    mh.cms.label(ax=ax, exp="CaloX", text=runtype, rlabel=f"Si1 vs Si2 Hits — run {run_id}", data=True)
+    runtype = get_beam_label(run_id)
+    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"Si1 vs Si2 Hits — run {run_id}", data=True)
     ax.set_xlabel("Si Tracker 1 (0=miss, 1=hit)", loc="right")
     ax.set_ylabel("Si Tracker 2 (0=miss, 1=hit)", loc="top")
     ax.set_xticks([0, 1])
