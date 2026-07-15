@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
 from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root_by_timestamp
-from utils.plotting import get_beam_label, draw_fit
+from utils.plotting import get_beam_label, draw_fit, _hist_edges
 from utils.constants import X_MAPPING, Y_MAPPING
 from utils.hodo import reconstruct_hodoscope
 from utils.selectors import get_branch_names, passes_veto, get_counter_branch_names, counter_1cm_hit_mask, counter_3cm_hit_mask
@@ -26,7 +26,7 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
         runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(xh, x1, bins=64)
+    H = np.histogram2d(xh, x1, bins=[_hist_edges(xh), _hist_edges(x1)])
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     tag = f"Run {run_id}" + (f" -- {selection}" if selection else "")
@@ -39,7 +39,7 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(yh, y1, bins=64)
+    H = np.histogram2d(yh, y1, bins=[_hist_edges(yh), _hist_edges(y1)])
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     draw_fit(ax, yh, y1, tag=tag)
@@ -77,8 +77,8 @@ def main():
             if int(args.run) >= 1825:
                 one_cm_wf = np.stack(tree[one_cm_branch].array(library="np"))
                 three_cm_wf = np.stack(tree[three_cm_branch].array(library="np"))
-                one_cm_hit = counter_1cm_hit_mask(one_cm_wf, amplitude_threshold=- 1000)
-                three_cm_hit = counter_3cm_hit_mask(three_cm_wf, amplitude_threshold=- 1000)
+                one_cm_hit = counter_1cm_hit_mask(one_cm_wf)
+                three_cm_hit = counter_3cm_hit_mask(three_cm_wf)
     except Exception as e:
         print(f"Error processing ROOT file {args.run}: {e}")
         return

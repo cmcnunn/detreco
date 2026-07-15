@@ -252,12 +252,34 @@ def get_beam_label(run_id):
         return f"{runtype} {beam_type} {beam_energy_gev} GeV"
     return runtype
 
+def _hist_edges(x, bins=64):
+    """Bin edges for ``x``, aware of discrete-valued data.
+
+    Equal-width bins from a plain ``linspace(x.min(), x.max(), bins+1)``
+    don't generally line up with data that only takes a handful of exact,
+    evenly-spaced values (e.g. hodoscope bar positions, ~0.6mm apart) --
+    the bin width comes out close to but not equal to the true spacing, so
+    one or more bins land entirely between two real values and always read
+    zero, showing up as a dead row/column with real data on both sides.
+    When ``x`` has few enough unique values, edges are placed exactly
+    halfway between consecutive values instead (one bin per value).
+    """
+    unique_x = np.unique(x)
+    if len(unique_x) <= bins and len(unique_x) > 1:
+        step = np.diff(unique_x)
+        half_before = np.concatenate(([step[0]], step)) / 2
+        edges = np.concatenate([unique_x - half_before, [unique_x[-1] + step[-1] / 2]])
+        return edges
+    return np.linspace(x.min(), x.max(), bins + 1)
+
+
 def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/detreco", label="Profile 2D", fname="profile2d"):
     if runtype == "":
         runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(xh, yh, bins=64)
+    xh, yh = np.asarray(xh), np.asarray(yh)
+    H = np.histogram2d(xh, yh, bins=[_hist_edges(xh), _hist_edges(yh)])
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
@@ -423,21 +445,45 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
     ax.legend(loc="lower right", fontsize=16, facecolor="black", edgecolor="white",
               labelcolor="white", framealpha=0.75)
 
-def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64):
-    """Per-bin selected/reference ratio on the standard detector-plane grid
-    (+/- 32 strip pitches, matching ``plot_effhist2d``).
+def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64, x_range=None, y_range=None,
+                           min_ref_count=10):
+    """Per-bin selected/reference ratio on a fixed grid.
+
+    ``x_range``/``y_range`` default to the standard hodoscope-plane grid
+    (+/- 32 strip pitches, matching ``plot_effhist2d``'s historical
+    behaviour) -- pass explicit ``(min, max)`` tuples for a reference
+    detector on a different physical scale (e.g. the silicon tracker,
+    whose positions aren't hodoscope-pitch-aligned).
+
+    Bins with fewer than ``min_ref_count`` reference hits get ``eff = NaN``
+    (not drawn) rather than a real-looking but nearly meaningless ratio --
+    e.g. a bin with 1 reference hit reads as a stark 0% or 100%. This
+    matters most on a reference grid sized to the reference detector's own
+    occupied region (like the tracker's, unlike the hodoscope's fixed
+    +/-32-pitch grid, which the beam spot usually only fills a fraction
+    of): most of that grid is sparse acceptance edge, and without this cut
+    it renders as speckled noise rather than a clean falling-off footprint.
 
     Returns ``(eff, h_ref, xedges, yedges)``. ``h_ref`` is returned alongside
     ``eff`` so callers can distinguish "0% efficiency" from "no reference
     hits landed in this bin" without recomputing the histograms.
     """
-    x_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
-    y_bins = np.linspace(-PITCH * 32, PITCH * 32, bins)
+    if x_range is None:
+        x_range = (-PITCH * 32, PITCH * 32)
+    if y_range is None:
+        y_range = (-PITCH * 32, PITCH * 32)
+    # bins+1 edges for `bins` intervals -- `bins` edges would give
+    # bins-1 intervals of width (span)/(bins-1), misaligned with the
+    # hodoscope's actual PITCH-spaced bar positions (same failure mode as
+    # the dead column in plot_profile/draw_fit, see _hist_edges).
+    x_bins = np.linspace(*x_range, bins + 1)
+    y_bins = np.linspace(*y_range, bins + 1)
 
     h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[x_bins, y_bins])
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[x_bins, y_bins])
 
     eff = np.divide(h_sel, h_ref, out=np.zeros_like(h_sel, dtype=float), where=h_ref > 0)
+    eff = np.where(h_ref >= min_ref_count, eff, np.nan)
     return eff, h_ref, xedges, yedges
 
 
@@ -456,8 +502,11 @@ def intrinsic_efficiency(eff, h_ref, min_eff=0.5):
     return mean, uncertainty
 
 
-def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename, runtype=""):
-    eff, h_ref, xedges, yedges = compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins)
+def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename, runtype="",
+                   x_range=None, y_range=None, min_ref_count=10):
+    eff, h_ref, xedges, yedges = compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins,
+                                                         x_range=x_range, y_range=y_range,
+                                                         min_ref_count=min_ref_count)
 
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))

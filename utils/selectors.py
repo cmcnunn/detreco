@@ -129,24 +129,31 @@ def mcp_hit_mask(mcp_wf, amplitude_threshold=DEFAULT_MCP_THRESHOLD,
     return mask
 
 
-def counter_1cm_hit_mask(wf, amplitude_threshold, **kwargs):
+# Both counters show the same shape: a narrow noise pedestal (baseline-
+# subtracted minimum, Gaussian, centered ~-12 to -14 ADC counts) that's
+# fully gone by about -20/-21, separated from a broad continuum of real
+# pulses reaching out to full-scale saturation (~-3950). -25 sits with
+# clear margin past the noise edge while keeping the smallest real pulses.
+# Derived from baseline-subtracted-minimum histograms of both channels
+# across 5 runs spanning 1827-2042 (~115k events); no gap/valley is fully
+# empty, so this isn't a hard boundary, just a well-clear-of-noise cut.
+DEFAULT_COUNTER_THRESHOLD = -25.0
+
+
+def counter_1cm_hit_mask(wf, amplitude_threshold=DEFAULT_COUNTER_THRESHOLD, **kwargs):
     """True for events where the 1 cm test counter shows a real pulse.
 
     Same pulse-finding criteria as ``mcp_hit_mask`` (see there for
     ``shoulder_threshold``/``require_interior_peak``/``n_baseline``).
-    ``amplitude_threshold`` has no established default yet for this
-    counter -- pass one explicitly.
     """
     return mcp_hit_mask(wf, amplitude_threshold=amplitude_threshold, **kwargs)
 
 
-def counter_3cm_hit_mask(wf, amplitude_threshold, **kwargs):
+def counter_3cm_hit_mask(wf, amplitude_threshold=DEFAULT_COUNTER_THRESHOLD, **kwargs):
     """True for events where the 3 cm test counter shows a real pulse.
 
     Same pulse-finding criteria as ``mcp_hit_mask`` (see there for
     ``shoulder_threshold``/``require_interior_peak``/``n_baseline``).
-    ``amplitude_threshold`` has no established default yet for this
-    counter -- pass one explicitly.
     """
     return mcp_hit_mask(wf, amplitude_threshold=amplitude_threshold, **kwargs)
 
