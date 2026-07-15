@@ -137,7 +137,7 @@ def mcp_hit_mask(mcp_wf, amplitude_threshold=DEFAULT_MCP_THRESHOLD,
 # Derived from baseline-subtracted-minimum histograms of both channels
 # across 5 runs spanning 1827-2042 (~115k events); no gap/valley is fully
 # empty, so this isn't a hard boundary, just a well-clear-of-noise cut.
-DEFAULT_COUNTER_THRESHOLD = -25.0
+DEFAULT_COUNTER_THRESHOLD = -100.0
 
 
 def counter_1cm_hit_mask(wf, amplitude_threshold=DEFAULT_COUNTER_THRESHOLD, **kwargs):
