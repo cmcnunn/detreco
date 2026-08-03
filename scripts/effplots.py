@@ -27,10 +27,12 @@ from utils.selectors import (
     passes_veto,
 )
 from utils.tracker import (
-    align_tracker_to_root_by_timestamp,
+    SENTINEL_X1,
+    SENTINEL_X2,
+    SENTINEL_Y1,
+    SENTINEL_Y2,
+    build_aligned_tracker_branches,
     load_tracker_run,
-    station1_hit_mask,
-    station2_hit_mask,
 )
 from utils.waveforms import subtract_baseline
 
@@ -212,36 +214,34 @@ def process_tracker_referenced_run(run_id, output_dir):
         three_cm_hit = counter_3cm_hit_mask(three_cm_wf)
 
     si_data = load_tracker_run(run_id)
-    mask1, mask2 = station1_hit_mask(si_data), station2_hit_mask(si_data)
-    tracker_mask, root_idx, offsets, match_frac = align_tracker_to_root_by_timestamp(
-        si_data, trigger_n, root_tstamp)
-    print(f"  [{run_id}] Aligned {tracker_mask.sum()}/{len(si_data)} tracker events "
-          f"({len(offsets)} segments, match_frac={match_frac:.4%})")
-
-    si_aligned = si_data[tracker_mask]
-    good_hodo_a = good_hodo[root_idx]
-    veto_a = veto_sel[root_idx]
-    mcp1_a = mcp1_hit[root_idx]
-    mcp2_a = mcp2_hit[root_idx]
-    if has_counters:
-        one_cm_a = one_cm_hit[root_idx]
-        three_cm_a = three_cm_hit[root_idx]
+    tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
+    x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
+    x2, y2 = tracker_branches["tracker_x2"], tracker_branches["tracker_y2"]
+    matched = tracker_branches["tracker_matched"]
+    print(f"  [{run_id}] Aligned {matched.sum()}/{len(trigger_n)} ROOT events "
+          f"(tracker-side match_frac={match_frac:.4%})")
 
     runtype = get_beam_label(run_id)
-    for n, station_mask in ((1, mask1), (2, mask2)):
-        ref = station_mask[tracker_mask]
-        x_tr = 10 * si_aligned[f"x{n}"]
-        y_tr = 10 * si_aligned[f"y{n}"]
+    # Both quantities live in ROOT-event space now (build_aligned_tracker_branches
+    # already re-indexed the tracker onto it), so no more root_idx bookkeeping --
+    # a plain sentinel check replaces station1_hit_mask/station2_hit_mask +
+    # tracker_mask, and every other array (good_hodo, veto_sel, ...) is already
+    # ROOT-indexed and needs no re-indexing at all.
+    station_data = {
+        1: (10 * x1, 10 * y1, (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)),
+        2: (10 * x2, 10 * y2, (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)),
+    }
+    for n, (x_tr, y_tr, ref) in station_data.items():
         x_ref, y_ref = x_tr[ref], y_tr[ref]
         if len(x_ref) == 0:
             print(f"  [{run_id}] Tracker{n}: no reference hits, skipping")
             continue
         x_range, y_range = (x_ref.min(), x_ref.max()), (y_ref.min(), y_ref.max())
 
-        selections = [("hodoscope", good_hodo_a), ("veto", veto_a),
-                      ("mcp1", mcp1_a), ("mcp2", mcp2_a)]
+        selections = [("hodoscope", good_hodo), ("veto", veto_sel),
+                      ("mcp1", mcp1_hit), ("mcp2", mcp2_hit)]
         if has_counters:
-            selections += [("1cm_counter", one_cm_a), ("3cm_counter", three_cm_a)]
+            selections += [("1cm_counter", one_cm_hit), ("3cm_counter", three_cm_hit)]
 
         for name, sel_mask in selections:
             sel = ref & sel_mask

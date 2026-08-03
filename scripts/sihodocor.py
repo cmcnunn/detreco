@@ -84,12 +84,14 @@ def main():
         return
 
     # Tracker and ROOT arrays don't share an index space yet -- align_tracker_to_root_by_timestamp
-    # finds per-spill-segment offsets between si_data's run_event_nr and DREAM's trigger_n
-    # (using real hardware timestamps to locate spill boundaries), and gives back the row
-    # indices needed to line the two up.
-    tracker_mask, root_idx, offsets, match_frac = align_tracker_to_root_by_timestamp(si_data, trigger_n, root_tstamp)
+    # finds spill boundaries in each stream (using real hardware timestamps), then within each
+    # matched segment fits an actual clock relationship between si_data's timestamp_to_dream and
+    # DREAM's FERS_Board1_tstamp_us, and matches events by nearest real time -- not by counting.
+    tracker_mask, root_idx, fit_diagnostics, match_frac = align_tracker_to_root_by_timestamp(si_data, trigger_n, root_tstamp)
+    n_rejected = sum(1 for _, _, fit in fit_diagnostics if fit is None)
     print(f"Aligned {tracker_mask.sum()}/{len(si_data)} tracker events "
-          f"({len(offsets)} segments, match_frac={match_frac:.4%})")
+          f"({len(fit_diagnostics) - n_rejected}/{len(fit_diagnostics)} segments used, "
+          f"match_frac={match_frac:.4%})")
 
     si_aligned = si_data[tracker_mask]
     xh_aligned, yh_aligned, maskh_aligned = xh[root_idx], yh[root_idx], maskh[root_idx]

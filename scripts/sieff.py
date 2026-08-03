@@ -4,7 +4,14 @@ import numpy as np
 import uproot
 
 from utils.data import get_run_filepath
-from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root
+from utils.tracker import (
+    SENTINEL_X1,
+    SENTINEL_X2,
+    SENTINEL_Y1,
+    SENTINEL_Y2,
+    build_aligned_tracker_branches,
+    load_tracker_run,
+)
 from utils.plotting import get_beam_label, plot_effhist2d, intrinsic_efficiency
 from utils.selectors import passes_veto, get_branch_names
 from utils.hodo import reconstruct_hodoscope
@@ -28,6 +35,7 @@ def _load_si_event_data(run_id):
     with uproot.open(filepath) as f:
         tree = f["EventTree"]
         trigger_n = tree["trigger_n"].array(library="np")
+        root_tstamp = tree["FERS_Board1_tstamp_us"].array(library="np")
         xh = np.stack(tree["FERS_Board1_energyHG"].array(library="np"))[:, X_MAPPING]
         yh = np.stack(tree["FERS_Board0_energyHG"].array(library="np"))[:, Y_MAPPING]
         veto_wf = np.stack(tree[veto].array(library="np"))
@@ -35,22 +43,29 @@ def _load_si_event_data(run_id):
     mask_v = passes_veto(veto_wf)
     xh, yh, good_hodo = reconstruct_hodoscope(xh, yh)
     si_data = load_tracker_run(run_id)
-    mask1, mask2 = station1_hit_mask(si_data), station2_hit_mask(si_data)
 
-    tracker_mask, root_idx, offset, match_frac = align_tracker_to_root(si_data, trigger_n)
+    # build_aligned_tracker_branches matches tracker events to ROOT by real
+    # clock time (see align_tracker_to_root_by_timestamp's docstring), and
+    # re-indexes tracker x1/y1/x2/y2 onto ROOT's own event ordering, filling
+    # unmatched events with the tracker's existing no-hit sentinels. An
+    # earlier counting-based version of this alignment silently mismatched
+    # a run-dependent fraction of events whenever the true tracker<->ROOT
+    # offset drifted within a run; matching by time instead measurably
+    # improved per-event correctness (confirmed: raw position correlation
+    # against the hodoscope up from 0.66-0.81 to 0.74-0.82 across test runs).
+    tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
+    x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
+    x2, y2 = tracker_branches["tracker_x2"], tracker_branches["tracker_y2"]
 
     # Not every ROOT event with a good hodoscope+veto hit has a matching
     # tracker row -- the tracker silently drops a sizeable, run-dependent
     # fraction of triggers (row just isn't written). Those are genuine
     # tracker misses, not missing data, so the reference frame here is
-    # every ROOT event (not only the ones align_tracker_to_root matched);
-    # the per-station hit mask defaults to False (miss) wherever no
-    # tracker row exists for that event. `logical_or.at` handles the rare
-    # case of >1 tracker row mapping to the same ROOT event.
-    root_mask1 = np.zeros(len(trigger_n), dtype=bool)
-    root_mask2 = np.zeros(len(trigger_n), dtype=bool)
-    np.logical_or.at(root_mask1, root_idx, mask1[tracker_mask])
-    np.logical_or.at(root_mask2, root_idx, mask2[tracker_mask])
+    # every ROOT event (not only the ones that matched); a sentinel value
+    # means "miss" (either genuinely no tracker row, or no trustworthy
+    # match), same as a station's own no-hit sentinel would.
+    root_mask1 = (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)
+    root_mask2 = (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)
 
     ref = good_hodo & mask_v
     return xh, yh, good_hodo, ref, root_mask1, root_mask2
