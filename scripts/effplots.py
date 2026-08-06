@@ -248,7 +248,7 @@ def process_tracker_referenced_run(run_id, output_dir):
             x_sel, y_sel = x_tr[sel], y_tr[sel]
             filename = os.path.join(output_dir, f"tracker{n}_{name}effmap_{run_id}.png")
             eff, h_ref, *_ = plot_effhist2d(
-                x_ref, y_ref, x_sel, y_sel, 64,
+                x_ref, y_ref, x_sel, y_sel, 120,
                 "Silicon Tracker X [mm]", "Silicon Tracker Y [mm]",
                 f"{name.replace('_', ' ').title()} vs Tracker{n}",
                 filename, runtype=runtype, x_range=x_range, y_range=y_range,
@@ -296,6 +296,7 @@ def main():
     plt.style.use(mh.style.ROOT)
     detectors = [("mcp1", "MCP1"), ("mcp2", "MCP2"), ("veto", "Veto"),
                  ("1cm_counter", "1cm Counter"), ("3cm_counter", "3cm Counter")]
+
     for key, label in detectors:
         x_ref = np.concatenate([r[key][0] for r in results])
         y_ref = np.concatenate([r[key][1] for r in results])
@@ -306,9 +307,24 @@ def main():
                   f"{COUNTER_1CM_3CM_FIRST_RUN} in this selection); skipping")
             continue
         filename = os.path.join(OUTPUT_DIR, f"hodo_{key}effmap_{runs_label}.png")
-        plot_effhist2d(x_ref, y_ref, x_sel, y_sel, 64,
-                       "X Position [mm]", "Y Position [mm]", f"{label} — {runs_label}",
-                       filename)
+        runtype = get_beam_label(args.run)
+        # Deliberately *not* passing x_range/y_range here: x_ref/y_ref are
+        # hodoscope positions quantized to PITCH/2 (reconstruct_hodoscope's
+        # "mean" method). Binning them into 64 bins over the empirical
+        # (x_ref.min(), x_ref.max()) box makes the bin width a few percent
+        # off from that quantization step, so the bin phase drifts across
+        # the range and one bin ends up landing almost exactly between two
+        # quantized values -- an aliasing artifact that looks like a dead
+        # bar (confirmed: neighboring bins ~900-1000 events, the aliased
+        # bin ~140, on run 1832). Leaving these unset falls back to
+        # compute_efficiency_map's default +/-32*PITCH grid, which is
+        # exactly bar-pitch-aligned and has no such drift.
+        eff, h_ref, *_ = plot_effhist2d(
+                x_ref, y_ref, x_sel, y_sel, 64,
+                "Silicon Tracker X [mm]", "Silicon Tracker Y [mm]",
+                f"{key.replace('_', ' ').title()} vs Hodoscope",
+                filename, runtype=runtype
+        )
         print(f"Efficiency map for {label} saved to {filename}")
 
     print("Aggregation complete. Generating plots...")

@@ -23,10 +23,10 @@ import numpy as np
 from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
-from scripts.sieff import load_si_hit_masks
 from utils.fit_funcs import line
 from utils.io import ensure_output_dir
 from utils.plotting import get_beam_label
+from utils.si_efficiency import load_si_hit_masks
 
 OUTPUT_DIR = ensure_output_dir("sicorr")
 _FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
