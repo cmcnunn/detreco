@@ -411,12 +411,29 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept):
     return matched, local_root_idx
 
 
+# scan_alignment_correlation's shift=0 real correlation, below which an
+# alignment that otherwise passes match_frac is refused. Picked from real
+# data (e+ 40 GeV, runs 1846-1882): garbage alignments (confirmed via this
+# same check to be mismatching essentially every event) topped out at
+# |r|=0.02, while genuine alignments started at r=0.39 -- 0.2 sits in the
+# middle of that gap with margin on both sides. match_frac alone isn't
+# enough: it only confirms the algorithm found *some* self-consistent
+# offset, not that the offset is correct (confirmed: match_frac 0.69-0.84,
+# comfortably above min_match_frac, on runs whose real correlation was
+# indistinguishable from zero -- across 23 same-energy runs checked this
+# way, real correlation strength predicted measured si-tracker efficiency
+# far better than match_frac did, Pearson r=0.92 vs 0.87).
+MIN_ALIGNMENT_CORRELATION = 0.2
+
+
 def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tstamp_us,
                                       threshold_factor: float = 300, merge_gap: int = 3,
                                       max_shift: int = 10, min_segments: int = 5,
                                       max_ratio_cv: float = 0.1, local_search_range: int = 200,
                                       min_anchor_count: int = 10, min_fit_r: float = 0.999,
-                                      min_match_frac: float = 0.5):
+                                      min_match_frac: float = 0.5,
+                                      x_root=None, good_root=None,
+                                      min_correlation: float = MIN_ALIGNMENT_CORRELATION):
     """Match tracker events to ROOT by real physical time, not by counting.
 
     Finds spill boundaries independently in each stream (see
@@ -444,6 +461,17 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
     segments that aren't real continuous spill activity, e.g. a long
     beam-off dead period with only a couple of genuine events) is skipped
     entirely rather than matched on a meaningless calibration.
+
+    Parameters
+    ----------
+    x_root, good_root : optional -- an independent reference position (e.g.
+        hodoscope x) and its goodness mask, both full ROOT-event length.
+        When given, the result is additionally checked against
+        ``scan_alignment_correlation`` at shift 0 and rejected if that real
+        per-event correlation falls below ``min_correlation`` -- see
+        ``MIN_ALIGNMENT_CORRELATION`` for why match_frac alone isn't a
+        strong enough gate. Omit to skip this check (e.g. for callers with
+        no independent reference available).
 
     Returns
     -------
@@ -517,6 +545,20 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
             f"Only {match_frac:.1%} of tracker events matched a ROOT event by time fit; "
             f"refusing to align (min_match_frac={min_match_frac:.1%})."
         )
+
+    if x_root is not None and good_root is not None:
+        x_tracker_all = tracker["x1"][tracker_mask]
+        keep = x_tracker_all != SENTINEL_X1
+        corr = scan_alignment_correlation(x_tracker_all[keep], root_idx[keep], x_root, good_root,
+                                          shift_range=0)
+        r0 = corr[0][1]
+        if not (r0 == r0) or r0 < min_correlation:  # nan-safe (r0 == r0 is False for NaN)
+            raise ValueError(
+                f"Real per-event correlation at shift 0 is {r0:.3f} (< {min_correlation}); "
+                f"alignment passes match_frac ({match_frac:.1%}) but doesn't find true "
+                f"tracker<->hodoscope correspondences, refusing."
+            )
+
     return tracker_mask, root_idx, fit_diagnostics, match_frac
 
 

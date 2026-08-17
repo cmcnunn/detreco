@@ -45,12 +45,20 @@ def get_run_beam(run_id, path=RUN_LIST_PATH):
     return entry.get("beam_type"), entry.get("beam_energy_gev")
 
 
-def get_runs_by_beam(beam_type=None, beam_energy_gev=None, path=RUN_LIST_PATH):
+def get_runs_by_beam(beam_type=None, beam_energy_gev=None, path=RUN_LIST_PATH, include_flagged=False):
     """Return the sorted run IDs (as ints) matching the given beam filters.
 
     Pass ``beam_type`` and/or ``beam_energy_gev`` to narrow the selection;
     omit either to leave that dimension unfiltered. Runs with unknown beam
     metadata (``None``) never match an explicit filter.
+
+    Excludes runs a shifter's elog notes flagged as junk, a documented
+    beam-quality problem, or a calibration run (see
+    ``scripts/update_run_list.py``'s ``_BAD_RUN_RE``) unless
+    ``include_flagged=True`` -- these still carry a normal beam_type/energy
+    tag (e.g. "JUNK RUN No current on board 8" tagged e+ 40 GeV, or "PSB
+    ring down ... muon contamination" tagged e+ 120 GeV), so without this
+    they'd silently get pooled in with clean physics runs at that energy.
     """
     run_list = load_run_list(path)
     matches = []
@@ -58,6 +66,8 @@ def get_runs_by_beam(beam_type=None, beam_energy_gev=None, path=RUN_LIST_PATH):
         if beam_type is not None and entry.get("beam_type") != beam_type:
             continue
         if beam_energy_gev is not None and entry.get("beam_energy_gev") != beam_energy_gev:
+            continue
+        if not include_flagged and entry.get("flagged"):
             continue
         matches.append(int(run_id))
     return sorted(matches)

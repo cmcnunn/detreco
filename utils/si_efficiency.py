@@ -11,7 +11,7 @@ import uproot
 
 from .constants import HG_THRESHOLD, X_MAPPING, Y_MAPPING
 from .data import get_run_filepath
-from .hodo import reconstruct_hodoscope
+from .hodo import hodo_axis_good_masks, reconstruct_hodoscope
 from .selectors import get_branch_names, passes_veto
 from .tracker import (
     SENTINEL_X1,
@@ -122,15 +122,27 @@ def load_hodo_eff_counts(run_id):
     return int(np.sum(good_hodo)), len(good_hodo)
 
 
-def _tracker_hit_masks(run_id, trigger_n, root_tstamp):
+def _tracker_hit_masks(run_id, trigger_n, root_tstamp, per_axis=False, x_root=None, good_root=None):
     """Return ``(root_mask1, root_mask2)``: per-ROOT-event booleans for
     whether si tracker station 1 / 2 has a trustworthy hit, aligned onto
-    ROOT's own event ordering.
+    ROOT's own event ordering. With ``per_axis=True``, also returns the four
+    single-axis masks those are built from: ``(root_mask1, root_mask2,
+    x1_mask, y1_mask, x2_mask, y2_mask)``.
+
+    ``x_root``/``good_root`` (typically the hodoscope's own x/good_hodo)
+    are passed straight through to ``align_tracker_to_root_by_timestamp``'s
+    real-correlation QA check -- see ``MIN_ALIGNMENT_CORRELATION`` for why
+    this matters: match_frac alone lets through alignments that satisfy
+    their own self-consistency checks without finding true per-event
+    correspondences (confirmed directly: runs 1859-1866 e+ 40 GeV had
+    match_frac 0.69-0.84 but real correlation |r| < 0.02). Omit to skip
+    that check.
 
     Raises if the tracker has no ``.dat`` data for this run at all, or if
     ``build_aligned_tracker_branches``'s own alignment-quality gates reject
-    it (too few spill boundaries, inconsistent boundary matching, or too
-    low a match fraction -- see that function's docstring).
+    it (too few spill boundaries, inconsistent boundary matching, too low a
+    match fraction, or -- when x_root/good_root are given -- too weak a
+    real correlation; see that function's docstring).
     """
     si_data = load_tracker_run(run_id)
 
@@ -143,7 +155,8 @@ def _tracker_hit_masks(run_id, trigger_n, root_tstamp):
     # offset drifted within a run; matching by time instead measurably
     # improved per-event correctness (confirmed: raw position correlation
     # against the hodoscope up from 0.66-0.81 to 0.74-0.82 across test runs).
-    tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
+    tracker_branches, match_frac = build_aligned_tracker_branches(
+        si_data, trigger_n, root_tstamp, x_root=x_root, good_root=good_root)
     x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
     x2, y2 = tracker_branches["tracker_x2"], tracker_branches["tracker_y2"]
 
@@ -154,8 +167,12 @@ def _tracker_hit_masks(run_id, trigger_n, root_tstamp):
     # every ROOT event (not only the ones that matched); a sentinel value
     # means "miss" (either genuinely no tracker row, or no trustworthy
     # match), same as a station's own no-hit sentinel would.
-    root_mask1 = (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)
-    root_mask2 = (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)
+    x1_mask, y1_mask = x1 != SENTINEL_X1, y1 != SENTINEL_Y1
+    x2_mask, y2_mask = x2 != SENTINEL_X2, y2 != SENTINEL_Y2
+    root_mask1 = x1_mask & y1_mask
+    root_mask2 = x2_mask & y2_mask
+    if per_axis:
+        return root_mask1, root_mask2, x1_mask, y1_mask, x2_mask, y2_mask
     return root_mask1, root_mask2
 
 
@@ -168,7 +185,8 @@ def _load_si_event_data(run_id):
     alignment, etc.) so callers can decide how to handle it per run.
     """
     trigger_n, root_tstamp, xh, yh, good_hodo, mask_v = _read_hodo_and_timing(run_id)
-    root_mask1, root_mask2 = _tracker_hit_masks(run_id, trigger_n, root_tstamp)
+    root_mask1, root_mask2 = _tracker_hit_masks(run_id, trigger_n, root_tstamp,
+                                                x_root=xh, good_root=good_hodo)
     ref = good_hodo & mask_v
     return xh, yh, good_hodo, ref, root_mask1, root_mask2
 
@@ -218,7 +236,8 @@ def load_si_and_hodo(run_id):
 
     empty = np.array([])
     try:
-        root_mask1, root_mask2 = _tracker_hit_masks(run_id, trigger_n, root_tstamp)
+        root_mask1, root_mask2 = _tracker_hit_masks(run_id, trigger_n, root_tstamp,
+                                                     x_root=xh, good_root=good_hodo)
         ref = good_hodo & mask_v
         xh_ref, yh_ref = xh[ref], yh[ref]
         xh_sel1, yh_sel1 = xh[ref & root_mask1], yh[ref & root_mask1]
@@ -229,3 +248,41 @@ def load_si_and_hodo(run_id):
         tracker_error = str(e)
 
     return xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2, n_hodo_good, n_events, tracker_error
+
+
+def load_axis_report(run_id):
+    """Per-axis/per-plane/track hit masks for one run, over every ROOT event.
+
+    Unlike the reference-gated functions above (``load_si_ref_and_hits`` and
+    friends, which condition on hodoscope-good + veto-pass events, matching
+    what deteff_scan.py/sicorr.py need), this reports each axis and plane's
+    raw hit rate over *all* events -- for ``scripts/eff.py``'s per-run
+    report (each axis, each plane, and the tracker/tracker+hodo coincidence).
+    No veto gating; raises if the tracker has no usable data for this run.
+
+    Returns a dict with ``n_events`` and, for each of ``x1``, ``y1``, ``x2``,
+    ``y2``, ``hodo_x``, ``hodo_y``, a boolean mask (length ``n_events``)
+    marking whether that axis/plane registered a hit -- callers combine them
+    as needed (e.g. ``x1 & y1`` for station 1's 2D hit rate).
+    """
+    filepaths = get_run_filepath(run_id)
+    arrs = _read_branches(
+        filepaths,
+        ["trigger_n", "FERS_Board1_tstamp_us", "FERS_Board1_energyHG", "FERS_Board0_energyHG"],
+        stack_names=["FERS_Board1_energyHG", "FERS_Board0_energyHG"],
+    )
+    trigger_n = arrs["trigger_n"]
+    root_tstamp = arrs["FERS_Board1_tstamp_us"]
+    hg_x = arrs["FERS_Board1_energyHG"][:, X_MAPPING]
+    hg_y = arrs["FERS_Board0_energyHG"][:, Y_MAPPING]
+
+    hodo_x, hodo_y = hodo_axis_good_masks(hg_x, hg_y, threshold=HG_THRESHOLD)
+    xh, _, _ = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD)
+    root_mask1, root_mask2, x1_mask, y1_mask, x2_mask, y2_mask = _tracker_hit_masks(
+        run_id, trigger_n, root_tstamp, per_axis=True, x_root=xh, good_root=hodo_x & hodo_y)
+
+    return {
+        "n_events": len(hg_x),
+        "x1": x1_mask, "y1": y1_mask, "x2": x2_mask, "y2": y2_mask,
+        "hodo_x": hodo_x, "hodo_y": hodo_y,
+    }

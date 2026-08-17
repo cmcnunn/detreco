@@ -1,8 +1,15 @@
 """Rebuild data/run_list.json from yofeng's converted-ROOT directory plus a
-beam-conditions CSV (run number -> beam type / energy).
+beam-conditions CSV (run number -> beam type / energy / shifter notes).
 
-Each run entry becomes ``{"file": <path or [paths]>, "beam_type": ..., "beam_energy_gev": ...}``.
-Beam fields are ``null`` for runs outside the CSV's coverage (e.g. TB2025).
+Each run entry becomes ``{"file": <path or [paths]>, "beam_type": ...,
+"beam_energy_gev": ..., "flagged": ..., "notes": ...}``. Beam fields are
+``null`` for runs outside the CSV's coverage (e.g. TB2025). ``flagged`` is
+True when a shifter's elog Notes for that run mark it junk, describe a
+documented beam-quality problem (e.g. "PSB ring down ... muon
+contamination"), or mark it a calibration run (see ``_BAD_RUN_RE``) --
+utils.data.get_runs_by_beam excludes these by default, since they still
+carry a normal beam_type/energy tag and would otherwise get silently pooled
+in with clean physics runs.
 
 Usage:
     python scripts/update_run_list.py [--csv data/TB2026_beam_conditions.csv]
@@ -44,8 +51,37 @@ def _parse_beam_energy(raw):
         return None
 
 
+
+# Shifters document a run's data quality directly in the elog "Notes" free
+# text rather than through a dedicated status column -- confirmed against
+# data/TB2026_beam_conditions.csv, where the "Error Run List" column (the
+# only other candidate) is entirely "#N/A" (a stale spreadsheet formula, not
+# real data). Beyond the unambiguous "JUNK RUN" marker, notes also record
+# real beam-quality problems that were never marked junk because the
+# shifters kept taking data through them regardless (e.g. run 1770, e+ 120
+# GeV: "PSB ring down, less intensity. Lots of muon contamination in this
+# beam so will take more events") -- for a clean physics sample those need
+# excluding too. Each phrase below was checked by hand against every row it
+# matches (not just grepped and trusted): "ring down" catches the PSB
+# contamination runs 1770-1773 without catching 1774 ("PSB ring back", i.e.
+# the problem being reported as resolved -- deliberately not a match).
+# "calibration"/"callibration" (sic, appears misspelled in the elog) marks
+# runs taken for detector calibration rather than physics data-taking.
+_BAD_RUN_PHRASES = [
+    "junk", "ring down", "contamination", "no beam", "beam is gone", "beam was down",
+    "beam down", "not hitting us", "stuck", "tripped", "tracker issue", "not saved",
+    "access issue", "calibration", "callibration",
+]
+_BAD_RUN_RE = re.compile("|".join(re.escape(p) for p in _BAD_RUN_PHRASES), re.IGNORECASE)
+
+
 def load_beam_conditions(csv_path):
-    """Return {run_id (int): (beam_type, beam_energy_gev)} parsed from the elog CSV."""
+    """Return {run_id (int): (beam_type, beam_energy_gev, flagged, notes)}
+    parsed from the elog CSV. ``flagged`` is True if any elog row for this
+    run's Notes matches ``_BAD_RUN_RE`` (junk, a documented beam-quality
+    problem, or a non-physics calibration run); ``notes`` joins every row's
+    Notes text for the run (elog runs sometimes get more than one row).
+    """
     beam = {}
     with open(csv_path, newline="") as f:
         first_line = f.readline()
@@ -64,7 +100,14 @@ def load_beam_conditions(csv_path):
             if beam_type in ("0", "NA"):
                 beam_type = None
             beam_energy = _parse_beam_energy(row.get("beam energy [GeV]"))
-            beam[run_id] = (beam_type, beam_energy)
+            note = (row.get("Notes") or "").strip()
+            flagged = bool(_BAD_RUN_RE.search(note))
+
+            if run_id in beam:
+                _, _, prev_flagged, prev_notes = beam[run_id]
+                flagged = flagged or prev_flagged
+                note = "; ".join(n for n in (prev_notes, note) if n)
+            beam[run_id] = (beam_type, beam_energy, flagged, note)
     return beam
 
 
@@ -84,11 +127,13 @@ def build_run_list(available, beam_conditions, existing):
         else:
             old = existing[str(run_id)]
             files = old if isinstance(old, list) else [old]
-        beam_type, beam_energy_gev = beam_conditions.get(run_id, (None, None))
+        beam_type, beam_energy_gev, flagged, notes = beam_conditions.get(run_id, (None, None, False, ""))
         merged[str(run_id)] = {
             "file": files[0] if len(files) == 1 else files,
             "beam_type": beam_type,
             "beam_energy_gev": beam_energy_gev,
+            "flagged": flagged,
+            "notes": notes,
         }
     return merged
 
@@ -108,8 +153,10 @@ def main():
 
     n_new = len(merged) - len(existing)
     n_with_beam = sum(1 for e in merged.values() if e["beam_type"] is not None)
+    n_flagged = sum(1 for e in merged.values() if e["flagged"])
     print(f"Runs: {len(existing)} -> {len(merged)} ({n_new:+d})")
     print(f"Runs with beam metadata: {n_with_beam}/{len(merged)}")
+    print(f"Runs flagged junk: {n_flagged}/{len(merged)}")
 
     with open(RUN_LIST_PATH, "w") as f:
         json.dump(merged, f, indent=4)

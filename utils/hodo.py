@@ -26,12 +26,14 @@ def calculate_bar_position(bar_index, pitch=PITCH):
     return (np.asarray(bar_index) - BAR_CENTER_OFFSET) * pitch
 
 
-def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD):
-    """Boolean mask of events with a well-formed hodoscope hit pattern.
+def hodo_axis_good_masks(hg_x, hg_y, threshold=HG_THRESHOLD):
+    """Per-axis boolean masks: does each plane, independently, have a
+    well-formed hit pattern (>=1 bar above ``threshold``, and those bars
+    forming a contiguous group, i.e. span == n_hits - 1)?
 
-    An event is "good" when each plane has between ``min_hits`` and
-    ``max_hits`` bars above ``threshold``, and those bars form a contiguous
-    group (span == n_hits - 1 <= ``max_span``).
+    Split out from ``good_hodo_mask`` so callers that want each plane's own
+    rate (e.g. a per-run X/Y efficiency report) don't have to duplicate this
+    logic -- ``good_hodo_mask`` is just the AND of the two.
     """
     hit_x = hg_x > threshold
     hit_y = hg_y > threshold
@@ -49,9 +51,20 @@ def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD):
         contiguous_x = span_x == (n_hit_x - 1)
         contiguous_y = span_y == (n_hit_y - 1)
 
-    return (
-        (n_hit_x >= 1) & (n_hit_y >= 1) & contiguous_x & contiguous_y
-    )
+    good_x = (n_hit_x >= 1) & contiguous_x
+    good_y = (n_hit_y >= 1) & contiguous_y
+    return good_x, good_y
+
+
+def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD):
+    """Boolean mask of events with a well-formed hodoscope hit pattern.
+
+    An event is "good" when each plane has between ``min_hits`` and
+    ``max_hits`` bars above ``threshold``, and those bars form a contiguous
+    group (span == n_hits - 1 <= ``max_span``).
+    """
+    good_x, good_y = hodo_axis_good_masks(hg_x, hg_y, threshold=threshold)
+    return good_x & good_y
 
 
 def reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH,
