@@ -16,7 +16,7 @@ from scipy.optimize import curve_fit
 
 from utils.fit_funcs import line
 from utils.constants import PITCH
-from utils.data import get_run_beam
+from utils.data import get_run_beam, load_run_list
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +238,19 @@ def get_runtype(run_id):
         return "TB2026"
     else:
         return "RUNTYPE ERROR"
+
+
+def get_runs_by_testbeam(testbeam):
+    """Return the sorted run IDs (as ints) whose get_runtype matches ``testbeam``.
+
+    ``testbeam`` is one of the labels get_runtype returns, e.g. "TB2025",
+    "Cosmic 2025", "TB2026".
+    """
+    run_list = load_run_list()
+    return sorted(
+        run_id for run_id in (int(r) for r in run_list)
+        if get_runtype(run_id) == testbeam
+    )
 
 
 def get_beam_label(run_id):
