@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import matplotlib.pyplot as plt
 import mplhep as mh
 from scipy.optimize import curve_fit
+from scipy.ndimage import gaussian_filter
 
 from utils.selectors import get_branch_names, passes_veto
 
@@ -92,6 +93,38 @@ def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
         "2d": TProfile2d(x_sel, y_sel, cer_sel, b, b, return_error=True),
     }
     return {"sci": sci_data, "cer": cer_data}
+
+def _nan_gaussian_filter(data, sigma):
+    """Gaussian-smooth a 1D or 2D array containing NaNs, via normalized convolution.
+
+    Ordinary gaussian_filter would treat NaN cells as contributing to their
+    neighbors; instead this zero-fills them and separately smooths a validity
+    mask, then divides one by the other so missing cells are excluded from the
+    weighted average rather than pulling it toward zero.
+    """
+    valid = np.isfinite(data)
+    filled = np.where(valid, data, 0.0)
+    smoothed = gaussian_filter(filled, sigma=sigma)
+    weight = gaussian_filter(valid.astype(float), sigma=sigma)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        result = smoothed / weight
+    result[weight < 1e-6] = np.nan
+    return result
+
+def bandpass_filter(data, fine_sigma=1.0, broad_frac=0.1):
+    """Isolate fine periodic structure in a 1D or 2D map: smooth lightly to
+    suppress per-bin shot noise, then subtract a much broader smoothing (the
+    overall beam-profile shape) so only structure finer than that broad scale
+    survives.
+
+    broad_frac is a fraction of the array's size, not a physical length -- this
+    doesn't assume any particular period, it just separates "smooth large-scale
+    trend" from "everything finer than that", whatever that turns out to be.
+    """
+    broad_sigma = max(data.shape[0] * broad_frac, fine_sigma * 4)
+    fine = _nan_gaussian_filter(data, fine_sigma)
+    broad = _nan_gaussian_filter(data, broad_sigma)
+    return fine - broad
 
 def _fit_sine_window(x, y, yerr, p0):
     """One curve_fit attempt (Fourier-informed p0 if not given) on an already-windowed profile."""
@@ -239,21 +272,71 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     ax.legend(fontsize=20)
                     plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}.png"))
                     plt.close()
+
+                    # Same band-pass idea as the 2D filtered map, but on the 1D profile
+                    # directly: no sine model imposed, just light smoothing minus a
+                    # broad smoothing, so any periodic residual is visible on its own
+                    # merits rather than only through a fitted sine curve.
+                    # Restricted to the same plateau window the sine fit already
+                    # validated -- outside it, statistics fall and the profile bends
+                    # sharply (the beam edge), and the broad-smoothing term reacts to
+                    # that real transition with large spurious swings that look like
+                    # oscillation but are a boundary artifact, not signal.
+                    x_lo, x_hi = centers[fit_mask].min(), centers[fit_mask].max()
+                    plateau = (centers >= x_lo) & (centers <= x_hi)
+                    centers_p = centers[plateau]
+                    mean_masked_1d = np.where(counts[plateau] >= 5, mean[plateau], np.nan)
+                    refined_1d = bandpass_filter(mean_masked_1d)
+                    finite_refined_1d = refined_1d[np.isfinite(refined_1d)]
+                    if finite_refined_1d.size:
+                        fig, ax = plt.subplots(figsize=(12, 12))
+                        ax.plot(centers_p, refined_1d, "o-", ms=3)
+                        ax.axhline(0, color="grey", linewidth=1, linestyle="--")
+                        ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
+                        ax.set_ylabel(f"{ch} Energy, background-subtracted (ADC)", loc="top")
+                        ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+                        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
+                        ax.grid()
+                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.png"))
+                        plt.close()
             elif dim == "2d":
                 exlabel = f"{ch.upper()} Energy vs Position"
                 x_centers, y_centers, mean, error, counts = data
+                min_2d_counts = 5
+                mean_masked = np.where(counts >= min_2d_counts, mean, np.nan)
                 fig, ax = plt.subplots(figsize=(14, 14))
-                finite_mean = mean[np.isfinite(mean)]
+                finite_mean = mean_masked[np.isfinite(mean_masked)]
                 vmin, vmax = np.nanpercentile(finite_mean, [40, 95]) if finite_mean.size else (None, None)
-                im = ax.imshow(mean.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto", vmin=vmin, vmax=vmax)
+                im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto", vmin=vmin, vmax=vmax)
                 ax.set_xlabel(f"{label} X Position (mm)", loc="right")
                 ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
-                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
                 cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy (ADC)")
                 cbar.formatter.set_powerlimits((0, 0))
                 cbar.update_ticks()
+                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
                 plt.savefig(os.path.join(output_dir, f"{ch}_{dim}.png"))
                 plt.close()
+
+                # Band-pass: light smoothing to kill per-pixel shot noise, minus a much
+                # broader smoothing (the overall beam-profile shape) to remove that
+                # trend -- whatever fine structure is left over is shown on its own,
+                # without assuming what scale it should be at.
+                refined = bandpass_filter(mean_masked)
+                finite_refined = refined[np.isfinite(refined)]
+                if finite_refined.size:
+                    vabs = np.nanpercentile(np.abs(finite_refined), 95)
+                    fig, ax = plt.subplots(figsize=(14, 14))
+                    im = ax.imshow(refined.T, origin="lower",
+                                    extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]],
+                                    aspect="auto", cmap="RdBu_r", vmin=-vabs, vmax=vabs)
+                    ax.set_xlabel(f"{label} X Position (mm)", loc="right")
+                    ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
+                    cbar = plt.colorbar(im, ax=ax, label=f"{ch} Energy, background-subtracted (ADC)")
+                    cbar.formatter.set_powerlimits((0, 0))
+                    cbar.update_ticks()
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (filtered)", data=True)
+                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered.png"))
+                    plt.close()
     print(f"Saved energy track plots to {output_dir}")
 
 def process_run(run):
