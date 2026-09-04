@@ -290,13 +290,22 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     finite_refined_1d = refined_1d[np.isfinite(refined_1d)]
                     if finite_refined_1d.size:
                         fig, ax = plt.subplots(figsize=(12, 12))
-                        ax.plot(centers_p, refined_1d, "o-", ms=3)
+                        ax.plot(centers_p, refined_1d, "o-", ms=3, label="filtered data")
                         ax.axhline(0, color="grey", linewidth=1, linestyle="--")
+                        # Overlay just the oscillatory term of the sine fit (offset and
+                        # the linear m*x term zeroed out) -- that background is exactly
+                        # what the filter above already subtracted, so this is the
+                        # model's prediction for what's left, on the same footing as
+                        # the model-free filtered data.
+                        x_fit_p = np.linspace(x_lo, x_hi, 200)
+                        y_fit_p = sine(x_fit_p, popt[0], popt[1], popt[2], 0, 0)
+                        ax.plot(x_fit_p, y_fit_p, "r-", linewidth=2, label=fit_label)
                         ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
                         ax.set_ylabel(f"{ch} Energy, background-subtracted (ADC)", loc="top")
                         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
                         mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
                         ax.grid()
+                        ax.legend(fontsize=20)
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.png"))
                         plt.close()
             elif dim == "2d":

@@ -369,7 +369,7 @@ def plot_residual(centers, counts, popt, title, filename, runtype=""):
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
     width = centers[1] - centers[0]
-    ax.bar(centers, counts, width=width, color="steelblue", alpha=0.8, label="Data")
+    ax.bar(centers, counts, width=width, color="steelblue", alpha=0.8)
     xs = np.linspace(centers[0], centers[-1], 400)
     ax.plot(xs, gauss(xs, *popt), color="red", lw=2,
            label=f"$\\mu$ = {popt[1]:.3f} mm\n$\\sigma$ = {abs(popt[2]):.3f} mm")
