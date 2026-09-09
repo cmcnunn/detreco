@@ -229,10 +229,13 @@ def load_si_and_hodo(run_id):
     couldn't be used (see ``_tracker_hit_masks``) and
     xh_ref/xh_sel1/yh_sel1/xh_sel2/yh_sel2 come back empty -- but
     n_hodo_good/n_events are always valid, since they come straight from
-    ROOT with no tracker dependency at all.
+    ROOT with no tracker dependency at all. Both are veto-gated (``n_events``
+    is the veto-passing population, not every event) so the hodoscope
+    efficiency uses the same reference selection as si1/si2, just without
+    the tracker-alignment requirement those add on top.
     """
     trigger_n, root_tstamp, xh, yh, good_hodo, mask_v = _read_hodo_and_timing(run_id)
-    n_hodo_good, n_events = int(np.sum(good_hodo)), len(good_hodo)
+    n_hodo_good, n_events = int(np.sum(good_hodo & mask_v)), int(np.sum(mask_v))
 
     empty = np.array([])
     try:

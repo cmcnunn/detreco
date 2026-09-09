@@ -345,8 +345,12 @@ def _fit_segment_time_calibration(run_event_nr, root_key_local, t_raw_seg, r_raw
 
     Returns
     -------
-    (slope, intercept, r, n_anchors) or None if there aren't enough anchor
-    points, or the fit quality doesn't clear ``min_fit_r``.
+    (slope, intercept, r, n_anchors, resid_rms) or None if there aren't
+    enough anchor points, or the fit quality doesn't clear ``min_fit_r``.
+    ``resid_rms`` is the RMS of the anchors' own fit residuals (in
+    ``r_raw_seg`` units) -- a per-segment scale for how far a nearest-time
+    match can be trusted, since it comes from points already confirmed to
+    be real tracker<->root correspondences.
     """
     naive_offset = int(run_event_nr.min() - root_key_local.min())
     best_offset, best_n = naive_offset, -1
@@ -372,10 +376,12 @@ def _fit_segment_time_calibration(run_event_nr, root_key_local, t_raw_seg, r_raw
     r_corr = float(np.corrcoef(t_anchor, r_anchor)[0, 1])
     if r_corr < min_fit_r:
         return None
-    return slope, intercept, r_corr, int(anchor_mask.sum())
+    resid = r_anchor - (slope * t_anchor + intercept)
+    resid_rms = float(np.sqrt(np.mean(resid ** 2)))
+    return slope, intercept, r_corr, int(anchor_mask.sum()), resid_rms
 
 
-def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept):
+def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept, max_residual=None):
     """Nearest-neighbor match in real (fitted) time within one segment.
 
     Strictly monotonic by construction (``j`` only ever advances): once a
@@ -385,11 +391,23 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept):
     same root row and silently duplicate matches (confirmed: the first,
     unconstrained version of this function did exactly that).
 
+    Parameters
+    ----------
+    max_residual : float, optional -- if given, a tracker row whose nearest
+        root row is farther than this (in ``r_raw_seg`` units) is rejected
+        (``matched=False``) rather than force-matched to it anyway. ``j``
+        still advances past it, since it was still each side's mutual
+        nearest neighbor at this point in the walk -- rejecting the match
+        doesn't free the root row up for a different tracker row. Omit (or
+        None) to keep the old always-match behavior.
+
     Returns
     -------
-    matched : ndarray of bool, shape (len(t_raw_seg),) -- always True here
-        (every tracker row gets *some* nearest match); callers wanting a
-        distance-based reject should check the residual themselves.
+    matched : ndarray of bool, shape (len(t_raw_seg),) -- True where the
+        row was matched within ``max_residual`` (or always True, if
+        ``max_residual`` is None); callers wanting a distance-based reject
+        with no ``max_residual`` given can still check the residual
+        themselves.
     local_root_idx : ndarray of int, position within ``r_raw_seg``
     """
     t_pred = slope * t_raw_seg.astype(np.float64) + intercept
@@ -406,6 +424,8 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept):
         while j + 1 < n_r and abs(r_raw_seg[j + 1] - tt) <= abs(r_raw_seg[j] - tt):
             j += 1
         local_root_idx[i] = j
+        if max_residual is not None and abs(r_raw_seg[j] - tt) > max_residual:
+            matched[i] = False
         j += 1  # strictly increasing -- guarantees no root row is reused
 
     return matched, local_root_idx
@@ -432,6 +452,7 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
                                       max_ratio_cv: float = 0.1, local_search_range: int = 200,
                                       min_anchor_count: int = 10, min_fit_r: float = 0.999,
                                       min_match_frac: float = 0.5,
+                                      max_residual_sigma: float = 5.0,
                                       x_root=None, good_root=None,
                                       min_correlation: float = MIN_ALIGNMENT_CORRELATION):
     """Match tracker events to ROOT by real physical time, not by counting.
@@ -464,6 +485,17 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
 
     Parameters
     ----------
+    max_residual_sigma : float, optional -- a tracker row is only kept
+        matched if its nearest root row (in fitted time) lands within
+        ``max_residual_sigma * resid_rms`` of the prediction, where
+        ``resid_rms`` is that segment's own anchor-fit residual RMS (see
+        ``_fit_segment_time_calibration``) -- a per-segment, self-calibrated
+        scale, since it comes from points already confirmed to be real
+        correspondences. A nearest-neighbor match beyond that isn't a real
+        counterpart, just whatever root row happened to be closest; such
+        rows are dropped (not force-matched) rather than counted as a
+        (wrong) match. Set to ``None`` to disable and force-match every row
+        to its nearest neighbor regardless of distance (the old behavior).
     x_root, good_root : optional -- an independent reference position (e.g.
         hodoscope x) and its goodness mask, both full ROOT-event length.
         When given, the result is additionally checked against
@@ -478,9 +510,9 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
     tracker_mask : ndarray of bool, shape (len(tracker),)
     root_idx : ndarray of int, one entry per True in ``tracker_mask``
     fit_diagnostics : list of (t_lo, t_hi, fit_or_None) per segment, where
-        ``fit_or_None`` is ``(slope, intercept, r, n_anchors)`` or ``None``
-        for a rejected segment -- for inspecting which parts of a run this
-        trusted enough to match at all.
+        ``fit_or_None`` is ``(slope, intercept, r, n_anchors, resid_rms)``
+        or ``None`` for a rejected segment -- for inspecting which parts of
+        a run this trusted enough to match at all.
     match_frac : float
     """
     trigger_n = np.asarray(trigger_n)
@@ -529,10 +561,11 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
         fit_diagnostics.append((int(t_lo), int(t_hi), fit))
         if fit is None:
             continue
-        slope, intercept, r_corr, n_anchor = fit
+        slope, intercept, r_corr, n_anchor, resid_rms = fit
+        max_residual = max_residual_sigma * resid_rms if max_residual_sigma is not None else None
 
         seg_matched, seg_local_root_idx = _time_based_segment_match(
-            t_raw[t_lo:t_hi], r_raw[r_lo:r_hi], slope, intercept)
+            t_raw[t_lo:t_hi], r_raw[r_lo:r_hi], slope, intercept, max_residual)
 
         seg_indices = np.arange(t_lo, t_hi)[seg_matched]
         tracker_mask[seg_indices] = True

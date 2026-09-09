@@ -2,13 +2,14 @@
 
 For each beam type (e+, pi+, mu+, ...) and each energy within it, pools
 every matching run's hodoscope-referenced hits and computes the intrinsic
-efficiency of each si-tracker station, plus the hodoscope's own event-level
-reconstruction rate (n_good_hodo / n_events, not gated by the reference
-selection). The hodoscope numbers are pooled over every run with a readable
-ROOT file, independent of whether that run's tracker data is available or
-aligns cleanly (see utils.si_efficiency.load_si_and_hodo) -- si1/si2 still
-necessarily need a working tracker, so they're pooled over the smaller
-subset that provides. Produces two summary plots -- efficiency vs. beam type
+efficiency of each si-tracker station, plus the hodoscope's own veto-gated
+reconstruction rate (n_good_hodo / n_events, both restricted to
+veto-passing events -- the same reference selection si1/si2 use, minus
+their tracker-alignment requirement). The hodoscope numbers are pooled over
+every run with a readable ROOT file, independent of whether that run's
+tracker data is available or aligns cleanly (see
+utils.si_efficiency.load_si_and_hodo) -- si1/si2 still necessarily need a
+working tracker, so they're pooled over the smaller subset that provides. Produces two summary plots -- efficiency vs. beam type
 (pooled over energy) and efficiency vs. beam energy (one line per beam
 type) -- plus the underlying numbers as CSVs.
 

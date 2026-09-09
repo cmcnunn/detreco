@@ -104,11 +104,11 @@ def _nan_gaussian_filter(data, sigma):
     """
     valid = np.isfinite(data)
     filled = np.where(valid, data, 0.0)
-    smoothed = gaussian_filter(filled, sigma=sigma)
-    weight = gaussian_filter(valid.astype(float), sigma=sigma)
+    smoothed = gaussian_filter(filled, sigma=sigma, mode="nearest")
+    weight = gaussian_filter(valid.astype(float), sigma=sigma, mode="nearest")
     with np.errstate(invalid="ignore", divide="ignore"):
         result = smoothed / weight
-    result[weight < 1e-6] = np.nan
+    result[weight < 0.5] = np.nan
     return result
 
 def bandpass_filter(data, fine_sigma=1.0, broad_frac=0.1):
@@ -232,6 +232,17 @@ def fit_sine_profile(centers, mean, error, counts=None, p0=None, x_range=None,
         raise RuntimeError("fit_sine_profile: no candidate plateau band converged")
     return best[1]
 
+def zoomed_oscillation_window(lo, hi, period, n_periods=5):
+    """Narrow [lo, hi] to n_periods oscillation cycles centered on its midpoint,
+    clipped back to [lo, hi]. Falls back to the full range if period isn't a
+    usable positive number (e.g. the sine fit didn't converge for that axis).
+    """
+    if period is None or not np.isfinite(period) or period <= 0:
+        return lo, hi
+    mid = 0.5 * (lo + hi)
+    half_span = 0.5 * n_periods * period
+    return max(lo, mid - half_span), min(hi, mid + half_span)
+
 def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
     '''
     Plot the energy tracks for a given run.
@@ -246,6 +257,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
     runtype = get_beam_label(run)
     plt.style.use(mh.style.ROOT)
     for ch in ["sci", "cer"]:
+        periods_by_axis = {}
         for dim in ["1d", "2d"]:
             data = energy_tracks[ch][dim]
             if dim == "1d":
@@ -253,8 +265,9 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     exlabel = f"{ch.upper()} Energy vs {axis.upper()} Position"
                     centers, mean, error, counts = data[axis]
                     fig, ax = plt.subplots(figsize=(12, 12))
-                    ax.errorbar(centers, mean, yerr=error, fmt="o")
+                    ax.errorbar(centers, mean, yerr=error, fmt="-o", ms=3)
                     popt, perr, fit_mask, period, period_err = fit_sine_profile(centers, mean, error, counts=counts)
+                    periods_by_axis[axis] = period
                     x_fit = np.linspace(centers[fit_mask].min(), centers[fit_mask].max(), 200)
                     y_fit = sine(x_fit, *popt)
                     fit_label = (f"period={period:.3g}±{period_err:.2g} mm")
@@ -271,6 +284,22 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     ax.grid()
                     ax.legend(fontsize=20)
                     plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}.png"))
+
+                    plateau_lo, plateau_hi = centers[fit_mask].min(), centers[fit_mask].max()
+                    zoom_lo, zoom_hi = zoomed_oscillation_window(plateau_lo, plateau_hi, period)
+                    if (zoom_hi - zoom_lo) < (plateau_hi - plateau_lo):
+                        ax.set_xlim(zoom_lo, zoom_hi)
+                        # y autoscale doesn't recompute from the visible window on its
+                        # own once set_ylim has been called above, so the oscillation
+                        # amplitude (a small fraction of the full plateau's y-range)
+                        # would otherwise stay squashed flat -- rescale to just the
+                        # zoomed-in points instead.
+                        in_zoom = (centers >= zoom_lo) & (centers <= zoom_hi) & np.isfinite(mean)
+                        if np.any(in_zoom):
+                            lo_y, hi_y = np.nanpercentile(mean[in_zoom], [5, 95])
+                            pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
+                            ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
+                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_zoom.png"))
                     plt.close()
 
                     # Same band-pass idea as the 2D filtered map, but on the 1D profile
@@ -307,7 +336,19 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                         ax.grid()
                         ax.legend(fontsize=20)
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.png"))
+
+                        zoom_lo, zoom_hi = zoomed_oscillation_window(x_lo, x_hi, period)
+                        if (zoom_hi - zoom_lo) < (x_hi - x_lo):
+                            ax.set_xlim(zoom_lo, zoom_hi)
+                            in_zoom = (centers_p >= zoom_lo) & (centers_p <= zoom_hi) & np.isfinite(refined_1d)
+                            if np.any(in_zoom):
+                                lo_y, hi_y = np.nanpercentile(refined_1d[in_zoom], [5, 95])
+                                pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
+                                ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
+                            plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered_zoom.png"))
                         plt.close()
+
+
             elif dim == "2d":
                 exlabel = f"{ch.upper()} Energy vs Position"
                 x_centers, y_centers, mean, error, counts = data
@@ -315,8 +356,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                 mean_masked = np.where(counts >= min_2d_counts, mean, np.nan)
                 fig, ax = plt.subplots(figsize=(14, 14))
                 finite_mean = mean_masked[np.isfinite(mean_masked)]
-                vmin, vmax = np.nanpercentile(finite_mean, [40, 95]) if finite_mean.size else (None, None)
-                im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto", vmin=vmin, vmax=vmax)
+                im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto")
                 ax.set_xlabel(f"{label} X Position (mm)", loc="right")
                 ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
                 cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy (ADC)")
@@ -345,6 +385,13 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     cbar.update_ticks()
                     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (filtered)", data=True)
                     plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered.png"))
+
+                    zoom_x_lo, zoom_x_hi = zoomed_oscillation_window(x_centers[0], x_centers[-1], periods_by_axis.get("x"))
+                    zoom_y_lo, zoom_y_hi = zoomed_oscillation_window(y_centers[0], y_centers[-1], periods_by_axis.get("y"))
+                    if (zoom_x_hi - zoom_x_lo) < (x_centers[-1] - x_centers[0]) or (zoom_y_hi - zoom_y_lo) < (y_centers[-1] - y_centers[0]):
+                        ax.set_xlim(zoom_x_lo, zoom_x_hi)
+                        ax.set_ylim(zoom_y_lo, zoom_y_hi)
+                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered_zoom.png"))
                     plt.close()
     print(f"Saved energy track plots to {output_dir}")
 
