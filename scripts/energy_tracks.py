@@ -51,6 +51,10 @@ from utils.selectors import get_branch_names
 # automatically, no flag needed.
 N_WORKERS = len(os.sched_getaffinity(0))
 
+# Nominal si-tracker strip pitch, marked on the FFT plots for reference against
+# the fitted/observed oscillation period.
+EXPECTED_PITCH_MM = 4.0
+
 def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
     """
     Build energy tracks for a given run.
@@ -232,6 +236,19 @@ def fit_sine_profile(centers, mean, error, counts=None, p0=None, x_range=None,
         raise RuntimeError("fit_sine_profile: no candidate plateau band converged")
     return best[1]
 
+def oscillation_spectrum(x, y):
+    """Angular-frequency power spectrum of a quadratic-detrended, Hann-windowed
+    profile -- same detrend fit_sine_profile's own p0 guess uses internally
+    (see _fit_sine_window), exposed here so the fitted period can be checked
+    against the dominant spectral peak instead of only trusted on curve_fit's
+    say-so. x is assumed ~evenly spaced (true for a TProfile1d's bin centers).
+    """
+    dx = np.median(np.diff(x))
+    residual = y - np.polyval(np.polyfit(x, y, 2), x)
+    spectrum = np.fft.rfft(residual * np.hanning(len(residual)))
+    freqs = np.fft.rfftfreq(len(residual), d=dx) * 2 * np.pi
+    return freqs, np.abs(spectrum) ** 2
+
 def zoomed_oscillation_window(lo, hi, period, n_periods=5):
     """Narrow [lo, hi] to n_periods oscillation cycles centered on its midpoint,
     clipped back to [lo, hi]. Falls back to the full range if period isn't a
@@ -300,6 +317,19 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                             pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
                             ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_zoom.png"))
+                    plt.close()
+
+                    freqs, power = oscillation_spectrum(centers[fit_mask], mean[fit_mask])
+                    fig, ax = plt.subplots(figsize=(12, 12))
+                    ax.plot(freqs[1:], power[1:], "-o", ms=3)
+                    ax.axvline(2 * np.pi / period, color="r", ls="--", label=f"sine fit: {period:.3g} mm")
+                    ax.axvline(2 * np.pi / EXPECTED_PITCH_MM, color="g", ls=":", label=f"{EXPECTED_PITCH_MM:.3g} mm pitch")
+                    ax.set_xlabel("Angular frequency (rad/mm)", loc="right")
+                    ax.set_ylabel("Power", loc="top")
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (FFT)", data=True)
+                    ax.grid()
+                    ax.legend(fontsize=20)
+                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_fft.png"))
                     plt.close()
 
                     # Same band-pass idea as the 2D filtered map, but on the 1D profile
