@@ -321,7 +321,7 @@ def main():
         # exactly bar-pitch-aligned and has no such drift.
         eff, h_ref, *_ = plot_effhist2d(
                 x_ref, y_ref, x_sel, y_sel, 64,
-                "Silicon Tracker X [mm]", "Silicon Tracker Y [mm]",
+                "Hodoscope X [mm]", "Hodoscope Y [mm]",
                 f"{key.replace('_', ' ').title()} vs Hodoscope",
                 filename, runtype=runtype
         )

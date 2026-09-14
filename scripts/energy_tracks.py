@@ -55,6 +55,18 @@ N_WORKERS = len(os.sched_getaffinity(0))
 # the fitted/observed oscillation period.
 EXPECTED_PITCH_MM = 4.0
 
+# Target bin width (mm) for the silicon tracker's energy-vs-position profiles.
+# The hodoscope's fixed 64 bins over its ~38mm-wide illuminated footprint
+# works out to ~0.6mm/bin, which is what actually gives it its smooth-looking
+# profile. Reusing a fixed *bin count* (250) for the tracker's own, typically
+# much wider (~70mm), footprint spreads the same number of events over far
+# more bins -- ~26 events/bin on a real run, vs ~100+/bin for the hodoscope --
+# so each tracker bin's mean energy is dominated by shot noise rather than
+# tracing the real modulation. Deriving the tracker's bin count from this
+# fixed physical width instead keeps its per-bin statistics (and resolution
+# relative to EXPECTED_PITCH_MM) comparable to the hodoscope's.
+TRACKER_TARGET_BIN_MM = 0.6
+
 def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
     """
     Build energy tracks for a given run.
@@ -78,23 +90,24 @@ def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
     cer_sel = cer[sel]
 
     if is_hodo:
-        b = 64
+        bx = by = 64
     else:
-        b = 250
+        bx = max(8, int(round((np.max(x_sel) - np.min(x_sel)) / TRACKER_TARGET_BIN_MM)))
+        by = max(8, int(round((np.max(y_sel) - np.min(y_sel)) / TRACKER_TARGET_BIN_MM)))
 
     sci_data = {
         "1d": {
-            "x": TProfile1d(x_sel, sci_sel, bins=b, x_min=np.min(x_sel), x_max=np.max(x_sel), return_error=True),
-            "y": TProfile1d(y_sel, sci_sel, bins=b, x_min=np.min(y_sel), x_max=np.max(y_sel), return_error=True)
+            "x": TProfile1d(x_sel, sci_sel, bins=bx, x_min=np.min(x_sel), x_max=np.max(x_sel), return_error=True),
+            "y": TProfile1d(y_sel, sci_sel, bins=by, x_min=np.min(y_sel), x_max=np.max(y_sel), return_error=True)
         },
-        "2d": TProfile2d(x_sel, y_sel, sci_sel, b, b, return_error=True),
+        "2d": TProfile2d(x_sel, y_sel, sci_sel, bx, by, return_error=True),
     }
     cer_data = {
         "1d": {
-            "x": TProfile1d(x_sel, cer_sel, bins=b, x_min=np.min(x_sel), x_max=np.max(x_sel), return_error=True),
-            "y": TProfile1d(y_sel, cer_sel, bins=b, x_min=np.min(y_sel), x_max=np.max(y_sel), return_error=True),
+            "x": TProfile1d(x_sel, cer_sel, bins=bx, x_min=np.min(x_sel), x_max=np.max(x_sel), return_error=True),
+            "y": TProfile1d(y_sel, cer_sel, bins=by, x_min=np.min(y_sel), x_max=np.max(y_sel), return_error=True),
         },
-        "2d": TProfile2d(x_sel, y_sel, cer_sel, b, b, return_error=True),
+        "2d": TProfile2d(x_sel, y_sel, cer_sel, bx, by, return_error=True),
     }
     return {"sci": sci_data, "cer": cer_data}
 
@@ -273,6 +286,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
     os.makedirs(output_dir, exist_ok=True)
     runtype = get_beam_label(run)
     plt.style.use(mh.style.ROOT)
+    fft_by_combo = {}
     for ch in ["sci", "cer"]:
         periods_by_axis = {}
         for dim in ["1d", "2d"]:
@@ -320,17 +334,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     plt.close()
 
                     freqs, power = oscillation_spectrum(centers[fit_mask], mean[fit_mask])
-                    fig, ax = plt.subplots(figsize=(12, 12))
-                    ax.plot(freqs[1:], power[1:], "-o", ms=3)
-                    ax.axvline(2 * np.pi / period, color="r", ls="--", label=f"sine fit: {period:.3g} mm")
-                    ax.axvline(2 * np.pi / EXPECTED_PITCH_MM, color="g", ls=":", label=f"{EXPECTED_PITCH_MM:.3g} mm pitch")
-                    ax.set_xlabel("Angular frequency (rad/mm)", loc="right")
-                    ax.set_ylabel("Power", loc="top")
-                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (FFT)", data=True)
-                    ax.grid()
-                    ax.legend(fontsize=20)
-                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_fft.png"))
-                    plt.close()
+                    fft_by_combo[(ch, axis)] = (freqs, power, period)
 
                     # Same band-pass idea as the 2D filtered map, but on the 1D profile
                     # directly: no sine model imposed, just light smoothing minus a
@@ -423,6 +427,25 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                         ax.set_ylim(zoom_y_lo, zoom_y_hi)
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered_zoom.png"))
                     plt.close()
+
+    combos = [(ch, axis) for ch in ["sci", "cer"] for axis in ["x", "y"] if (ch, axis) in fft_by_combo]
+    if combos:
+        fig, axes = plt.subplots(len(combos), 1, figsize=(12, 5 * len(combos)), sharex=True)
+        axes = np.atleast_1d(axes)
+        for ax, (ch, axis) in zip(axes, combos):
+            freqs, power, period = fft_by_combo[(ch, axis)]
+            ax.plot(freqs[1:], power[1:], "-o", ms=3)
+            ax.axvline(2 * np.pi / period, color="r", ls="--", label=f"sine fit: {period:.3g} mm")
+            ax.axvline(2 * np.pi / EXPECTED_PITCH_MM, color="g", ls=":", label=f"{EXPECTED_PITCH_MM:.3g} mm pitch")
+            ax.set_ylabel(f"{ch.upper()} vs {axis.upper()}\nPower", loc="top")
+            ax.grid()
+            ax.legend(fontsize=14)
+        axes[-1].set_xlabel("Angular frequency (rad/mm)", loc="right")
+        mh.label.exp_label(ax=axes[0], exp="CaloX", text=runtype, rlabel=f"{label} Oscillation FFT", data=True)
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, "oscillation_fft.png"))
+        plt.close()
+
     print(f"Saved energy track plots to {output_dir}")
 
 def process_run(run):
@@ -457,7 +480,7 @@ def process_run(run):
         # Sentinel mask must run on the raw values -- SENTINEL_X1 etc are in raw units,
         # so comparing against them after the /10 mm conversion below silently passes
         # every no-hit row through instead of filtering it out.
-        si_mask = (x1_raw != SENTINEL_X1) & (y1_raw != SENTINEL_Y1) & (x2_raw != SENTINEL_X2) & (y2_raw != SENTINEL_Y2)
+        si_mask = (x1_raw != SENTINEL_X1) & (y1_raw != SENTINEL_Y1) & (x2_raw != SENTINEL_X2) & (y2_raw != SENTINEL_Y2) & veto_sel
         x1, y1 = x1_raw * 10, y1_raw * 10
         x2, y2 = x2_raw * 10, y2_raw * 10
         print(f"  [{run}] Aligned {matched.sum()}/{len(trigger_n)} ROOT events "
@@ -467,7 +490,7 @@ def process_run(run):
         return
 
     try:
-        hodo_energy_tracks = build_energy_tracks(hx, hy, total_sci_energy, total_cer_energy, good_hodo, calib_data=False, is_hodo=True)
+        hodo_energy_tracks = build_energy_tracks(hx, hy, total_sci_energy, total_cer_energy, good_hodo & veto_sel, calib_data=False, is_hodo=True)
         trk1_energy_tracks = build_energy_tracks(x1, y1, total_sci_energy, total_cer_energy, si_mask, calib_data=False, is_hodo=False)
         trk2_energy_tracks = build_energy_tracks(x2, y2, total_sci_energy, total_cer_energy, si_mask, calib_data=False, is_hodo=False)
         plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope")

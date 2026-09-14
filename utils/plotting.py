@@ -22,10 +22,29 @@ from utils.data import get_run_beam, load_run_list
 # ---------------------------------------------------------------------------
 # Binned statistics
 # ---------------------------------------------------------------------------
-def _edges_from_bins(bins, x_min, x_max):
-    if np.isscalar(bins):
-        return np.linspace(x_min, x_max, int(bins) + 1)
-    return np.asarray(bins)
+def _edges_from_bins(x, bins, x_min, x_max):
+    """Bin edges spanning [x_min, x_max], snapped to ``x``'s own real values
+    when there are few enough distinct ones within that window (e.g. the
+    hodoscope's bar-pitch-quantized positions) rather than an arbitrary
+    evenly-spaced grid.
+
+    An evenly-spaced grid's bin width generally isn't an exact multiple of
+    that quantization step, so its bin phase drifts across the range and
+    some bins land entirely between two real values -- a "dead" bin reading
+    zero counts even deep inside a well-populated region, not a real drop
+    in the underlying quantity (same failure mode documented in
+    ``scripts/effplots.py``'s default efficiency-map grid, and in
+    ``_hist_edges`` below, which this reuses). Continuous data (e.g. the
+    silicon tracker's positions) has too many unique values to trigger this
+    and falls back to the plain evenly-spaced grid.
+    """
+    if not np.isscalar(bins):
+        return np.asarray(bins)
+    x = np.asarray(x)
+    in_window = x[(x >= x_min) & (x <= x_max)]
+    if len(np.unique(in_window)) <= bins and len(in_window) > 1:
+        return _hist_edges(in_window, bins=int(bins))
+    return np.linspace(x_min, x_max, int(bins) + 1)
 
 
 def TProfile1d(x, y, bins, x_min=None, x_max=None, return_error=False):
@@ -45,7 +64,7 @@ def TProfile1d(x, y, bins, x_min=None, x_max=None, return_error=False):
     if x_max is None:
         x_max = float(np.max(x))
 
-    edges = _edges_from_bins(bins, x_min, x_max)
+    edges = _edges_from_bins(x, bins, x_min, x_max)
     nbins = len(edges) - 1
 
     counts, _ = np.histogram(x, bins=edges)
@@ -76,8 +95,8 @@ def TProfile2d(x, y, z, xbins, ybins, x_range=None, y_range=None,
     x_range = x_range or (float(np.min(x)), float(np.max(x)))
     y_range = y_range or (float(np.min(y)), float(np.max(y)))
 
-    x_edges = _edges_from_bins(xbins, *x_range)
-    y_edges = _edges_from_bins(ybins, *y_range)
+    x_edges = _edges_from_bins(x, xbins, *x_range)
+    y_edges = _edges_from_bins(y, ybins, *y_range)
 
     counts, _, _ = np.histogram2d(x, y, bins=[x_edges, y_edges])
     sum_z, _, _ = np.histogram2d(x, y, bins=[x_edges, y_edges], weights=z)
@@ -398,9 +417,9 @@ def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=
 
 _FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
 
-def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
-    """Overlay a straight-line fit (through the per-bin peak, not raw events) and
-    its equation/correlation directly on the plot.
+def fit_profile_line(x, y, n_sigma_clip=3.0, max_iter=5):
+    """Fit a straight line through the per-bin peak (``profile_mode``) of
+    ``y`` vs ``x``, not the raw events.
 
     The fit is weighted by each profile point's own event count (a point
     built from 500 events is trusted more than one built from 6) and
@@ -409,23 +428,18 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
     points can't inflate the very spread used to judge them) from the line
     are dropped for good and the line is refit, so a handful of stray
     profile points -- e.g. from a still-misaligned segment upstream --
-    can't drag the whole line off the real ridge. Rejected points are
-    marked with a red X.
+    can't drag the whole line off the real ridge.
 
-    ``tag`` (e.g. a run number/selection string) is prepended as the first
-    line of the fit line's legend entry, if given.
+    Returns ``None`` if fewer than 2 profile points survive ``profile_mode``
+    (a line fit needs at least 2 points; a low-statistics selection, e.g. a
+    tight/unvalidated cut, can leave 0 or 1 surviving bins). Otherwise
+    returns a dict with ``m``, ``m_err``, ``b``, ``b_err``, ``r`` (Pearson
+    correlation of the kept profile points), ``prof_x``, ``prof_y``,
+    ``prof_w`` and ``keep`` (boolean mask into the profile arrays).
     """
     prof_x, prof_y, prof_w = profile_mode(x, y)
-    ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
-
     if len(prof_x) < 2:
-        # A line fit needs at least 2 points; a low-statistics selection
-        # (e.g. a tight/unvalidated cut) can leave profile_mode with 0 or 1
-        # surviving bins, which would otherwise crash curve_fit.
-        ax.text(0.97, 0.05, f"Not enough data for a fit ({len(prof_x)} profile point(s))",
-                transform=ax.transAxes, ha="right", va="bottom",
-                color="white", fontsize=20, path_effects=_FIT_OUTLINE)
-        return
+        return None
 
     keep = np.ones(len(prof_x), dtype=bool)
     m, b, cov = None, None, None
@@ -442,6 +456,31 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
 
     m_err, b_err = np.sqrt(np.diag(cov))
     r = np.corrcoef(prof_x[keep], prof_y[keep])[0, 1]
+    return {
+        "m": m, "m_err": m_err, "b": b, "b_err": b_err, "r": r,
+        "prof_x": prof_x, "prof_y": prof_y, "prof_w": prof_w, "keep": keep,
+    }
+
+def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
+    """Overlay a straight-line fit (through the per-bin peak, not raw events) and
+    its equation/correlation directly on the plot.
+
+    ``tag`` (e.g. a run number/selection string) is prepended as the first
+    line of the fit line's legend entry, if given. Rejected points are
+    marked with a red X. See ``fit_profile_line`` for the fit itself.
+    """
+    fit = fit_profile_line(x, y, n_sigma_clip=n_sigma_clip, max_iter=max_iter)
+    prof_x, prof_y = (fit["prof_x"], fit["prof_y"]) if fit else profile_mode(x, y)[:2]
+    ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
+
+    if fit is None:
+        ax.text(0.97, 0.05, f"Not enough data for a fit ({len(prof_x)} profile point(s))",
+                transform=ax.transAxes, ha="right", va="bottom",
+                color="white", fontsize=20, path_effects=_FIT_OUTLINE)
+        return
+
+    m, m_err, b, b_err, r = fit["m"], fit["m_err"], fit["b"], fit["b_err"], fit["r"]
+    keep = fit["keep"]
     n_rejected = int((~keep).sum())
 
     label = f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n$r$ = {r:.5f}"
