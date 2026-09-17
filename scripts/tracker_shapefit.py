@@ -31,22 +31,23 @@ reference but not the other two points at that one detector; a
 discrepancy that's consistent across all three points at the counter's own
 geometry differing from the assumed nominal value instead.
 
-Tracker1/Tracker2 positions are rescaled by get_run_calibration()'s fitted
-Hodo-vs-Tracker conversion coefficient (this run's own, from
+Tracker1/Tracker2 positions come back already calibrated onto the
+hodoscope's mm scale -- ``build_aligned_tracker_branches(..., run_id=...)``
+applies utils.tracker.get_tracker_hodo_calibration's fitted Hodo-vs-Tracker
+conversion coefficient (this run's own, from
 ``data/tracker_hodo_slopes/<testbeam>_slopes.csv`` -- see
 ``scripts.sihodocor --testbeam``; falling back to that testbeam's mean, or
-no correction) before fitting, so a tracker-referenced fit reports a size
-in the same calibrated mm scale as the hodoscope-referenced fit -- without
-this, a run's tracker-vs-hodo scale mismatch alone (not any real physical
-difference) would show up as the tracker references disagreeing with the
-hodoscope reference on the veto/counter dimensions.
+no correction) as a reconstruction step, so a tracker-referenced fit
+reports a size in the same calibrated mm scale as the hodoscope-referenced
+fit -- without this, a run's tracker-vs-hodo scale mismatch alone (not any
+real physical difference) would show up as the tracker references
+disagreeing with the hodoscope reference on the veto/counter dimensions.
 
 Usage:
     python -m scripts.tracker_shapefit --run 1832
 """
 
 import argparse
-import csv
 import os
 import sys
 
@@ -58,13 +59,12 @@ from scipy.optimize import curve_fit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.sihodocor import MIN_FIT_POINTS, MIN_FIT_R
 from utils.constants import HG_THRESHOLD, PITCH, VETO_THRESHOLD, X_MAPPING, Y_MAPPING
 from utils.data import get_run_filepath
 from utils.fit_funcs import erf_box, erf_disk
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import _hist_edges, get_beam_label, get_runtype
+from utils.plotting import _hist_edges, get_beam_label
 from utils.selectors import (
     COUNTER_1CM_3CM_FIRST_RUN,
     counter_1cm_hit_mask,
@@ -91,79 +91,12 @@ VETO_RADIUS_MM = 25.0
 COUNTER_1CM_HALF_SIDE_MM = 5.0
 COUNTER_3CM_HALF_SIDE_MM = 15.0
 
-# Fitted Hodo-vs-Tracker slope (x1/y1/x2/y2 = m*hodo + b) from
-# ``python -m scripts.sihodocor --testbeam <name>``. Only the slope is
-# used: a fitted *size* (unlike a position) doesn't care about the fit's
-# intercept, only its scale, so dividing a tracker-raw-mm size by m
-# converts it to the hodoscope's calibrated mm scale.
-#
-# get_run_calibration() below prefers each run's own fitted slope (a
-# single testbeam-wide average hides real run-to-run variation -- e.g. run
-# 1774's own Tracker1-X slope is 1.0479, vs this testbeam's 1.0043 mean,
-# and using the run's own value visibly closed most of a ~3% Tracker-vs-
-# Hodoscope veto-radius gap that the mean didn't touch). This table is
-# only the fallback for a run missing from that CSV: TB2026's mean trusted
-# slope per (tracker, axis) as of 2026-09-14.
-TRACKER_HODO_SLOPE_MEAN = {
-    "TB2026": {
-        ("Tracker1", "x"): 1.0043,
-        ("Tracker1", "y"): 0.9826,
-        ("Tracker2", "x"): 0.9970,
-        ("Tracker2", "y"): 0.9896,
-    },
-}
-
-# Versioned (not gitignored, unlike output/) copy of each testbeam's
-# ``scripts.sihodocor --testbeam`` bigplot CSV -- this is what makes that
-# CSV an explicit calibration *input* to this script rather than a
-# transient artifact that happens to still be sitting in output/ from a
-# previous run. Regenerate/update via:
-#   python -m scripts.sihodocor --testbeam <name>
-#   cp output/sihodocor/bigplot/<name>_slopes.csv data/tracker_hodo_slopes/
-TRACKER_HODO_SLOPES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                       "data", "tracker_hodo_slopes")
-
-
-def get_run_calibration(run_id):
-    """Return this run's {(ref_label, axis): slope} tracker/hodo calibration.
-
-    Prefers run_id's own row in data/tracker_hodo_slopes/<testbeam>_slopes.csv
-    (quality-gated the same way scripts.sihodocor's aggregate histogram is:
-    |r| >= MIN_FIT_R and >= MIN_FIT_POINTS profile points -- a run's own fit
-    can itself be a degenerate/garbage outlier, e.g. a near-zero-statistics
-    run reduced to a 2-point fit with a trivial |r|=1). Falls back to
-    TRACKER_HODO_SLOPE_MEAN, then to no correction (1.0, with a warning) if
-    neither is available for this run's testbeam.
-    """
-    runtype = get_runtype(run_id)
-    mean_calib = TRACKER_HODO_SLOPE_MEAN.get(runtype, {})
-    calib = dict(mean_calib)
-    used_own = set()
-
-    csv_path = os.path.join(TRACKER_HODO_SLOPES_DIR, f"{runtype.replace(' ', '_')}_slopes.csv")
-    if os.path.exists(csv_path):
-        with open(csv_path, newline="") as f:
-            for row in csv.DictReader(f):
-                if row["run"] != str(int(run_id)):
-                    continue
-                for trackern, axis in [("1", "x"), ("1", "y"), ("2", "x"), ("2", "y")]:
-                    slope, r, n_points = (row.get(f"tracker{trackern}_{axis}_slope"),
-                                          row.get(f"tracker{trackern}_{axis}_r"),
-                                          row.get(f"tracker{trackern}_{axis}_n_points"))
-                    if not slope or not r or not n_points:
-                        continue
-                    if abs(float(r)) >= MIN_FIT_R and int(n_points) >= MIN_FIT_POINTS:
-                        calib[(f"Tracker{trackern}", axis)] = float(slope)
-                        used_own.add((f"Tracker{trackern}", axis))
-                break
-
-    if calib:
-        source = ("this run's own fit" if len(used_own) == 4
-                  else f"this run's own fit for {sorted(used_own)}, testbeam mean for the rest" if used_own
-                  else "testbeam mean (run not found/not trusted in the calibration CSV)")
-        print(f"  Tracker/hodo calibration ({runtype}): {source}")
-    return calib
-
+# Tracker/hodoscope scale calibration (fitted Hodo-vs-Tracker slope,
+# per-run with a testbeam-mean fallback) now lives in utils/tracker.py --
+# build_aligned_tracker_branches applies it directly when given a run_id
+# (see its and utils.tracker.get_tracker_hodo_calibration's docstrings),
+# since every consumer of tracker positions benefits from it, not just this
+# script.
 # --- Bin widths for the efficiency-map grids ---
 VETO_BIN_MM = 1.0
 COUNTER_BIN_MM = 0.5
@@ -406,37 +339,26 @@ def process_run(run_id):
     xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)
 
     si_data = load_tracker_run(run_id)
-    tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
+    # run_id here is what makes build_aligned_tracker_branches add the
+    # calibrated tracker_x{1,2}_mm/tracker_y{1,2}_mm branches (see its and
+    # utils.tracker.calibrate_tracker_positions's docstrings) -- this is the
+    # reconstruction-time calibration step, shared with every other caller
+    # of build_aligned_tracker_branches, rather than logic private to this
+    # script.
+    tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp, run_id=run_id)
     x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
     x2, y2 = tracker_branches["tracker_x2"], tracker_branches["tracker_y2"]
+    x1_mm, y1_mm = tracker_branches["tracker_x1_mm"], tracker_branches["tracker_y1_mm"]
+    x2_mm, y2_mm = tracker_branches["tracker_x2_mm"], tracker_branches["tracker_y2_mm"]
     counter_summary = (f"1cm_hits={one_cm_hit.sum()}, 3cm_hits={three_cm_hit.sum()}" if has_counters
                        else "1cm/3cm counters not present in this run")
     print(f"  [{run_id}] tracker match_frac={match_frac:.4%}, "
           f"veto_hits={veto_sel.sum()}, {counter_summary}, hodo_good={good_hodo.sum()}")
 
-    # Three independent reference "rulers" -- each detector's own (x, y),
-    # in mm, and the mask of events where that detector reports a real
-    # position. Tracker positions come out of load_tracker_run in cm.
-    x1_mm, y1_mm = 10 * x1, 10 * y1
-    x2_mm, y2_mm = 10 * x2, 10 * y2
-
-    # Rescale the tracker positions onto the hodoscope's calibrated mm
-    # scale (see get_run_calibration's docstring) before fitting -- a size
-    # fit is scale-equivariant, so this is equivalent to (and simpler than)
-    # dividing the fitted radius/side afterward, and it makes every
-    # downstream window/binning choice automatically operate in corrected
-    # units too. Runs from a testbeam without a known calibration fall back
-    # to raw tracker mm, with a warning, rather than silently mis-scaling.
-    runtype = get_runtype(run_id)
-    calib = get_run_calibration(run_id)
-    if calib:
-        x1_mm = x1_mm / calib.get(("Tracker1", "x"), 1.0)
-        y1_mm = y1_mm / calib.get(("Tracker1", "y"), 1.0)
-        x2_mm = x2_mm / calib.get(("Tracker2", "x"), 1.0)
-        y2_mm = y2_mm / calib.get(("Tracker2", "y"), 1.0)
-    else:
-        print(f"  No tracker/hodo calibration known for testbeam {runtype!r}; "
-              f"using uncalibrated tracker mm.")
+    # Three independent reference "rulers" -- each detector's own (x, y) in
+    # mm, and the mask of events where that detector reports a real
+    # position. The Tracker1/Tracker2 positions above are already
+    # calibrated onto the hodoscope's mm scale.
 
     references = {
         "Tracker1": (x1_mm, y1_mm, (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)),

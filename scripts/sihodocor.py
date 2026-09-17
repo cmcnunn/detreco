@@ -10,7 +10,15 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
-from utils.tracker import load_tracker_run, station1_hit_mask, station2_hit_mask, align_tracker_to_root_by_timestamp
+from utils.tracker import (
+    load_tracker_run,
+    station1_hit_mask,
+    station2_hit_mask,
+    align_tracker_to_root_by_timestamp,
+    calibrate_tracker_positions,
+    TRACKER_HODO_MIN_FIT_R,
+    TRACKER_HODO_MIN_FIT_POINTS,
+)
 from utils.plotting import get_beam_label, get_runs_by_testbeam, draw_fit, fit_profile_line, _hist_edges
 from utils.constants import X_MAPPING, Y_MAPPING
 from utils.hodo import reconstruct_hodoscope
@@ -176,28 +184,38 @@ def process_run(run, run_output_dir):
         plot_sihodocor(xh_good, yh_good, x1, y1, run, trackern="1", selection=plot, OUTPUTDIR=run_output_dir)
         plot_sihodocor(xh_good, yh_good, x2, y2, run, trackern="2", selection=plot, OUTPUTDIR=run_output_dir)
 
+    # Sanity check that the utils.tracker calibration (fitted from exactly
+    # this kind of Hodo-vs-Tracker correlation, see TRACKER_HODO_SLOPE_MEAN's
+    # docstring) actually does what it claims: redo the same veto-selected
+    # correlation plot as above, but on the calibrated tracker_x/y_mm
+    # positions instead of raw ones -- if calibration is working, the fitted
+    # slope here should come out at m ~= 1.0, unlike the uncalibrated
+    # "Veto_Selection" plot above. This is a diagnostic only; it must NOT
+    # feed back into get_tracker_hodo_calibration's own measurement (that
+    # would be circular -- see this function's raw, uncalibrated x1/x2 above).
+    x1_mm, y1_mm, x2_mm, y2_mm = calibrate_tracker_positions(
+        si_aligned["x1"], si_aligned["y1"], si_aligned["x2"], si_aligned["y2"], run)
+    mask_plot = mask & data["maskv_aligned"]
+    xh_good, yh_good = xh_aligned[mask_plot], yh_aligned[mask_plot]
+    plot_sihodocor(xh_good, yh_good, x1_mm[mask_plot], y1_mm[mask_plot], run, trackern="1",
+                   selection="Veto_Selection_Calibrated", OUTPUTDIR=run_output_dir)
+    plot_sihodocor(xh_good, yh_good, x2_mm[mask_plot], y2_mm[mask_plot], run, trackern="2",
+                   selection="Veto_Selection_Calibrated", OUTPUTDIR=run_output_dir)
+
 
 # Conversion-coefficient (fit slope) keys collected per run for --testbeam,
 # one per (tracker station, axis) against the hodoscope.
 SLOPE_KEYS = [("1", "x"), ("1", "y"), ("2", "x"), ("2", "y")]
 
-# Minimum |Pearson r| (of the kept, sigma-clipped profile points) for a
-# run's fitted slope to be trusted as a real conversion coefficient rather
-# than noise. A tight/low-statistics veto selection can leave a profile fit
-# "successful" (>= 2 points) but essentially uncorrelated or even
-# anti-correlated -- e.g. a handful of points scattered by multiple
-# scattering/misalignment rather than tracing a real line -- which can
-# report wildly wrong (even negative) slopes despite most runs clustering
-# near the true ~1 mm/mm coefficient. Runs below this threshold are dropped
-# from the aggregate histogram/CSV mean, not silently averaged in.
-MIN_FIT_R = 0.8
-
-# Minimum number of profile points actually used in the fit (after
-# sigma-clipping). A straight line through exactly 2 points always has
-# |r| = 1 by construction, so MIN_FIT_R alone can't catch a degenerate
-# 2-point "fit" built from a handful of low-statistics profile bins --
-# this closes that gap.
-MIN_FIT_POINTS = 4
+# Quality-gate thresholds for trusting a run's fitted slope as a real
+# conversion coefficient rather than noise -- defined in utils/tracker.py
+# (see TRACKER_HODO_MIN_FIT_R's docstring there) since
+# utils.tracker.get_tracker_hodo_calibration applies the exact same gate
+# when reading this script's own output CSV back in as a reconstruction-time
+# calibration; kept as one source of truth rather than two constants that
+# could silently drift apart.
+MIN_FIT_R = TRACKER_HODO_MIN_FIT_R
+MIN_FIT_POINTS = TRACKER_HODO_MIN_FIT_POINTS
 
 def get_run_slopes(run):
     """Fit Hodo-vs-Tracker{1,2}-{x,y} for one run, veto-selected, and return

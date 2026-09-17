@@ -1,21 +1,30 @@
-"""Write a companion ROOT file of sentinel-filled tracker positions, one row
-per ROOT event, for one or more runs.
+"""Write a companion ROOT file of sentinel-filled, calibrated tracker
+positions, one row per ROOT event, for one or more runs.
 
 Packages whatever alignment ``align_tracker_to_root_by_timestamp`` produces
 into a small, reusable file: same event count/order as the run's own
 ``EventTree``, so it can be read alongside it by matching row index (or
 used as a ROOT "friend tree"). A ROOT event with no trustworthy tracker
 match gets the tracker's own existing no-hit sentinels (-1000/-2000/-3000/
--4000 for x1/y1/x2/y2) instead of being silently dropped, so downstream
-code just needs ``!= -1000`` (etc) rather than re-running the whole
-alignment pipeline (spill-boundary finding, per-segment offset search,
-loading the raw .dat files) every time it wants tracker positions.
+-4000 for x1/y1/x2/y2, raw cm; -10000/-20000/-30000/-40000 for the mm
+branches below) instead of being silently dropped, so downstream code just
+needs ``!= -1000`` (etc) rather than re-running the whole alignment
+pipeline (spill-boundary finding, per-segment offset search, loading the
+raw .dat files) every time it wants tracker positions.
 
-This doesn't add any accuracy of its own -- see
-align_tracker_to_root_by_timestamp's docstring for how the alignment
-itself works (matching by real clock time, not by counting events) and
-its known precision limits. It just gives whatever that function produces
-a stable, reusable form instead of recomputing it on every analysis run.
+Also includes ``tracker_x{1,2}_mm``/``tracker_y{1,2}_mm``: the raw
+positions rescaled onto the hodoscope's calibrated mm scale (see
+``utils.tracker.calibrate_tracker_positions`` / ``scripts.sihodocor
+--testbeam``) -- this is the reconstruction-time calibration step, so any
+other analysis reading this file gets calibrated positions without having
+to know that correction exists or re-derive it.
+
+This doesn't add any positional accuracy of its own beyond that
+calibration -- see align_tracker_to_root_by_timestamp's docstring for how
+the alignment itself works (matching by real clock time, not by counting
+events) and its known precision limits. It just gives whatever that
+function (plus the calibration) produces a stable, reusable form instead
+of recomputing it on every analysis run.
 
 Usage:
     python -m scripts.build_tracker_root --run 1832
@@ -43,7 +52,13 @@ def build_one_run(run_id):
         trigger_n = tree["trigger_n"].array(library="np")
         root_tstamp = tree["FERS_Board1_tstamp_us"].array(library="np")
 
-    branches, match_frac = build_aligned_tracker_branches(tracker, trigger_n, root_tstamp)
+    # run_id here adds the calibrated tracker_x{1,2}_mm/tracker_y{1,2}_mm
+    # branches (see build_aligned_tracker_branches's and
+    # utils.tracker.calibrate_tracker_positions's docstrings) alongside the
+    # raw cm ones, so this companion file's calibration stays current with
+    # whatever's in data/tracker_hodo_slopes/ without needing to rebuild
+    # every consuming script.
+    branches, match_frac = build_aligned_tracker_branches(tracker, trigger_n, root_tstamp, run_id=run_id)
 
     out_path = os.path.join(OUTPUT_DIR, f"{run_id}_tracker.root")
     with uproot.recreate(out_path) as fout:
