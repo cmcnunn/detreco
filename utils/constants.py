@@ -6,6 +6,10 @@ NS_MM = 0.2
 LG_THRESHOLD = 229
 HG_THRESHOLD = 6000
 VETO_THRESHOLD = -1000
+# Nominal radius (mm) of the veto's circular acceptance, fitted in
+# scripts/tracker_shapefit.py -- shared here so other scripts (e.g.
+# scripts/energy_tracks.py) can size plot windows to the same footprint.
+VETO_RADIUS_MM = 10.0
 
 # Position i in the reindexed HG array is read from raw channel X_MAPPING[i],
 # so reversing the array's order (not its values) mirrors the physical X

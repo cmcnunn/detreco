@@ -7,6 +7,7 @@ import numpy as np
 import uproot
 import mplhep as mh
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
@@ -62,7 +63,7 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
     H = np.histogram2d(xh, x1, bins=[_hist_edges(xh), _hist_edges(x1)])
-    cb = mh.hist2dplot(*H, ax=ax, cmin=0)
+    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm())
     cb.cbar.set_label("Events", loc='top')
     tag = f"Run {run_id}" + (f" -- {selection}" if selection else "")
     draw_fit(ax, xh, x1, tag=tag)
@@ -75,7 +76,7 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
 
     fig, ax = plt.subplots(figsize=(12, 12))
     H = np.histogram2d(yh, y1, bins=[_hist_edges(yh), _hist_edges(y1)])
-    cb = mh.hist2dplot(*H, ax=ax, cmin=0)
+    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm())
     cb.cbar.set_label("Events", loc='top')
     draw_fit(ax, yh, y1, tag=tag)
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoY vs Tracker{trackern}", data=True)

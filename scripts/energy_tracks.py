@@ -41,7 +41,7 @@ from utils.tracker import (
 )
 from utils.hodo import reconstruct_hodoscope 
 from utils.constants import VETO_THRESHOLD, X_MAPPING, Y_MAPPING
-from utils.data import get_run_filepath
+from utils.data import get_run_filepath, get_run_table_position
 from utils.plotting import get_beam_label, get_runs_by_testbeam, TProfile1d, TProfile2d
 from utils.energy import load_energy_data
 from utils.selectors import get_branch_names
@@ -262,16 +262,132 @@ def oscillation_spectrum(x, y):
     freqs = np.fft.rfftfreq(len(residual), d=dx) * 2 * np.pi
     return freqs, np.abs(spectrum) ** 2
 
-def zoomed_oscillation_window(lo, hi, period, n_periods=5):
-    """Narrow [lo, hi] to n_periods oscillation cycles centered on its midpoint,
-    clipped back to [lo, hi]. Falls back to the full range if period isn't a
-    usable positive number (e.g. the sine fit didn't converge for that axis).
+# Window (as a fraction of the nominal pitch) searched for a real oscillation
+# peak, and the significance bar it has to clear -- see find_significant_peaks.
+PEAK_SEARCH_WINDOW_FRAC = 0.3
+PEAK_MIN_SIGNIFICANCE = 2.0
+PEAK_LOCAL_NEIGHBORS = 4
+
+def find_significant_peaks(centers, mean, error, counts, pitch=EXPECTED_PITCH_MM,
+                            window_frac=PEAK_SEARCH_WINDOW_FRAC,
+                            n_local_neighbors=PEAK_LOCAL_NEIGHBORS,
+                            min_significance=PEAK_MIN_SIGNIFICANCE):
+    """Find real oscillation peaks near `pitch` in this profile's FFT power
+    spectrum (oscillation_spectrum), replacing the old single-sine-fit
+    approach (scrapped: it picked a different period depending on how
+    tightly the fit window was drawn, with no way to tell a real
+    oscillation from noise -- see fit_sine_profile's history).
+
+    Two things this gets right that a naive "tallest bin" search doesn't:
+
+    - Significance is judged against each candidate's own *local* spectral
+      neighborhood (the n_local_neighbors bins flanking the search window on
+      each side), not the global spectrum. This spectrum's power falls off
+      strongly with frequency in general, so comparing a candidate near the
+      pitch against, say, the single largest bin anywhere (which usually
+      sits at much lower frequency, where power is intrinsically higher)
+      unfairly penalizes a real peak just for being at higher frequency --
+      confirmed empirically: a peak that looked "insignificant" against the
+      global max was still a clear, real local bump once compared to its
+      own neighbors instead.
+    - Every local maximum within the window that clears the significance
+      bar is returned, not just the single tallest one. A profile can have
+      two comparable candidate peaks close in height (confirmed on a real
+      run: two bumps within ~1.2x of each other, one much closer to the
+      nominal pitch than the other) -- silently picking the taller one
+      would misreport which period is "the" answer when the data itself
+      doesn't clearly say.
+
+    Returns a list of {"period", "power", "significance"} dicts, sorted by
+    significance descending (empty if no candidate clears the bar).
     """
-    if period is None or not np.isfinite(period) or period <= 0:
-        return lo, hi
-    mid = 0.5 * (lo + hi)
-    half_span = 0.5 * n_periods * period
-    return max(lo, mid - half_span), min(hi, mid + half_span)
+    centers = np.asarray(centers); mean = np.asarray(mean)
+    error = np.asarray(error); counts = np.asarray(counts)
+    base_mask = np.isfinite(mean) & np.isfinite(error) & (error > 0) & (counts >= 10)
+    if base_mask.sum() < 8:
+        return []
+
+    freqs, power = oscillation_spectrum(centers[base_mask], mean[base_mask])
+    with np.errstate(divide="ignore"):
+        periods = np.where(freqs > 0, 2 * np.pi / np.where(freqs > 0, freqs, np.nan), np.inf)
+
+    lo, hi = (1 - window_frac) * pitch, (1 + window_frac) * pitch
+    in_window = (periods >= lo) & (periods <= hi) & (freqs > 0)
+    if not in_window.any():
+        return []
+    win_idx = np.where(in_window)[0]
+
+    # A local maximum here means higher power than its true spectral
+    # neighbors (i-1, i+1 in the full array) -- not just the highest bin
+    # among window members -- so a real bump right at the window's edge is
+    # still found even though one of its neighbors falls outside the window.
+    candidates = [i for i in win_idx if 0 < i < len(power) - 1
+                  and power[i] >= power[i - 1] and power[i] >= power[i + 1]]
+    if not candidates:
+        candidates = [win_idx[np.argmax(power[win_idx])]]
+
+    lo_bound = max(1, win_idx.min() - n_local_neighbors)
+    hi_bound = min(len(freqs), win_idx.max() + 1 + n_local_neighbors)
+    local_idx = np.array([i for i in range(lo_bound, hi_bound) if i not in win_idx])
+    if len(local_idx) == 0:
+        return []
+    local_floor = np.median(power[local_idx])
+    if local_floor <= 0:
+        return []
+
+    results = [{"period": float(periods[i]), "power": float(power[i]),
+                "significance": float(power[i] / local_floor)}
+               for i in candidates]
+    results = [r for r in results if r["significance"] >= min_significance]
+    results.sort(key=lambda r: -r["significance"])
+    return results
+
+# Fixed (x_lo, x_hi, y_lo, y_hi) plot bounds (mm) for each detector label,
+# tight around its illuminated veto footprint. These profiles are binned out
+# to the full range of veto-passing hits, but a sparse halo of scattered/
+# mis-tracked hits reaches well beyond the actual beam spot at low
+# per-bin counts, leaving large empty margins around the real, densely
+# populated blob -- unrelated to the oscillation period, so a period-based
+# zoom (the old approach) never addressed it. Measured directly off two
+# TB2026 pi+ 60 GeV runs (1774, 1811) as the >=10-counts/bin pixel bounding
+# box (5 counts/bin, the plots' own display threshold, still included that
+# sparse halo -- 10 was the smallest threshold that consistently excluded
+# it on both runs), padded by ~1.5mm and rounded; both runs agreed closely,
+# so these are hardcoded rather than recomputed per run. If the beam/veto
+# alignment shifts (different testbeam period, veto moved, etc.) these will
+# need remeasuring the same way.
+VETO_PLOT_BOUNDS = {
+    "Hodoscope": {"x": (-15.0, 7.0), "y": (-20.0, 3.0)},
+    "Tracker 1": {"x": (36.0, 60.0), "y": (35.0, 67.0)},
+    "Tracker 2": {"x": (33.0, 56.0), "y": (35.0, 69.0)},
+}
+
+def _beam_label_with_position(run):
+    """get_beam_label plus the run's table X/Y position, when known.
+
+    Kept local to this script rather than folded into get_beam_label
+    itself, since that helper is shared with scripts (eff.py, hodores.py,
+    etc.) that don't plot against table position and shouldn't have their
+    label cluttered by it.
+    """
+    label = get_beam_label(run)
+    table_x, table_y = get_run_table_position(run)
+    if table_x is not None and table_y is not None:
+        label = f"{label} (table X={table_x:g}, Y={table_y:g} mm)"
+    return label
+
+
+def _rescale_y_to_window(ax, x, y, x_lo, x_hi):
+    """Set ax's y-limits from the 5th/95th percentile of y restricted to
+    [x_lo, x_hi] -- autoscale doesn't recompute from the visible window on
+    its own once set_xlim narrows it to less than the full data range.
+    """
+    in_window = (x >= x_lo) & (x <= x_hi) & np.isfinite(y)
+    if not np.any(in_window):
+        return
+    lo_y, hi_y = np.nanpercentile(y[in_window], [5, 95])
+    pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
+    ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
 
 def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
     '''
@@ -284,11 +400,11 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
     '''
     output_dir = os.path.join("output", "energy_tracks", run, label.replace(" ", "_"))
     os.makedirs(output_dir, exist_ok=True)
-    runtype = get_beam_label(run)
+    runtype = _beam_label_with_position(run)
     plt.style.use(mh.style.ROOT)
+    bounds = VETO_PLOT_BOUNDS.get(label)
     fft_by_combo = {}
     for ch in ["sci", "cer"]:
-        periods_by_axis = {}
         for dim in ["1d", "2d"]:
             data = energy_tracks[ch][dim]
             if dim == "1d":
@@ -298,7 +414,6 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     fig, ax = plt.subplots(figsize=(12, 12))
                     ax.errorbar(centers, mean, yerr=error, fmt="-o", ms=3)
                     popt, perr, fit_mask, period, period_err = fit_sine_profile(centers, mean, error, counts=counts)
-                    periods_by_axis[axis] = period
                     x_fit = np.linspace(centers[fit_mask].min(), centers[fit_mask].max(), 200)
                     y_fit = sine(x_fit, *popt)
                     fit_label = (f"period={period:.3g}±{period_err:.2g} mm")
@@ -306,31 +421,20 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
                     ax.set_ylabel(f"Average {ch} Energy (ADC)", loc="top")
                     ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
-                    finite_mean = mean[np.isfinite(mean)]
-                    if finite_mean.size:
-                        lo, hi = np.nanpercentile(finite_mean, [5, 95])
-                        pad = 0.1 * (hi - lo) if hi > lo else max(abs(lo), 1)
-                        ax.set_ylim(lo - pad, hi + pad)
-                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
+                    if bounds is not None:
+                        x_lo, x_hi = bounds[axis]
+                        ax.set_xlim(x_lo, x_hi)
+                        _rescale_y_to_window(ax, centers, mean, x_lo, x_hi)
+                    else:
+                        finite_mean = mean[np.isfinite(mean)]
+                        if finite_mean.size:
+                            lo, hi = np.nanpercentile(finite_mean, [5, 95])
+                            pad = 0.1 * (hi - lo) if hi > lo else max(abs(lo), 1)
+                            ax.set_ylim(lo - pad, hi + pad)
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
                     ax.grid()
                     ax.legend(fontsize=20)
                     plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}.png"))
-
-                    plateau_lo, plateau_hi = centers[fit_mask].min(), centers[fit_mask].max()
-                    zoom_lo, zoom_hi = zoomed_oscillation_window(plateau_lo, plateau_hi, period)
-                    if (zoom_hi - zoom_lo) < (plateau_hi - plateau_lo):
-                        ax.set_xlim(zoom_lo, zoom_hi)
-                        # y autoscale doesn't recompute from the visible window on its
-                        # own once set_ylim has been called above, so the oscillation
-                        # amplitude (a small fraction of the full plateau's y-range)
-                        # would otherwise stay squashed flat -- rescale to just the
-                        # zoomed-in points instead.
-                        in_zoom = (centers >= zoom_lo) & (centers <= zoom_hi) & np.isfinite(mean)
-                        if np.any(in_zoom):
-                            lo_y, hi_y = np.nanpercentile(mean[in_zoom], [5, 95])
-                            pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
-                            ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
-                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_zoom.png"))
                     plt.close()
 
                     freqs, power = oscillation_spectrum(centers[fit_mask], mean[fit_mask])
@@ -366,20 +470,14 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                         ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
                         ax.set_ylabel(f"{ch} Energy, background-subtracted (ADC)", loc="top")
                         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
-                        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
+                        if bounds is not None:
+                            vx_lo, vx_hi = bounds[axis]
+                            ax.set_xlim(vx_lo, vx_hi)
+                            _rescale_y_to_window(ax, centers_p, refined_1d, vx_lo, vx_hi)
+                        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
                         ax.grid()
                         ax.legend(fontsize=20)
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.png"))
-
-                        zoom_lo, zoom_hi = zoomed_oscillation_window(x_lo, x_hi, period)
-                        if (zoom_hi - zoom_lo) < (x_hi - x_lo):
-                            ax.set_xlim(zoom_lo, zoom_hi)
-                            in_zoom = (centers_p >= zoom_lo) & (centers_p <= zoom_hi) & np.isfinite(refined_1d)
-                            if np.any(in_zoom):
-                                lo_y, hi_y = np.nanpercentile(refined_1d[in_zoom], [5, 95])
-                                pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
-                                ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
-                            plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered_zoom.png"))
                         plt.close()
 
 
@@ -396,7 +494,10 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                 cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy (ADC)")
                 cbar.formatter.set_powerlimits((0, 0))
                 cbar.update_ticks()
-                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True)
+                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
+                if bounds is not None:
+                    ax.set_xlim(*bounds["x"])
+                    ax.set_ylim(*bounds["y"])
                 plt.savefig(os.path.join(output_dir, f"{ch}_{dim}.png"))
                 plt.close()
 
@@ -417,15 +518,11 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                     cbar = plt.colorbar(im, ax=ax, label=f"{ch} Energy, background-subtracted (ADC)")
                     cbar.formatter.set_powerlimits((0, 0))
                     cbar.update_ticks()
-                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (filtered)", data=True)
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (filtered)", data=True, fontsize=24)
+                    if bounds is not None:
+                        ax.set_xlim(*bounds["x"])
+                        ax.set_ylim(*bounds["y"])
                     plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered.png"))
-
-                    zoom_x_lo, zoom_x_hi = zoomed_oscillation_window(x_centers[0], x_centers[-1], periods_by_axis.get("x"))
-                    zoom_y_lo, zoom_y_hi = zoomed_oscillation_window(y_centers[0], y_centers[-1], periods_by_axis.get("y"))
-                    if (zoom_x_hi - zoom_x_lo) < (x_centers[-1] - x_centers[0]) or (zoom_y_hi - zoom_y_lo) < (y_centers[-1] - y_centers[0]):
-                        ax.set_xlim(zoom_x_lo, zoom_x_hi)
-                        ax.set_ylim(zoom_y_lo, zoom_y_hi)
-                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered_zoom.png"))
                     plt.close()
 
     combos = [(ch, axis) for ch in ["sci", "cer"] for axis in ["x", "y"] if (ch, axis) in fft_by_combo]
@@ -441,12 +538,70 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
             ax.grid()
             ax.legend(fontsize=14)
         axes[-1].set_xlabel("Angular frequency (rad/mm)", loc="right")
-        mh.label.exp_label(ax=axes[0], exp="CaloX", text=runtype, rlabel=f"{label} Oscillation FFT", data=True)
+        mh.label.exp_label(ax=axes[0], exp="CaloX", text=runtype, rlabel=f"{label} Oscillation FFT", data=True, fontsize=24)
         plt.tight_layout()
         plt.savefig(os.path.join(output_dir, "oscillation_fft.png"))
         plt.close()
 
     print(f"Saved energy track plots to {output_dir}")
+
+def plot_significant_peaks(run, energy_tracks, label="Hodoscope"):
+    """Plot each axis's FFT power spectrum (SCI and CER overlaid) with every
+    peak find_significant_peaks judges real marked and labeled, alongside
+    the search window and local-comparison band it was judged against.
+
+    Separate from plot_energy_tracks (which still does its own, sine-fit-
+    based per-axis plots) rather than replacing anything there -- this is
+    the new, validated peak-search approach, additive so the existing
+    plots keep working exactly as before regardless of how this one turns
+    out. Saved as oscillation_peaks.png alongside plot_energy_tracks's own
+    output for the same run/label.
+    """
+    output_dir = os.path.join("output", "energy_tracks", run, label.replace(" ", "_"))
+    os.makedirs(output_dir, exist_ok=True)
+    runtype = _beam_label_with_position(run)
+    plt.style.use(mh.style.ROOT)
+
+    lo, hi = (1 - PEAK_SEARCH_WINDOW_FRAC) * EXPECTED_PITCH_MM, (1 + PEAK_SEARCH_WINDOW_FRAC) * EXPECTED_PITCH_MM
+    colors = {"sci": "tab:blue", "cer": "tab:orange"}
+
+    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    for ax, axis in zip(axes, ["x", "y"]):
+        any_data = False
+        for ch in ["sci", "cer"]:
+            centers, mean, error, counts = energy_tracks[ch]["1d"][axis]
+            centers = np.asarray(centers); mean = np.asarray(mean)
+            error = np.asarray(error); counts = np.asarray(counts)
+            base_mask = np.isfinite(mean) & np.isfinite(error) & (error > 0) & (counts >= 10)
+            if base_mask.sum() < 8:
+                continue
+            any_data = True
+            freqs, power = oscillation_spectrum(centers[base_mask], mean[base_mask])
+            ax.plot(freqs[1:], power[1:], "-", lw=1.5, color=colors[ch], alpha=0.8, label=ch.upper())
+            for p in find_significant_peaks(centers, mean, error, counts):
+                pf = 2 * np.pi / p["period"]
+                ax.plot(pf, p["power"], "o", color=colors[ch], ms=10, mec="black")
+                ax.annotate(f"{p['period']:.2f} mm ({p['significance']:.1f}x)", (pf, p["power"]),
+                            textcoords="offset points", xytext=(8, 8), fontsize=11,
+                            color=colors[ch], fontweight="bold")
+        if not any_data:
+            ax.text(0.5, 0.5, "Not enough data", ha="center", va="center", transform=ax.transAxes)
+            continue
+        ax.axvspan(2 * np.pi / hi, 2 * np.pi / lo, color="grey", alpha=0.12,
+                   label=f"search window (±{PEAK_SEARCH_WINDOW_FRAC:.0%} of pitch)")
+        ax.axvline(2 * np.pi / EXPECTED_PITCH_MM, color="green", ls=":", lw=2,
+                   label=f"{EXPECTED_PITCH_MM:.0f} mm pitch")
+        ax.set_yscale("log")
+        ax.set_xlabel("Angular frequency (rad/mm)", loc="right")
+        ax.set_ylabel("Power", loc="top")
+        ax.legend(fontsize=11, loc="upper right")
+        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"{label} {axis.upper()}", data=True, fontsize=24)
+
+    plt.tight_layout()
+    outpath = os.path.join(output_dir, "oscillation_peaks.png")
+    plt.savefig(outpath, dpi=150)
+    plt.close(fig)
+    print(f"Peak-search plot saved to {outpath}")
 
 def process_run(run):
     """
@@ -496,6 +651,9 @@ def process_run(run):
         plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope")
         plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1")
         plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2")
+        plot_significant_peaks(run, hodo_energy_tracks, label="Hodoscope")
+        plot_significant_peaks(run, trk1_energy_tracks, label="Tracker 1")
+        plot_significant_peaks(run, trk2_energy_tracks, label="Tracker 2")
     except Exception as e:
         print(f"Error plotting run {run}: {e}")
 

@@ -45,6 +45,20 @@ def get_run_beam(run_id, path=RUN_LIST_PATH):
     return entry.get("beam_type"), entry.get("beam_energy_gev")
 
 
+def get_run_table_position(run_id, path=RUN_LIST_PATH):
+    """Return the ``(table_x_mm, table_y_mm)`` recorded for ``run_id``.
+
+    Either element may be ``None`` if the run isn't covered by the elog CSV
+    that ``scripts/update_run_list.py`` merges in, or the cell was blank.
+    """
+    run_list = load_run_list(path)
+    run_id = str(run_id)
+    if run_id not in run_list:
+        raise KeyError(f"Run {run_id} not found in {path}")
+    entry = run_list[run_id]
+    return entry.get("table_x_mm"), entry.get("table_y_mm")
+
+
 def get_runs_by_beam(beam_type=None, beam_energy_gev=None, path=RUN_LIST_PATH, include_flagged=False):
     """Return the sorted run IDs (as ints) matching the given beam filters.
 

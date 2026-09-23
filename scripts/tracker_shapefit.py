@@ -59,7 +59,7 @@ from scipy.optimize import curve_fit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.constants import HG_THRESHOLD, PITCH, VETO_THRESHOLD, X_MAPPING, Y_MAPPING
+from utils.constants import HG_THRESHOLD, PITCH, VETO_RADIUS_MM, VETO_THRESHOLD, X_MAPPING, Y_MAPPING
 from utils.data import get_run_filepath
 from utils.fit_funcs import erf_box, erf_disk
 from utils.hodo import reconstruct_hodoscope
@@ -87,9 +87,19 @@ Y_HG_BRANCH = "FERS_Board0_energyHG"
 X_HG_BRANCH = "FERS_Board1_energyHG"
 
 # --- Known physical dimensions (mm) ---
-VETO_RADIUS_MM = 25.0
+# VETO_RADIUS_MM lives in utils/constants.py (shared with scripts/energy_tracks.py).
 COUNTER_1CM_HALF_SIDE_MM = 5.0
 COUNTER_3CM_HALF_SIDE_MM = 15.0
+
+# Half-width (mm) of the veto_fit_*.png plot crop around the fitted disk
+# center, on top of the fitted radius -- same idea as energy_tracks.py's
+# veto-shape zoom, applied here directly from this fit's own (x0, y0, r)
+# instead of a hardcoded box, since fit_veto already gives us the disk's
+# real per-run center and radius. This crops the *plot* only; fit_veto's
+# own window (x0 +/- (VETO_RADIUS_MM + margin=20), same for y) is left
+# alone, since that extra margin is real data the fit needs to see the
+# eff=0 plateau and constrain the sigmoid edge.
+VETO_FIT_PLOT_MARGIN_MM = 5.0
 
 # Tracker/hodoscope scale calibration (fitted Hodo-vs-Tracker slope,
 # per-run with a testbeam-mean fallback) now lives in utils/tracker.py --
@@ -231,7 +241,7 @@ def _param_str(name, value, err, nominal):
     return f"{name}={value:.2f}+/-{err:.2f} mm (nominal {nominal:.1f} mm, pull {pull:+.1f} sigma)"
 
 
-def plot_fit_diagnostic(model, popt, eff, xedges, yedges, title, filename, ref_label):
+def plot_fit_diagnostic(model, popt, eff, xedges, yedges, title, filename, ref_label, xlim=None, ylim=None):
     xc = 0.5 * (xedges[:-1] + xedges[1:])
     yc = 0.5 * (yedges[:-1] + yedges[1:])
     X, Y = np.meshgrid(xc, yc, indexing="ij")
@@ -251,6 +261,10 @@ def plot_fit_diagnostic(model, popt, eff, xedges, yedges, title, filename, ref_l
         ax.set_title(subtitle)
         ax.set_xlabel(f"{ref_label} X [mm]")
         ax.set_ylabel(f"{ref_label} Y [mm]")
+        if xlim is not None:
+            ax.set_xlim(*xlim)
+        if ylim is not None:
+            ax.set_ylim(*ylim)
     fig.suptitle(title)
     plt.tight_layout()
     plt.savefig(filename, dpi=200)
@@ -272,7 +286,9 @@ def report_veto(ref_label, result, output_dir, run_id, beam_label):
     tag = ref_label.lower().replace(" ", "_")
     filename = os.path.join(output_dir, f"veto_fit_{tag}.png")
     title = f"Run {run_id} ({beam_label})\nVeto vs {ref_label}: R={r:.2f}$\\pm${r_err:.2f} mm"
-    plot_fit_diagnostic(erf_disk, popt, eff, xedges, yedges, title, filename, ref_label)
+    half_span = r + VETO_FIT_PLOT_MARGIN_MM
+    plot_fit_diagnostic(erf_disk, popt, eff, xedges, yedges, title, filename, ref_label,
+                         xlim=(x0 - half_span, x0 + half_span), ylim=(y0 - half_span, y0 + half_span))
 
 
 def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_id, beam_label):

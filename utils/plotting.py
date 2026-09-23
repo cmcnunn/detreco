@@ -468,13 +468,31 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
     ``tag`` (e.g. a run number/selection string) is prepended as the first
     line of the fit line's legend entry, if given. Rejected points are
     marked with a red X. See ``fit_profile_line`` for the fit itself.
+
+    The label reports two different correlation coefficients, since they
+    can disagree substantially (e.g. r_profile ~= 1.0 with r_event ~= 0.7 is
+    not a contradiction -- it means the fit line/geometry is right on
+    average, not that individual x/y pairs are reliably matched -- see
+    fit_profile_line's docstring on the mismatched-pairs halo this profile
+    fit is built to ignore):
+    - r_profile: Pearson r of the kept profile points (fit_profile_line's
+      own ``r``) -- how well the *peak* y tracks x, robust to a
+      low-density mismatched-event background.
+    - r_event: raw Pearson r of every (x, y) pair passed in, with no
+      profile/peak-finding or outlier rejection -- sensitive to exactly
+      that background, so a much lower value than r_profile usually means
+      a real population of mismatched/uncorrelated pairs, not a fit
+      problem.
     """
+    global_r = np.corrcoef(x, y)[0, 1] if len(x) > 1 else np.nan
     fit = fit_profile_line(x, y, n_sigma_clip=n_sigma_clip, max_iter=max_iter)
     prof_x, prof_y = (fit["prof_x"], fit["prof_y"]) if fit else profile_mode(x, y)[:2]
     ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
 
     if fit is None:
-        ax.text(0.97, 0.05, f"Not enough data for a fit ({len(prof_x)} profile point(s))",
+        ax.text(0.97, 0.05,
+                f"Not enough data for a fit ({len(prof_x)} profile point(s))\n"
+                f"$r_{{event}}$ = {global_r:.5f}",
                 transform=ax.transAxes, ha="right", va="bottom",
                 color="white", fontsize=20, path_effects=_FIT_OUTLINE)
         return
@@ -483,7 +501,9 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
     keep = fit["keep"]
     n_rejected = int((~keep).sum())
 
-    label = f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n$r$ = {r:.5f}"
+    label = (f"y = ({m:.3f} $\\pm$ {m_err:.3f})x + ({b:.3f} $\\pm$ {b_err:.3f})\n"
+             f"$r_{{profile}}$ = {r:.5f}\n"
+             f"$r_{{event}}$ = {global_r:.5f}")
     if n_rejected:
         label += f"\n({n_rejected} outlier{'s' if n_rejected != 1 else ''} excluded)"
     if tag:
@@ -495,7 +515,7 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
         ax.plot(prof_x[~keep], prof_y[~keep], "x", color="red", ms=12, mew=2.5)
 
     ax.legend(loc="lower right", fontsize=16, facecolor="black", edgecolor="white",
-              labelcolor="white", framealpha=0.75)
+              labelcolor="black", framealpha=0.75)
 
 def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64, x_range=None, y_range=None,
                            min_ref_count=10):
