@@ -37,3 +37,7 @@ Y_MAPPING = np.array([
     56,48,40,32,24,16,8,0
 ], dtype=np.int64)
 
+#Z positions (cm in reference to the face of DREAM)
+Z_H = 150.5
+Z_Si1 = 240.5
+Z_Si2 = 193.5

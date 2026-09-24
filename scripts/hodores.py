@@ -1,64 +1,79 @@
-"""Hodoscope spatial resolution against the silicon tracker, two ways.
+"""Hodoscope spatial resolution against the silicon tracker.
 
-Both methods below compare the hodoscope's reconstructed position to a
-si-tracker station's, using the same reference selection (hodoscope-good,
-veto-passing, tracker-hit events, matched to ROOT via
-utils.tracker.build_aligned_tracker_branches -- same as sihodocor.py/
-sieff.py). Both measure not the hodoscope's resolution in isolation, but
-that resolution convolved (in quadrature) with the tracker station's own
-resolution and multiple scattering across the gap between them:
+Compares the hodoscope's reconstructed position to a straight track through
+both si-tracker stations, extrapolated to the hodoscope's own z. Reference
+selection: hodoscope-good, veto-passing events with a real hit on *both*
+stations, matched to ROOT via utils.tracker.build_aligned_tracker_branches
+(same as sihodocor.py/sieff.py).
 
-    sigma_measured^2 ~= sigma_hodo^2 + sigma_tracker^2 + sigma_MS^2
+Why a track rather than one station: a single station's residual also
+carries the beam's angular spread times the station-to-hodoscope gap (each
+particle's angle moves it between the two planes) -- confirmed on real
+data, run 1774's x residual is 0.49mm against Si1 (90cm upstream), 0.33mm
+against Si2 (43cm upstream), but 0.26mm against the track. An earlier
+version of this script ran that single-station fit and a tracker-window
+convergence scan too; both were dropped in favour of the track.
 
-Since the si tracker's point resolution is expected to be far finer than
-the hodoscope's 0.6mm bar pitch, sigma_tracker^2 should be negligible next
-to the other two terms -- both methods below lean on that assumption
-rather than measuring sigma_tracker independently and subtracting it. (The
-rigorous alternative -- extrapolating a track through both tracker
-stations to the hodoscope's own z and subtracting that extrapolation's
-known uncertainty in quadrature, as in e.g. beam-telescope DUT resolution
-analyses -- needs station/hodoscope z-positions this module doesn't have;
-worth revisiting if/when those are available.)
+With the surveyed z-positions (utils.constants Z_Si1/Z_Si2/Z_H, cm from the
+DREAM face), the track is evaluated at the hodoscope's z:
 
-Method 1 -- full-sample residual fit (``fit_resolution``): histograms
-hodo-minus-tracker over every reference-selected event and fits a Gaussian.
-Fast, uses all statistics, but trusts the sigma_tracker ~ 0 assumption
-without checking it.
+    x_track(Z_H) = x2 * (Z_Si1 - Z_H)/(Z_Si1 - Z_Si2) + x1 * (Z_H - Z_Si2)/(Z_Si1 - Z_Si2)
+                 = 1.915 * x2 - 0.915 * x1
 
-Method 2 -- window convergence (``window_convergence``): slices events into
-progressively narrower bins of tracker position and fits the hodoscope's
-*raw* position within each slice. As the window narrows well below the
-tracker's own resolution, both the tracker's contribution and the window's
-own geometric width (variance width^2/12 for a uniform window) shrink
-toward zero, so the fitted sigma should fall and then plateau at the same
-target the quadrature approach assumes: sigma_hodo^2 + sigma_MS^2. Slower
-(most events get cut away at small widths) but doesn't just assume
-sigma_tracker is negligible -- it demonstrates it, and a plateau that
-hasn't been reached by the smallest usable window is a visible warning
-sign the two methods' results should be compared to.
+The beam passes Si1 -> Si2 -> hodoscope, so this extrapolates past Si2
+rather than interpolating. Before fitting, the track is mapped into the
+hodoscope frame by a per-run shift + rotation calibration
+(``calibrate_track``): the hodoscope is turned ~27 mrad (~1.5 deg) relative
+to the tracker, confirmed on every good run checked across pi+/mu+/e+ at
+10-160 GeV. The x residual rises with track y (~+30 mrad) and the y
+residual falls with track x (~-25 mrad); equal-and-opposite is the
+signature of a rotation, and the ~5 mrad left over is a small
+non-orthogonality between the X and Y bars, absorbed by the same fit. Left
+uncorrected it adds ~0.15mm in quadrature (run 1774, x: 0.257 -> 0.207mm).
+Each residual against its *own* coordinate is flat (< 0.5 mrad), so no
+scale term is fitted. Validated on held-out events: fitting on even events
+flattens the odd events' cross-slopes to < 1 mrad (``plot_rotation_signature``).
+
+What remains is
+
+    sigma_R^2 = sigma_hodo^2 + sigma_track^2 + sigma_MS^2,   sigma_track = 2.12 * sigma_station
+
+(2.12 = sqrt(1.915^2 + 0.915^2), both stations assumed equally precise).
+sigma_hodo and sigma_track can't be separated using this data alone: with
+three planes on one straight line, each plane's residual against the line
+through the other two is the *same* number per event up to a constant
+factor (verified on run 1774: event-by-event correlation exactly +/-1), so
+a 3x3 "solve for all three resolutions" system is rank 1 -- it only ever
+gives one equation. The script therefore reports a *range*:
+
+  - upper end: sigma_track = 0, i.e. sigma_hodo = sigma_R;
+  - lower end: pitch/sqrt(12) = 0.173mm, the ideal single-bar resolution.
+    ``reconstruct_hodoscope``'s default "argmax" always reports one bar
+    centre, and no assignment rule does better than giving each hit the bar
+    it actually crossed (a uniform error across one pitch) -- softer bar
+    edges only add to it. (Would not hold for its "mean" method, which also
+    reports half-pitch positions for two-bar hits.)
+
+``--tracker-resolution`` additionally gives a point estimate from a
+per-station value supplied from elsewhere. sigma_MS is not negligible at
+low energy (sigma_R rises from ~0.19mm at 160 GeV to ~0.25mm at 20 GeV)
+and inflates both ends, so the hodoscope's intrinsic resolution is best
+quoted from high-energy runs.
 
 The tracker-to-ROOT alignment is itself imperfect (see utils/tracker.py's
 module docstring and scan_alignment_correlation): a run can report a high
-match_frac while carrying little genuine per-event correspondence, which
-would show up here as a residual distribution with no clean central peak
-rather than a real (if broad) Gaussian core. Both methods guard against
-this with a MAD-based clip (same approach as utils.plotting.draw_fit) so a
-minority of mismatched events can't drag the fit off the real peak, but a
-low retained-fraction is a sign the alignment for that run/station is
-untrustworthy, not a bug in this script. Method 1 clips its own (large,
-stable) full-sample residual directly. Method 2 clips *once*, globally, on
-that same full-sample residual before ever slicing into windows -- not
-per-window -- because a percentile-based clip threshold recomputed fresh on
-each window's own small, heavily bar-quantized subsample turns out to be
-unstable (see ``window_convergence``'s docstring for the specific failure
-mode this caused on real data).
+match_frac while carrying little genuine per-event correspondence.
+``calibrate_track`` refuses a run outright below MIN_ALIGNMENT_CORRELATION
+(its per-run fit would otherwise be fitting noise), and every fit is
+preceded by a MAD-based clip (same approach as utils.plotting.draw_fit) so
+a minority of mismatched events can't drag it off the real peak.
 
 The hodoscope and tracker each define their own (0, 0), and those origins
 are not surveyed to coincide -- confirmed on real data: residuals sit near
-a constant few-cm offset (not zero) for every station/axis. Both fits
-below center their window on the data's own (robust) median rather than an
-assumed absolute range for exactly this reason -- sigma is the target, the
-fitted mean is just a by-product.
+a constant few-cm offset (not zero). The calibration absorbs that offset,
+and the residual fit centers its window on the data's own (robust) median
+rather than an assumed absolute range -- sigma is the target, the fitted
+mean is just a by-product.
 
 Usage:
     python -m scripts.hodores --run <run_id>   # one run
@@ -72,9 +87,10 @@ import matplotlib.pyplot as plt
 import mplhep as mh
 import numpy as np
 import uproot
+from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
-from utils.constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING
+from utils.constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING, Z_H, Z_Si1, Z_Si2
 from utils.data import get_run_filepath, load_run_list
 from utils.fit_funcs import gauss
 from utils.hodo import reconstruct_hodoscope
@@ -82,6 +98,7 @@ from utils.io import ensure_output_dir
 from utils.plotting import get_beam_label
 from utils.selectors import get_branch_names, passes_veto
 from utils.tracker import (
+    MIN_ALIGNMENT_CORRELATION,
     SENTINEL_X1,
     SENTINEL_X2,
     SENTINEL_Y1,
@@ -92,28 +109,45 @@ from utils.tracker import (
 
 OUTPUT_DIR = ensure_output_dir("hodores")
 
-DEFAULT_HALF_WIDTH_MM = 5.0  # residual-fit window is [median - this, median + this]
+# The calibrated residual is ~0.2mm wide and flat-topped (bar quantization),
+# which makes the Gaussian sigma sensitive to coarse bins -- 0.1mm bins read
+# ~1.5% high on run 1774, while anything from 15 to 50 um bins agrees to
+# < 1%. +/-1.5mm with 100 bins gives 30 um.
+DEFAULT_HALF_WIDTH_MM = 1.5  # residual-fit window is [median - this, median + this]
 DEFAULT_BINS = 100
 MAD_CLIP = 5.0  # sigma-equivalent clip applied before every fit below
 MAX_RELATIVE_SIGMA_ERR = 0.5  # reject a fit if sigma_err exceeds this fraction of sigma
+MIN_CALIBRATION_EVENTS = 200
 
-# Descending tracker-window widths (mm) for the convergence scan. 0.6mm is
-# the hodoscope's own bar pitch, included as a natural reference point.
-DEFAULT_WIDTHS_MM = [8.0, 4.0, 2.0, 1.0, 0.6, 0.3, 0.15, 0.08, 0.01]
-DEFAULT_MIN_WINDOW_EVENTS = 50
+# Lower end of the reported range: ideal single-bar (argmax) resolution, see module docstring.
+SIGMA_HODO_FLOOR_MM = PITCH / np.sqrt(12)  # 0.173
 
-LABELS = {"x1": "Station 1 X", "y1": "Station 1 Y", "x2": "Station 2 X", "y2": "Station 2 Y"}
+TRACK_LABELS = {"x": "Track X", "y": "Track Y"}
+# x residual / y residual, in every plot.
+AXIS_COLORS = {"x": "#2a78d6", "y": "#eb6834"}
+
+# Straight-line weights putting the two-station track at the hodoscope's z
+# (see module docstring): x_track = TRACK_W1 * x1 + TRACK_W2 * x2.
+TRACK_W1 = (Z_H - Z_Si2) / (Z_Si1 - Z_Si2)  # -0.915
+TRACK_W2 = (Z_Si1 - Z_H) / (Z_Si1 - Z_Si2)  # +1.915
+# Per-station tracker error -> error on x_track, propagated through the weights.
+TRACK_ERR_GAIN = float(np.hypot(TRACK_W1, TRACK_W2))  # 2.12
 
 
 def load_run_data(run_id):
-    """Return ``(data, match_frac)`` for one run.
+    """Return ``(track, match_frac)`` for one run.
 
-    ``data`` holds, per station/axis key ("x1", "y1", "x2", "y2"), a
-    ``(tracker_mm, hodo_mm)`` pair of same-length arrays: tracker position
-    (mm) and the hodoscope's reconstructed position (mm) for the
-    reference-selected events (good hodoscope hit, veto pass) that also
-    registered a real hit on that station -- i.e. already restricted to
-    real tracker hits, no sentinel rows.
+    ``track`` is a dict of same-length mm arrays "x1", "y1", "x2", "y2"
+    (tracker) and "xh", "yh" (hodoscope), for the reference-selected events
+    (good hodoscope hit, veto pass) that also registered a real hit on
+    *both* stations -- no sentinel rows.
+
+    Tracker positions are the raw hardware scale (x10 cm -> mm), not
+    ``utils.tracker.calibrate_tracker_positions``'s per-station Hodo-vs-Tracker
+    slopes: those were fitted one station at a time, so they partly absorb the
+    beam's angular spread over each station's own gap -- exactly the term the
+    extrapolation already removes. The track's own-coordinate residual slope
+    is flat to < 0.5 mrad on the raw scale.
 
     Raises on any failure (missing ROOT/tracker file, bad alignment, etc.)
     so callers can decide how to skip a run.
@@ -136,16 +170,14 @@ def load_run_data(run_id):
     x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
     x2, y2 = tracker_branches["tracker_x2"], tracker_branches["tracker_y2"]
 
-    ref = good_hodo & veto_sel
-    hit1 = ref & (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)
-    hit2 = ref & (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)
-
+    both = (good_hodo & veto_sel & (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)
+            & (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2))
     # tracker x1/y1/x2/y2 are in cm; *10 puts them in mm alongside xh/yh.
-    data = {
-        "x1": (10 * x1[hit1], xh[hit1]), "y1": (10 * y1[hit1], yh[hit1]),
-        "x2": (10 * x2[hit2], xh[hit2]), "y2": (10 * y2[hit2], yh[hit2]),
+    track = {
+        "x1": 10 * x1[both], "y1": 10 * y1[both], "x2": 10 * x2[both], "y2": 10 * y2[both],
+        "xh": xh[both], "yh": yh[both],
     }
-    return data, match_frac
+    return track, match_frac
 
 
 # (half-range, z) pairs for _robust_clip's percentile-widening fallback:
@@ -176,15 +208,15 @@ def _robust_clip_mask(values, n_mad=MAD_CLIP):
     # MAD collapses to exactly 0 whenever at least half the sample sits on
     # one exact value -- e.g. a single dominant hodoscope bar. A single
     # fixed fallback percentile pair isn't safe here either: confirmed on
-    # real data (run 1774, si1/hodoY at a 0.3mm window) that the dominant
-    # bar alone can hold *more* than 50% of the sample, which pins the
-    # 25th/75th percentiles to that same exact value too (IQR == 0), so a
-    # plain IQR fallback would clip away the genuinely real,
-    # immediately-adjacent bars along with the actual outlier tail -- 1205
-    # events collapsed to the 673 sitting exactly on the mode, discarding
-    # 217 + 198 events one bar to either side that are real hodoscope
-    # smearing, not mismatches. Instead, widen the percentile pair step by
-    # step until one finds a nonzero spread; if even the 1st/99th
+    # real data (run 1774, si1/hodoY, in a narrow 0.3mm tracker-position
+    # slice) that the dominant bar alone can hold *more* than 50% of the
+    # sample, which pins the 25th/75th percentiles to that same exact value
+    # too (IQR == 0), so a plain IQR fallback would clip away the genuinely
+    # real, immediately-adjacent bars along with the actual outlier tail --
+    # 1205 events collapsed to the 673 sitting exactly on the mode,
+    # discarding 217 + 198 events one bar to either side that are real
+    # hodoscope smearing, not mismatches. Instead, widen the percentile pair
+    # step by step until one finds a nonzero spread; if even the 1st/99th
     # percentiles coincide (essentially everything on one value), there's
     # nothing meaningful left to clip against, so keep everything and let
     # the downstream fit's own validity gate (MAX_RELATIVE_SIGMA_ERR) catch
@@ -207,14 +239,9 @@ def _robust_clip(values, n_mad=MAD_CLIP):
 def _fit_gaussian(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
     """Histogram + Gaussian fit on already-clean ``values`` -- no outlier clipping.
 
-    Low-level piece shared by ``fit_resolution`` (which clips first, using
-    its own local sample) and ``window_convergence`` (which clips once,
-    globally, before slicing into windows -- see that function's docstring
-    for why re-clipping per window is unsafe). The histogram window is
-    centered on the data's own median rather than a fixed absolute range --
-    e.g. the hodoscope and tracker frames carry their own, uncoordinated
-    origins, so a residual's true peak generally sits well away from zero
-    (see module docstring).
+    Low-level piece of ``fit_resolution``, which clips first. The histogram
+    window is centered on the data's own median rather than a fixed
+    absolute range (see module docstring).
 
     A successful ``curve_fit`` call doesn't guarantee a meaningful result --
     a histogram with too few well-separated bins to actually constrain a
@@ -260,9 +287,7 @@ def fit_resolution(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
     """Clip outliers from one 1-D distribution (a residual, typically), then fit a Gaussian.
 
     Thin wrapper around ``_fit_gaussian``: clips first using this sample's
-    own statistics. Fine for a single big, stable sample (Method 1's
-    full-run residual) -- see ``window_convergence`` for why a per-window
-    version of this same clip-then-fit pattern is unsafe on small samples.
+    own statistics -- fine for the large, stable full-run residuals fit here.
 
     Returns ``(mu, mu_err, sigma, sigma_err, n_used, n_total, (centers, counts, popt))``,
     or ``None`` if there isn't enough data to fit, or the fit isn't trustworthy.
@@ -277,137 +302,175 @@ def fit_resolution(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
     return mu, mu_err, sigma, sigma_err, n_used, n_total, extra
 
 
-def _diagnose_fit_failure(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
-    """Best-effort human-readable reason a ``_fit_gaussian`` call on ``values`` returned ``None``.
+def extrapolate_to_hodo(t1, t2):
+    """Straight line through the two station hits, evaluated at the hodoscope's z (``Z_H``)."""
+    return TRACK_W1 * np.asarray(t1) + TRACK_W2 * np.asarray(t2)
 
-    ``values`` is expected to already be outlier-clipped (as
-    ``window_convergence`` passes it) -- this does not clip again, it just
-    re-derives why the histogram/fit step failed, purely for a readable
-    message in place of a bare ``--`` in the convergence table.
+
+def calibrate_track(track, fit_mask=None):
+    """Per-run shift + rotation calibration of the extrapolated track into the hodoscope frame.
+
+    ``track`` is ``load_run_data``'s both-station sample. After the usual
+    robust clip, fits one line per axis to the residual against the *other*
+    coordinate:
+
+        hodo_x - x_track = a * y_track + c_x
+        hodo_y - y_track = b * x_track + c_y
+
+    A rigid rotation by theta shows up as a = +theta, b = -theta (the X bars
+    lean one way as you go up in y, the Y bars the other way as you go
+    across in x), so the rotation is (a - b) / 2; a + b is the
+    non-orthogonality between the X and Y bars, which the same two lines
+    absorb. The calibrated reference is then ``x_track + a * y_track + c_x``
+    (likewise y) -- the track as the hodoscope's frame sees it.
+
+    ``fit_mask`` (bool, one per event) restricts which events the fit uses
+    while still applying the result to every event -- for testing the
+    calibration on events it never saw (see ``plot_rotation_signature``), since
+    on its own fit sample the calibrated cross-slope is zero by construction.
+
+    Returns ``(cal, None)`` on success, or ``(None, reason)`` if the run is
+    refused: too few both-station events, or a hodoscope-vs-track Pearson r
+    below MIN_ALIGNMENT_CORRELATION -- a tracker-to-ROOT alignment that
+    isn't finding real correspondences (confirmed: run 1866, e+ 40 GeV, r ~
+    0), where this fit would only be fitting noise. ``cal`` holds, per axis
+    ("x"/"y"), ``(reference, hodo, reference_shift_only)`` same-length mm
+    arrays, plus "slopes" ``(a, b)`` in rad, "r", and -- for
+    ``plot_rotation_signature`` -- "track_x"/"track_y" (uncalibrated) and
+    "keep" (the clip mask the fit used).
     """
-    values = np.asarray(values)
-    if len(values) < 20:
-        return "too few events"
-    center = np.median(values)
-    counts, _ = np.histogram(values, bins=bins, range=(center - half_width, center + half_width))
-    n_distinct_bins = int((counts > 0).sum())
-    if n_distinct_bins < 4:
-        # The hodoscope only reports discrete, PITCH-spaced bar positions --
-        # once a window is narrow enough that real (non-outlier) events pile
-        # onto just a handful of adjacent bars, no amount of extra
-        # statistics adds more distinct values to fit against.
-        return f"only {n_distinct_bins} distinct hodoscope value(s) in this window (< 4 needed)"
-    return "fit unreliable (sigma_err too large relative to sigma)"
+    px = extrapolate_to_hodo(track["x1"], track["x2"])
+    py = extrapolate_to_hodo(track["y1"], track["y2"])
+    xh, yh = track["xh"], track["yh"]
+    if len(px) < MIN_CALIBRATION_EVENTS:
+        return None, f"only {len(px)} both-station events (< {MIN_CALIBRATION_EVENTS})"
+    r = min(np.corrcoef(xh, px)[0, 1], np.corrcoef(yh, py)[0, 1])
+    if not r >= MIN_ALIGNMENT_CORRELATION:  # nan-safe
+        return None, f"hodoscope-vs-track correlation r={r:.2f} < {MIN_ALIGNMENT_CORRELATION}"
+
+    keep = _robust_clip_mask(xh - px) & _robust_clip_mask(yh - py)
+    fit = keep if fit_mask is None else keep & fit_mask
+    a, cx = np.polyfit(py[fit], (xh - px)[fit], 1)
+    b, cy = np.polyfit(px[fit], (yh - py)[fit], 1)
+    cal = {
+        "x": (px + a * py + cx, xh, px + np.median((xh - px)[fit])),
+        "y": (py + b * px + cy, yh, py + np.median((yh - py)[fit])),
+        "slopes": (a, b), "r": r, "track_x": px, "track_y": py, "keep": keep,
+    }
+    return cal, None
 
 
-def window_convergence(x_tracker, x_hodo, widths=DEFAULT_WIDTHS_MM, min_events=DEFAULT_MIN_WINDOW_EVENTS,
-                       bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
-    """Scan progressively narrower tracker-position windows and fit the
-    hodoscope's raw position within each.
-
-    Mismatched (tracker, hodoscope) pairs -- from imperfect tracker-to-ROOT
-    alignment, see module docstring -- are clipped out *once*, globally, via
-    the full-sample residual (hodo - tracker), the same statistic and clip
-    ``fit_resolution`` uses for Method 1. This is deliberate, not
-    incidental: an earlier version re-ran ``_robust_clip`` fresh inside each
-    width's own small subsample, which turned out to be unsafe on real data
-    (run 1774, si2/hodoY) -- a percentile-based threshold computed on a
-    heavily bar-quantized sample is extremely sensitive to exactly where a
-    percentile's *rank* happens to fall relative to the single dominant
-    bar's huge count jump, and a difference of a handful of events between
-    two nested windows can flip it to either side. That produced a visibly
-    non-monotonic result: a narrower, strictly-nested 0.01mm window
-    "succeeded" right where the wider 0.08mm window it's a subset of had
-    just failed, purely because each recomputed its own threshold from
-    scratch on a different small sample. Clipping once, globally, on the
-    full (tens-of-thousands-of-event) sample avoids that instability, and
-    every window below is then a guaranteed subset of every wider window --
-    genuinely monotonic (up to Poisson noise) rather than only expected to
-    be.
-
-    All windows share the same center (the cleaned sample's robust median
-    tracker position) -- a single representative spot within the beam
-    profile, not a scan across it. See module docstring for why the fitted
-    sigma is expected to fall and then plateau as ``widths`` shrinks.
-
-    Returns a list of ``(width, sigma, sigma_err, n_events, fail_reason)`` in
-    the same order as ``widths``; ``sigma``/``sigma_err``/``fail_reason`` are
-    ``None`` on success. On failure ``fail_reason`` is a short string (see
-    ``_diagnose_fit_failure``) -- narrower windows commonly fail simply
-    because the hodoscope's own bar quantization runs out of distinct
-    values to fit against, not because of a data or fit problem.
-    """
-    x_tracker = np.asarray(x_tracker)
-    x_hodo = np.asarray(x_hodo)
-    if len(x_tracker) == 0:
-        return [(w, None, None, 0, "no events") for w in widths]
-
-    keep = _robust_clip_mask(x_hodo - x_tracker)
-    x_tracker, x_hodo = x_tracker[keep], x_hodo[keep]
-    if len(x_tracker) == 0:
-        return [(w, None, None, 0, "no events survived the global outlier clip") for w in widths]
-
-    center = np.median(x_tracker)
-    results = []
-    for w in widths:
-        sel = np.abs(x_tracker - center) <= w / 2
-        n = int(sel.sum())
-        if n < min_events:
-            results.append((w, None, None, n, "too few events in this tracker window"))
-            continue
-        fit = _fit_gaussian(x_hodo[sel], bins=bins, half_width=half_width)
+def plot_track_residual(fit_shift, fit_cal, axis, title, filename, runtype=""):
+    """Residual for one axis: shift-only vs rotation-calibrated, each with its Gaussian fit."""
+    plt.style.use(mh.style.ROOT)
+    fig, ax = plt.subplots(figsize=(12, 12))
+    for fit, color, name in ((fit_shift, "gray", "Shift only"), (fit_cal, AXIS_COLORS[axis], "Rotation-calibrated")):
         if fit is None:
-            reason = _diagnose_fit_failure(x_hodo[sel], bins=bins, half_width=half_width)
-            results.append((w, None, None, n, reason))
             continue
-        _, _, sigma, sigma_err, *_ = fit
-        results.append((w, sigma, sigma_err, n, None))
-    return results
-
-
-def plot_residual(centers, counts, popt, title, filename, runtype=""):
-    plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(12, 12))
-    width = centers[1] - centers[0]
-    ax.bar(centers, counts, width=width, color="steelblue", alpha=0.8)
-    xs = np.linspace(centers[0], centers[-1], 400)
-    ax.plot(xs, gauss(xs, *popt), color="red", lw=2,
-           label=f"$\\mu$ = {popt[1]:.3f} mm\n$\\sigma$ = {abs(popt[2]):.3f} mm")
-    ax.set_xlabel("Hodoscope $-$ Tracker [mm]", loc="right")
+        mu, _, sigma, sigma_err, _, _, (centers, counts, popt) = fit
+        # Center each on its own fitted mean so the two shapes overlay directly.
+        half_bin = 0.5 * (centers[1] - centers[0])
+        edges = np.append(centers - half_bin, centers[-1] + half_bin) - mu
+        ax.stairs(counts, edges, color=color, lw=2.5,
+                  label=f"{name}: $\\sigma$ = {sigma:.3f} $\\pm$ {sigma_err:.3f} mm")
+        xs = np.linspace(centers[0], centers[-1], 400)
+        ax.plot(xs - mu, gauss(xs, *popt), color=color, lw=1.5, ls="--")
+    ax.set_xlabel(f"Hodo {axis.upper()} $-$ Track {axis.upper()} at $z_H$ [mm]", loc="right")
     ax.set_ylabel("Events", loc="top")
-    ax.legend()
+    ax.set_ylim(0, 1.3 * ax.get_ylim()[1])
+    ax.legend(loc="upper left", fontsize=18)
     mh.label.exp_label(exp="CaloX", text=runtype, data=True, rlabel=title, ax=ax)
     plt.tight_layout()
     plt.savefig(filename, dpi=300)
     plt.close(fig)
-    print(f"Residual plot saved {filename}")
+    print(f"Track residual plot saved {filename}")
 
 
-def plot_convergence(scan, title, filename, runtype=""):
-    """Plot fitted sigma vs. tracker-window width, from ``window_convergence``'s output."""
-    widths = np.array([w for w, s, se, n, reason in scan])
-    sigmas = np.array([s if s is not None else np.nan for w, s, se, n, reason in scan])
-    errs = np.array([se if se is not None else 0.0 for w, s, se, n, reason in scan])
-    valid = ~np.isnan(sigmas)
+def _profile(x, y, n_bins=16, min_count=30):
+    """Mean of ``y`` (and its standard error) in equal-population bins of ``x``."""
+    edges = np.percentile(x, np.linspace(1, 99, n_bins + 1))
+    centers, means, errs = [], [], []
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        sel = (x >= lo) & (x < hi)
+        if sel.sum() < min_count:
+            continue
+        centers.append(x[sel].mean())
+        means.append(y[sel].mean())
+        errs.append(y[sel].std() / np.sqrt(sel.sum()))
+    return np.array(centers), np.array(means), np.array(errs)
+
+
+def _draw_profile_fit(ax, x, y, x_range, name, marker, point_fill, line_color, line_style):
+    """One profile (black-edged points) + its straight-line fit on ``ax``, slope in the legend."""
+    centers, means, errs = _profile(x, y)
+    (slope, intercept), cov = np.polyfit(x, y, 1, cov=True)
+    ax.errorbar(centers, means, yerr=errs, fmt=marker, ms=9, color="black", mfc=point_fill, mew=2, zorder=5,
+               label=f"{name}slope = {1e3 * slope:+.1f} $\\pm$ {1e3 * np.sqrt(cov[0, 0]):.1f} mrad")
+    xs = np.linspace(*x_range, 2)
+    ax.plot(xs, slope * xs + intercept, color=line_color, ls=line_style, lw=2.5, zorder=4)
+
+
+def plot_rotation_signature(cal, filename, runtype="", rlabel="", test_mask=None):
+    """Evidence for ``calibrate_track``'s rotation.
+
+    Top row: each residual against the *other* coordinate -- the rotation
+    signature (equal-and-opposite slopes, see ``calibrate_track``). Bottom
+    row: against its own coordinate -- the scale control, which should be
+    flat; the sawtooth there is the hodoscope reporting bar centres as the
+    track crosses each 0.6mm bar.
+
+    With ``test_mask`` omitted, plots the *uncalibrated* (shift-only)
+    residuals: the evidence that a rotation is there. With ``test_mask``
+    given, ``cal`` should come from ``calibrate_track(track,
+    fit_mask=~test_mask)``, and only the ``test_mask`` events -- ones the
+    calibration never saw -- are plotted: the 2D histogram is the calibrated
+    residual, with the same events' shift-only profile overlaid in gray. On
+    its own fit sample the calibrated cross-slope is zero by construction,
+    so only a held-out sample actually tests it. The top row should go flat,
+    and the bottom row's sawtooth teeth sharpen, since the rotation no longer
+    smears each bar edge across the other coordinate.
+    """
+    sel = cal["keep"] if test_mask is None else cal["keep"] & test_mask
+    before = {axis: (cal[axis][1] - cal[axis][2])[sel] for axis in TRACK_LABELS}
+    after = {axis: (cal[axis][1] - cal[axis][0])[sel] for axis in TRACK_LABELS}
+    if test_mask is None:
+        px, py = cal["track_x"][sel], cal["track_y"][sel]
+        shown, frame, suffix = before, "at hodoscope", ""
+    else:
+        # The calibrated track, i.e. the hodoscope's own frame: there the bar
+        # edges sit at fixed positions, so the bottom row's teeth can sharpen.
+        # Against the raw track position they'd instead blur, since each edge
+        # lands at a different raw x for every y once the rotation is removed.
+        px, py = cal["x"][0][sel], cal["y"][0][sel]
+        shown, frame, suffix = after, "(hodoscope frame)", ", after calibration (held-out events)"
 
     plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(12, 12))
-    ax.errorbar(widths[valid], sigmas[valid], yerr=errs[valid], fmt="o-", ms=10,
-               color="steelblue", ecolor="black", capsize=4)
-    if valid.any():
-        w_min = widths[valid].min()
-        sigma_at_min = sigmas[valid][np.argmin(widths[valid])]
-        ax.axhline(sigma_at_min, color="red", ls="--", lw=1.5,
-                  label=f"Smallest usable window ({w_min:g} mm): $\\sigma$ = {sigma_at_min:.3f} mm")
-        ax.legend()
-    ax.set_xscale("log")
-    ax.set_xlabel("Tracker window width [mm]", loc="right")
-    ax.set_ylabel("Fitted hodoscope $\\sigma$ [mm]", loc="top")
-    mh.label.exp_label(exp="CaloX", text=runtype, data=True, rlabel=title, ax=ax)
+    fig, axes = plt.subplots(2, 2, figsize=(20, 18))
+    panels = [
+        (axes[0, 0], py, "x", "Track Y", "Hodo X $-$ Track X", "rotation signature"),
+        (axes[0, 1], px, "y", "Track X", "Hodo Y $-$ Track Y", "rotation signature"),
+        (axes[1, 0], px, "x", "Track X", "Hodo X $-$ Track X", "control (own coordinate)"),
+        (axes[1, 1], py, "y", "Track Y", "Hodo Y $-$ Track Y", "control (own coordinate)"),
+    ]
+    for ax, x, axis, xlabel, ylabel, what in panels:
+        x_range = np.percentile(x, [0.5, 99.5])
+        ax.hist2d(x, shown[axis], bins=[80, 60], range=[x_range, [-1.5, 1.5]], cmap="Blues", norm=LogNorm(),
+                  rasterized=True)
+        if test_mask is None:
+            _draw_profile_fit(ax, x, before[axis], x_range, "", "o", "white", AXIS_COLORS[axis], "-")
+        else:
+            _draw_profile_fit(ax, x, before[axis], x_range, "Before: ", "s", "lightgray", "gray", "--")
+            _draw_profile_fit(ax, x, after[axis], x_range, "After: ", "o", "white", AXIS_COLORS[axis], "-")
+        ax.axhline(0, color="gray", lw=1, ls=":")
+        ax.set_xlabel(f"{xlabel} {frame} [mm]", loc="right")
+        ax.set_ylabel(f"{ylabel} [mm]", loc="top")
+        ax.set_ylim(-1.5, 1.5)
+        ax.legend(loc="upper left", fontsize=20, title=what + suffix, title_fontsize=20)
+        mh.label.exp_label(exp="CaloX", text=runtype, data=True, rlabel=rlabel, ax=ax, fontsize=20)
     plt.tight_layout()
-    plt.savefig(filename, dpi=300)
+    plt.savefig(filename, dpi=150)
     plt.close(fig)
-    print(f"Convergence plot saved {filename}")
+    print(f"Rotation signature plot saved {filename}")
 
 
 def main():
@@ -417,115 +480,133 @@ def main():
                         help="Run ID to process (default: every run in run_list.json, pooled)")
     parser.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
     parser.add_argument("--half-width", type=float, default=DEFAULT_HALF_WIDTH_MM, metavar="MM",
-                        help="Fit window half-width around each distribution's own median, in mm")
-    parser.add_argument("--widths", type=float, nargs="+", default=DEFAULT_WIDTHS_MM, metavar="MM",
-                        help="Descending tracker-window widths (mm) for the convergence scan")
-    parser.add_argument("--min-window-events", type=int, default=DEFAULT_MIN_WINDOW_EVENTS,
-                        help="Minimum events required in a tracker window to attempt a fit")
+                        help="Fit window half-width around each residual's own median, in mm")
+    parser.add_argument("--tracker-resolution", type=float, default=None, metavar="MM",
+                        help=f"Per-station tracker resolution, if known: adds a point estimate with "
+                             f"{TRACK_ERR_GAIN:.2f}x this subtracted in quadrature, alongside the range")
     args = parser.parse_args()
 
     run_ids = [args.run] if args.run else sorted(load_run_list().keys(), key=int)
     run_label = args.run if args.run else "all_runs"
     runtype = get_beam_label(args.run) if args.run else ""
+    rlabel = f"Run {run_label}" if args.run else run_label
 
-    pooled = {key: ([], []) for key in LABELS}  # key -> (tracker_parts, hodo_parts)
+    # axis -> (reference_parts, hodo_parts, reference_shift_only_parts), each
+    # already in its own run's hodoscope frame, so pooling across runs is safe.
+    pooled = {axis: ([], [], []) for axis in TRACK_LABELS}
+    calibrations = []  # (run_id, a, b) per accepted run
+    n_refused = 0
+    last_cal = last_track = None
     for run_id in run_ids:
         try:
-            data, match_frac = load_run_data(run_id)
+            track, match_frac = load_run_data(run_id)
         except Exception as e:
             print(f"[skip] run {run_id}: {e}")
             continue
-        for key in LABELS:
-            trk, hodo = data[key]
-            pooled[key][0].append(trk)
-            pooled[key][1].append(hodo)
         if args.run:
-            print(f"Run {run_id}: tracker match_frac={match_frac:.4%}  "
-                 f"n_hit1={len(data['x1'][0])}  n_hit2={len(data['x2'][0])}")
+            print(f"Run {run_id}: tracker match_frac={match_frac:.4%}  n_both_stations={len(track['xh'])}")
+
+        cal, reason = calibrate_track(track)
+        if cal is None:
+            n_refused += 1
+            print(f"[skip] run {run_id}: {reason}")
+            continue
+        for axis in TRACK_LABELS:
+            for parts, arr in zip(pooled[axis], cal[axis]):
+                parts.append(arr)
+        calibrations.append((run_id, *cal["slopes"]))
+        last_cal, last_track = cal, track
 
     pooled = {
-        key: (np.concatenate(trk) if trk else np.array([]), np.concatenate(hodo) if hodo else np.array([]))
-        for key, (trk, hodo) in pooled.items()
+        axis: tuple(np.concatenate(parts) if parts else np.array([]) for parts in arrays)
+        for axis, arrays in pooled.items()
     }
 
-    summary_lines = [f"Hodoscope resolution vs Si Tracker -- {run_label}"]
+    header_line = f"Hodoscope resolution vs Si Tracker -- {run_label}"
+    print(f"\n{header_line}")
+    summary_lines = [header_line]
+    info = [f"  Track extrapolated to hodoscope z: x_track(z_H) = {TRACK_W2:.3f}*x2 {TRACK_W1:+.3f}*x1   "
+            f"(z from DREAM face: Si1={Z_Si1:g}, Si2={Z_Si2:g}, hodo={Z_H:g} cm)"]
+    if calibrations:
+        a = np.array([c[1] for c in calibrations])
+        b = np.array([c[2] for c in calibrations])
+        rotation, non_orth = 0.5 * (a - b), a + b
+        if args.run:
+            info.append(f"  Rotation calibration: dX/dY = {1e3 * a[0]:+.1f} mrad, dY/dX = {1e3 * b[0]:+.1f} mrad"
+                        f"  ->  rotation {1e3 * rotation[0]:.1f} mrad, non-orthogonality {1e3 * non_orth[0]:+.1f} mrad")
+        else:
+            info.append(f"  Rotation calibration over {len(calibrations)} run(s): rotation median "
+                        f"{1e3 * np.median(rotation):.1f} mrad (range {1e3 * rotation.min():.1f} to "
+                        f"{1e3 * rotation.max():.1f}), non-orthogonality median {1e3 * np.median(non_orth):+.1f} mrad")
+    if n_refused:
+        info.append(f"  {n_refused} run(s) refused -- see the [skip] lines above")
+    for line in info:
+        print(line)
+    summary_lines += info
 
-    # --- Method 1: full-sample residual fit ---
-    print(f"\n[Method 1] Full-sample residual fit -- {run_label}")
-    header = f"{'Selection':<15}{'mu [mm]':>12}{'sigma [mm]':>14}{'n_used':>10}{'n_total':>10}"
+    header = (f"{'Selection':<11}{'sigma_R shift':>15}{'sigma_R cal':>13}{'sigma_err':>11}"
+              f"{'sigma_hodo range':>20}{'n_used':>9}{'n_total':>9}")
     print(header)
     print("-" * len(header))
-    summary_lines += ["", "Method 1: full-sample residual fit", header]
+    summary_lines += ["", header, "-" * len(header)]
 
-    for key, label in LABELS.items():
-        x_tracker, x_hodo = pooled[key]
-        residual = x_hodo - x_tracker
-        fit = fit_resolution(residual, bins=args.bins, half_width=args.half_width)
-        if fit is None:
-            line = f"{label:<15}{'--':>12}{'--':>14}{'insufficient data':>20}"
+    floor = SIGMA_HODO_FLOOR_MM
+    upper_ends = {}  # axis -> (sigma_R, sigma_err)
+    for axis, label in TRACK_LABELS.items():
+        reference, hodo, reference_shift = pooled[axis]
+        fit_shift = fit_resolution(hodo - reference_shift, bins=args.bins, half_width=args.half_width)
+        fit_cal = fit_resolution(hodo - reference, bins=args.bins, half_width=args.half_width)
+        if fit_cal is None:
+            line = f"{label:<11}{'--':>15}{'--':>13}{'insufficient data':>20}"
             print(line)
             summary_lines.append(line)
             continue
 
-        mu, mu_err, sigma, sigma_err, n_used, n_total, (centers, counts, popt) = fit
-        line = f"{label:<15}{mu:>12.4f}{sigma:>14.4f}{n_used:>10d}{n_total:>10d}"
+        _, _, sigma, sigma_err, n_used, n_total, _ = fit_cal
+        upper_ends[axis] = (sigma, sigma_err)
+        shift_str = f"{fit_shift[2]:.4f}" if fit_shift is not None else "--"
+        range_str = f"{floor:.3f} - {sigma:.3f}"
+        line = (f"{label:<11}{shift_str:>15}{sigma:>13.4f}{sigma_err:>11.4f}"
+                f"{range_str:>20}{n_used:>9d}{n_total:>9d}")
         print(line)
         summary_lines.append(line)
-        summary_lines.append(f"    mu_err = {mu_err:.4f} mm, sigma_err = {sigma_err:.4f} mm")
 
-        filename = os.path.join(OUTPUT_DIR, f"hodores_residual_{key}_{run_label}.png")
-        title = f"{label} Residual" if args.run else f"{label} Residual — {run_label}"
-        plot_residual(centers, counts, popt, title, filename, runtype=runtype)
+        filename = os.path.join(OUTPUT_DIR, f"hodores_track_residual_{axis}_{run_label}.png")
+        plot_track_residual(fit_shift, fit_cal, axis, f"{label} Residual", filename, runtype=runtype)
 
-    # --- Method 2: tracker-window convergence ---
-    print(f"\n[Method 2] Tracker-window convergence -- {run_label}")
-    summary_lines += ["", "Method 2: tracker-window convergence (width [mm] -> sigma [mm])"]
+    quote = ["", "Hodoscope resolution (range):"]
+    for axis, (sigma, sigma_err) in upper_ends.items():
+        quote.append(f"  {axis.upper()}: {floor:.3f} - {sigma:.3f} mm   (upper end +/- {sigma_err:.3f} stat.)")
+        if sigma < floor:
+            quote.append(f"     WARNING: sigma_R is below pitch/sqrt(12) -- the Gaussian core is "
+                         f"underestimating this flat-topped residual")
+    quote += [
+        f"  upper end = tracker resolution 0 (sigma_hodo = sigma_R)",
+        f"  lower end = pitch/sqrt(12) = {floor:.3f} mm, the ideal single-bar resolution",
+        "  Multiple scattering inflates the upper end at low beam energy -- quote high-energy runs.",
+    ]
+    if args.tracker_resolution is not None:
+        sigma_track = TRACK_ERR_GAIN * args.tracker_resolution
+        quote.append(f"  With --tracker-resolution {args.tracker_resolution:g} mm per station "
+                     f"(sigma_track = {sigma_track:.4f} mm):")
+        for axis, (sigma, _) in upper_ends.items():
+            sigma_hodo = np.sqrt(max(sigma ** 2 - sigma_track ** 2, 0.0))
+            note = "  -- below pitch/sqrt(12), so this tracker resolution is too large" if sigma_hodo < floor else ""
+            quote.append(f"    {axis.upper()}: {sigma_hodo:.3f} mm{note}")
+    for line in quote:
+        print(line)
+    summary_lines += quote
 
-    for key, label in LABELS.items():
-        x_tracker, x_hodo = pooled[key]
-        scan = window_convergence(x_tracker, x_hodo, widths=args.widths,
-                                  min_events=args.min_window_events,
-                                  bins=args.bins, half_width=args.half_width)
+    if args.run and last_cal is not None:
+        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_{run_label}.png")
+        plot_rotation_signature(last_cal, filename, runtype=runtype, rlabel=rlabel)
 
-        print(f"\n{label}:")
-        summary_lines.append(f"  {label}:")
-        row_fmt = "  {:>10}{:>14}{:>14}{:>10}"
-        print(row_fmt.format("width[mm]", "sigma[mm]", "sigma_err", "n_events"))
-        for w, sigma, sigma_err, n, reason in scan:
-            if sigma is None:
-                row = row_fmt.format(f"{w:g}", "--", "--", n) + f"   ({reason})"
-            else:
-                row = row_fmt.format(f"{w:g}", f"{sigma:.4f}", f"{sigma_err:.4f}", n)
-            print(row)
-            summary_lines.append("    " + row.strip())
-
-        valid = [(w, s, se, n) for w, s, se, n, reason in scan if s is not None]
-        if not valid:
-            print(f"  {label}: no window had enough statistics to fit")
-            summary_lines.append(f"    ({label}: no window had enough statistics to fit)")
-            continue
-
-        w_min, sigma_min, sigma_min_err, n_min = min(valid, key=lambda t: t[0])
-        msg = f"  -> converged sigma ({label}) = {sigma_min:.4f} +/- {sigma_min_err:.4f} mm at width={w_min:g} mm (n={n_min})"
-
-        skipped_narrower = [(w, reason) for w, s, se, n, reason in scan if s is None and w < w_min]
-        if skipped_narrower:
-            reasons = {reason for _, reason in skipped_narrower}
-            reason_note = reasons.pop() if len(reasons) == 1 else "mixed reasons"
-            msg += (f"\n     Note: {len(skipped_narrower)} narrower window(s) could not be fit "
-                   f"({reason_note}) -- this may not be the true plateau, just the narrowest fittable point.")
-
-        if len(valid) >= 2:
-            w2, s2, se2, n2 = sorted(valid, key=lambda t: t[0])[1]
-            if abs(sigma_min - s2) > 2 * np.sqrt(sigma_min_err ** 2 + se2 ** 2):
-                msg += ("\n     WARNING: sigma still differs beyond uncertainty between the two smallest "
-                       "successfully-fit windows -- not clearly converged.")
-        print(msg)
-        summary_lines.append(msg)
-
-        filename = os.path.join(OUTPUT_DIR, f"hodores_convergence_{key}_{run_label}.png")
-        title = f"{label} Window Convergence" if args.run else f"{label} Window Convergence — {run_label}"
-        plot_convergence(scan, title, filename, runtype=runtype)
+        # Same panels after calibration, fit on even events and shown on odd
+        # ones -- interleaved in time, so both halves see the same conditions.
+        odd = np.arange(len(last_track["xh"])) % 2 == 1
+        holdout_cal, _ = calibrate_track(last_track, fit_mask=~odd)
+        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_calibrated_{run_label}.png")
+        plot_rotation_signature(holdout_cal, filename, runtype=runtype, rlabel=rlabel, test_mask=odd)
 
     summary_path = os.path.join(OUTPUT_DIR, f"hodores_{run_label}.txt")
     with open(summary_path, "w") as f:
