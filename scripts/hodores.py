@@ -10,7 +10,8 @@ Why a track rather than one station: a single station's residual also
 carries the beam's angular spread times the station-to-hodoscope gap (each
 particle's angle moves it between the two planes) -- confirmed on real
 data, run 1774's x residual is 0.49mm against Si1 (90cm upstream), 0.33mm
-against Si2 (43cm upstream), but 0.26mm against the track. An earlier
+against Si2 (43cm upstream), but 0.26mm against the track (Gaussian-core
+widths, before the rotation calibration below). An earlier
 version of this script ran that single-station fit and a tracker-window
 convergence scan too; both were dropped in favour of the track.
 
@@ -29,10 +30,22 @@ to the tracker, confirmed on every good run checked across pi+/mu+/e+ at
 residual falls with track x (~-25 mrad); equal-and-opposite is the
 signature of a rotation, and the ~5 mrad left over is a small
 non-orthogonality between the X and Y bars, absorbed by the same fit. Left
-uncorrected it adds ~0.15mm in quadrature (run 1774, x: 0.257 -> 0.207mm).
+uncorrected it adds ~0.15mm in quadrature (run 1774, x RMS: 0.253 -> 0.205mm).
 Each residual against its *own* coordinate is flat (< 0.5 mrad), so no
 scale term is fitted. Validated on held-out events: fitting on even events
 flattens the odd events' cross-slopes to < 1 mrad (``plot_rotation_signature``).
+
+The width is a 3-sigma-truncated RMS (``truncated_rms``), not a Gaussian
+fit: the calibrated residual is flat-topped (a 0.6mm bar blurred by the
+track's error), which a Gaussian doesn't describe, and pitch/sqrt(12) at the
+lower end of the range below is itself an RMS -- so both ends compare like
+with like. The truncation matters: 15-30% of events sit mm away from the
+peak (tracker-to-ROOT mismatches, a broad flat background), and a looser
+window lets the RMS track alignment quality instead of the hodoscope
+(confirmed: with only the 5*MAD clip, run 1812 at 27% mismatched read
+0.267mm against 0.224mm for run 1817; truncated at 3 sigma both read
+0.197mm). At 160 GeV the 3-sigma window converges to about +/-0.6mm, one
+pitch.
 
 What remains is
 
@@ -56,46 +69,49 @@ gives one equation. The script therefore reports a *range*:
 
 ``--tracker-resolution`` additionally gives a point estimate from a
 per-station value supplied from elsewhere. sigma_MS is not negligible at
-low energy (sigma_R rises from ~0.19mm at 160 GeV to ~0.25mm at 20 GeV)
-and inflates both ends, so the hodoscope's intrinsic resolution is best
+low energy (sigma_R rises from ~0.20mm at 160 GeV to ~0.24mm at 20 GeV)
+and inflates the upper end, so the hodoscope's intrinsic resolution is best
 quoted from high-energy runs.
 
 The tracker-to-ROOT alignment is itself imperfect (see utils/tracker.py's
 module docstring and scan_alignment_correlation): a run can report a high
 match_frac while carrying little genuine per-event correspondence.
 ``calibrate_track`` refuses a run outright below MIN_ALIGNMENT_CORRELATION
-(its per-run fit would otherwise be fitting noise), and every fit is
-preceded by a MAD-based clip (same approach as utils.plotting.draw_fit) so
-a minority of mismatched events can't drag it off the real peak.
+(its per-run fit would otherwise be fitting noise). Its fit, and the RMS's
+starting window, begin from a MAD-based clip (same approach as
+utils.plotting.draw_fit) so the mismatched events can't drag either off the
+real peak.
 
 The hodoscope and tracker each define their own (0, 0), and those origins
 are not surveyed to coincide -- confirmed on real data: residuals sit near
 a constant few-cm offset (not zero). The calibration absorbs that offset,
-and the residual fit centers its window on the data's own (robust) median
-rather than an assumed absolute range -- sigma is the target, the fitted
-mean is just a by-product.
+and the RMS is taken about the residual's own (truncated) mean rather than
+zero -- the width is the target, the mean just a by-product.
 
 Usage:
-    python -m scripts.hodores --run <run_id>   # one run
-    python -m scripts.hodores                  # every run in run_list.json, pooled
+    python -m scripts.hodores --run <run_id>          # one run
+    python -m scripts.hodores --testbeam TB2026       # per-run distribution across a testbeam
+    python -m scripts.hodores                         # every run in run_list.json, pooled
 """
 
 import argparse
+import csv
 import os
+import warnings
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import matplotlib.pyplot as plt
 import mplhep as mh
 import numpy as np
 import uproot
 from matplotlib.colors import LogNorm
-from scipy.optimize import curve_fit
+from matplotlib.ticker import MaxNLocator
 
 from utils.constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING, Z_H, Z_Si1, Z_Si2
 from utils.data import get_run_filepath, load_run_list
-from utils.fit_funcs import gauss
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import get_beam_label
+from utils.plotting import get_beam_label, get_run_beam, get_runs_by_testbeam
 from utils.selectors import get_branch_names, passes_veto
 from utils.tracker import (
     MIN_ALIGNMENT_CORRELATION,
@@ -108,16 +124,23 @@ from utils.tracker import (
 )
 
 OUTPUT_DIR = ensure_output_dir("hodores")
+TESTBEAM_OUTPUT_DIR = ensure_output_dir("hodores/testbeam")
 
-# The calibrated residual is ~0.2mm wide and flat-topped (bar quantization),
-# which makes the Gaussian sigma sensitive to coarse bins -- 0.1mm bins read
-# ~1.5% high on run 1774, while anything from 15 to 50 um bins agrees to
-# < 1%. +/-1.5mm with 100 bins gives 30 um.
-DEFAULT_HALF_WIDTH_MM = 1.5  # residual-fit window is [median - this, median + this]
-DEFAULT_BINS = 100
-MAD_CLIP = 5.0  # sigma-equivalent clip applied before every fit below
-MAX_RELATIVE_SIGMA_ERR = 0.5  # reject a fit if sigma_err exceeds this fraction of sigma
+# Default --workers for --testbeam: one per CPU this process may use (respects
+# a SLURM/cgroup allocation), same as scripts/sihodocor.py. Each worker holds
+# one run's ROOT file in memory, so pass fewer on a shared login node.
+N_WORKERS = len(os.sched_getaffinity(0))
+
+MAD_CLIP = 5.0  # sigma-equivalent clip: calibration fit sample, and truncated_rms's starting window
+RMS_TRUNCATION_SIGMA = 3.0  # truncated_rms keeps events within this many RMS of the mean
+MIN_RMS_EVENTS = 20
 MIN_CALIBRATION_EVENTS = 200
+
+# Residual plots only: +/-1.5mm in 100 bins (30 um).
+PLOT_HALF_WIDTH_MM = 1.5
+PLOT_BINS = 100
+# --testbeam resolution distribution's bin width.
+DISTRIBUTION_BIN_MM = 0.01
 
 # Lower end of the reported range: ideal single-bar (argmax) resolution, see module docstring.
 SIGMA_HODO_FLOOR_MM = PITCH / np.sqrt(12)  # 0.173
@@ -125,6 +148,16 @@ SIGMA_HODO_FLOOR_MM = PITCH / np.sqrt(12)  # 0.173
 TRACK_LABELS = {"x": "Track X", "y": "Track Y"}
 # x residual / y residual, in every plot.
 AXIS_COLORS = {"x": "#2a78d6", "y": "#eb6834"}
+# --testbeam's resolution-vs-energy plot: colour + marker per beam type,
+# kept off the x/y blue and orange so neither reads as an axis.
+BEAM_STYLES = {"pi+": ("#1baf7a", "o"), "mu+": ("#eda100", "s"), "e+": ("#e87ba4", "^")}
+
+# One CSV row per run for --testbeam (see run_resolution).
+TESTBEAM_CSV_FIELDS = [
+    "run", "beam_type", "beam_energy_gev", "status", "n_both_stations", "match_frac",
+    "rotation_mrad", "non_orthogonality_mrad",
+    "rms_x_mm", "rms_x_err_mm", "n_used_x", "rms_y_mm", "rms_y_err_mm", "n_used_y", "detail",
+]
 
 # Straight-line weights putting the two-station track at the hodoscope's z
 # (see module docstring): x_track = TRACK_W1 * x1 + TRACK_W2 * x2.
@@ -219,8 +252,7 @@ def _robust_clip_mask(values, n_mad=MAD_CLIP):
     # step by step until one finds a nonzero spread; if even the 1st/99th
     # percentiles coincide (essentially everything on one value), there's
     # nothing meaningful left to clip against, so keep everything and let
-    # the downstream fit's own validity gate (MAX_RELATIVE_SIGMA_ERR) catch
-    # a genuinely bad fit instead.
+    # the downstream estimate (and its own truncation) handle it instead.
     for lo, hi, z in _ROBUST_PERCENTILES:
         q_lo, q_hi = np.percentile(values, [lo, hi])
         spread = q_hi - q_lo
@@ -230,76 +262,43 @@ def _robust_clip_mask(values, n_mad=MAD_CLIP):
     return np.ones(len(values), dtype=bool)
 
 
-def _robust_clip(values, n_mad=MAD_CLIP):
-    """Drop points far from the median before fitting. See ``_robust_clip_mask``."""
-    values = np.asarray(values)
-    return values[_robust_clip_mask(values, n_mad=n_mad)]
+def truncated_rms(values, n_sigma=RMS_TRUNCATION_SIGMA, max_iter=100):
+    """RMS of ``values`` within +/- ``n_sigma`` RMS of their mean, iterated until stable.
 
+    Starts from ``_robust_clip_mask``'s window, so the iteration begins on
+    the real peak rather than the broad mismatch background (see module
+    docstring), then repeatedly recomputes the mean and RMS of the kept
+    events and keeps everything within ``n_sigma`` RMS of that mean, until
+    the kept set stops changing.
 
-def _fit_gaussian(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
-    """Histogram + Gaussian fit on already-clean ``values`` -- no outlier clipping.
+    The uncertainty uses the kept sample's own fourth moment,
+    var(RMS) ~= (m4 - RMS^4) / (4 RMS^2 N), rather than the Gaussian
+    RMS / sqrt(2N): the residual is flat-topped, so the two differ. It is
+    statistical only -- the truncation itself is a choice, not a fluctuation.
 
-    Low-level piece of ``fit_resolution``, which clips first. The histogram
-    window is centered on the data's own median rather than a fixed
-    absolute range (see module docstring).
-
-    A successful ``curve_fit`` call doesn't guarantee a meaningful result --
-    a histogram with too few well-separated bins to actually constrain a
-    Gaussian (e.g. a couple of dominant spike bins plus mostly-empty
-    neighbors) can converge to a numerically "valid" but physically
-    meaningless degenerate solution (huge sigma, huge sigma_err), rather
-    than raising. ``MAX_RELATIVE_SIGMA_ERR`` catches that after the fact:
-    a sigma whose own uncertainty is comparable to (or bigger than) its
-    value isn't a measurement, it's noise that happened to fit.
-
-    Returns ``(mu, mu_err, sigma, sigma_err, n_used, (centers, counts, popt))``,
-    or ``None`` if there isn't enough data to fit, or the fit isn't trustworthy.
-    """
-    values = np.asarray(values)
-    n_used = len(values)
-    if n_used < 20:
-        return None
-
-    center = np.median(values)
-    hist_range = (center - half_width, center + half_width)
-    counts, edges = np.histogram(values, bins=bins, range=hist_range)
-    centers = 0.5 * (edges[:-1] + edges[1:])
-    nonzero = counts > 0
-    if nonzero.sum() < 4:
-        return None
-
-    p0 = (counts.max(), np.median(values), np.std(values) or 1.0)
-    try:
-        popt, pcov = curve_fit(gauss, centers[nonzero], counts[nonzero], p0=p0,
-                               sigma=np.sqrt(counts[nonzero]), absolute_sigma=True, maxfev=10000)
-    except RuntimeError:
-        return None
-
-    perr = np.sqrt(np.diag(pcov))
-    mu, sigma = popt[1], abs(popt[2])
-    mu_err, sigma_err = perr[1], perr[2]
-    if not np.isfinite(sigma_err) or sigma <= 0 or sigma_err > MAX_RELATIVE_SIGMA_ERR * sigma:
-        return None
-    return mu, mu_err, sigma, sigma_err, n_used, (centers, counts, popt)
-
-
-def fit_resolution(values, bins=DEFAULT_BINS, half_width=DEFAULT_HALF_WIDTH_MM):
-    """Clip outliers from one 1-D distribution (a residual, typically), then fit a Gaussian.
-
-    Thin wrapper around ``_fit_gaussian``: clips first using this sample's
-    own statistics -- fine for the large, stable full-run residuals fit here.
-
-    Returns ``(mu, mu_err, sigma, sigma_err, n_used, n_total, (centers, counts, popt))``,
-    or ``None`` if there isn't enough data to fit, or the fit isn't trustworthy.
+    Returns ``(mean, rms, rms_err, n_used, n_total, keep)``, or ``None`` if
+    fewer than MIN_RMS_EVENTS survive.
     """
     values = np.asarray(values)
     n_total = len(values)
-    clipped = _robust_clip(values)
-    result = _fit_gaussian(clipped, bins=bins, half_width=half_width)
-    if result is None:
+    keep = _robust_clip_mask(values)
+    for _ in range(max_iter):
+        if keep.sum() < MIN_RMS_EVENTS:
+            return None
+        mean, rms = values[keep].mean(), values[keep].std()
+        new_keep = np.abs(values - mean) <= n_sigma * rms
+        if np.array_equal(new_keep, keep):
+            break
+        keep = new_keep
+    kept = values[keep]
+    if len(kept) < MIN_RMS_EVENTS:
         return None
-    mu, mu_err, sigma, sigma_err, n_used, extra = result
-    return mu, mu_err, sigma, sigma_err, n_used, n_total, extra
+    mean, rms = kept.mean(), kept.std()
+    if rms <= 0:
+        return None
+    m4 = np.mean((kept - mean) ** 4)
+    rms_err = np.sqrt(max(m4 - rms ** 4, 0.0) / (4 * rms ** 2 * len(kept)))
+    return mean, rms, rms_err, len(kept), n_total, keep
 
 
 def extrapolate_to_hodo(t1, t2):
@@ -360,25 +359,32 @@ def calibrate_track(track, fit_mask=None):
     return cal, None
 
 
-def plot_track_residual(fit_shift, fit_cal, axis, title, filename, runtype=""):
-    """Residual for one axis: shift-only vs rotation-calibrated, each with its Gaussian fit."""
+def plot_track_residual(res_shift, rms_shift, res_cal, rms_cal, axis, title, filename, runtype=""):
+    """Residual for one axis: shift-only vs rotation-calibrated, each with its ``truncated_rms``.
+
+    Each is centered on its own truncated mean so the two shapes overlay
+    directly; dashed lines mark the calibrated residual's truncation window.
+    """
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
-    for fit, color, name in ((fit_shift, "gray", "Shift only"), (fit_cal, AXIS_COLORS[axis], "Rotation-calibrated")):
-        if fit is None:
+    edges = np.linspace(-PLOT_HALF_WIDTH_MM, PLOT_HALF_WIDTH_MM, PLOT_BINS + 1)
+    for residual, result, color, name in ((res_shift, rms_shift, "gray", "Shift only"),
+                                          (res_cal, rms_cal, AXIS_COLORS[axis], "Rotation-calibrated")):
+        if result is None:
             continue
-        mu, _, sigma, sigma_err, _, _, (centers, counts, popt) = fit
-        # Center each on its own fitted mean so the two shapes overlay directly.
-        half_bin = 0.5 * (centers[1] - centers[0])
-        edges = np.append(centers - half_bin, centers[-1] + half_bin) - mu
-        ax.stairs(counts, edges, color=color, lw=2.5,
-                  label=f"{name}: $\\sigma$ = {sigma:.3f} $\\pm$ {sigma_err:.3f} mm")
-        xs = np.linspace(centers[0], centers[-1], 400)
-        ax.plot(xs - mu, gauss(xs, *popt), color=color, lw=1.5, ls="--")
+        mean, rms, rms_err, *_ = result
+        counts, _ = np.histogram(residual - mean, bins=edges)
+        ax.stairs(counts, edges, color=color, lw=2.5, label=f"{name}: RMS = {rms:.3f} $\\pm$ {rms_err:.3f} mm")
+    if rms_cal is not None:
+        window = RMS_TRUNCATION_SIGMA * rms_cal[1]
+        ax.axvline(-window, color=AXIS_COLORS[axis], lw=1.5, ls="--",
+                   label=f"$\\pm${RMS_TRUNCATION_SIGMA:g} RMS truncation ($\\pm${window:.2f} mm)")
+        ax.axvline(window, color=AXIS_COLORS[axis], lw=1.5, ls="--")
     ax.set_xlabel(f"Hodo {axis.upper()} $-$ Track {axis.upper()} at $z_H$ [mm]", loc="right")
     ax.set_ylabel("Events", loc="top")
     ax.set_ylim(0, 1.3 * ax.get_ylim()[1])
-    ax.legend(loc="upper left", fontsize=18)
+    # Opaque, so the truncation lines don't run through the text.
+    ax.legend(loc="upper left", fontsize=18, frameon=True, facecolor="white", edgecolor="none", framealpha=1)
     mh.label.exp_label(exp="CaloX", text=runtype, data=True, rlabel=title, ax=ax)
     plt.tight_layout()
     plt.savefig(filename, dpi=300)
@@ -473,18 +479,226 @@ def plot_rotation_signature(cal, filename, runtype="", rlabel="", test_mask=None
     print(f"Rotation signature plot saved {filename}")
 
 
+def run_resolution(run_id):
+    """One run's resolution for ``--testbeam``, as one CSV row (see TESTBEAM_CSV_FIELDS).
+
+    The same per-run chain as ``--run`` -- load, calibrate, truncated RMS per
+    axis -- without the plots. Never raises: a run that can't be loaded or
+    is refused comes back with its reason in "status"/"detail" and the
+    resolution columns empty, so one bad run can't take down the pool.
+    """
+    beam_type, energy = get_run_beam(run_id)
+    row = {"run": int(run_id), "beam_type": beam_type or "",
+           "beam_energy_gev": energy if energy is not None else ""}
+    try:
+        # reconstruct_hodoscope's span check warns on every event with an
+        # empty plane -- harmless, but it would bury the progress lines.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="All-NaN slice encountered", category=RuntimeWarning)
+            track, match_frac = load_run_data(run_id)
+    except Exception as e:
+        return {**row, "status": "load failed", "detail": str(e)}
+    row.update(n_both_stations=len(track["xh"]), match_frac=match_frac)
+
+    cal, reason = calibrate_track(track)
+    if cal is None:
+        status = "low correlation" if "correlation" in reason else "too few events"
+        return {**row, "status": status, "detail": reason}
+    a, b = cal["slopes"]
+    row.update(rotation_mrad=1e3 * 0.5 * (a - b), non_orthogonality_mrad=1e3 * (a + b))
+    for axis in TRACK_LABELS:
+        reference, hodo, _ = cal[axis]
+        result = truncated_rms(hodo - reference)
+        if result is None:
+            return {**row, "status": "too few events", "detail": f"truncated RMS failed on {axis}"}
+        _, rms, rms_err, n_used, _, _ = result
+        row.update({f"rms_{axis}_mm": rms, f"rms_{axis}_err_mm": rms_err, f"n_used_{axis}": n_used})
+    return {**row, "status": "ok", "detail": ""}
+
+
+def _ok_rows(rows):
+    return [row for row in rows if row["status"] == "ok"]
+
+
+def plot_testbeam_distribution(rows, testbeam, filename):
+    """Histogram of the per-run resolution (the range's upper end) across a testbeam, X and Y overlaid."""
+    ok = _ok_rows(rows)
+    plt.style.use(mh.style.ROOT)
+    fig, ax = plt.subplots(figsize=(12, 9))
+    if not ok:
+        ax.text(0.5, 0.5, "No runs passed", ha="center", va="center", transform=ax.transAxes)
+    else:
+        values = {axis: np.array([row[f"rms_{axis}_mm"] for row in ok]) for axis in TRACK_LABELS}
+        # Runs above twice the median are left off the plot (the summary and
+        # CSV still list them): a run with no real residual peak (confirmed:
+        # run 1881, e+ 40 GeV, 8.9mm -- almost all tracker-to-ROOT
+        # mismatches, only just past the correlation gate) would otherwise
+        # stretch the axis and squash the real runs into one bin.
+        cap = 2 * np.median(np.concatenate(list(values.values())))
+        shown = {axis: v[v <= cap] for axis, v in values.items()}
+        # From just below the pitch/sqrt(12) floor to just past the widest run shown.
+        lo = SIGMA_HODO_FLOOR_MM - DISTRIBUTION_BIN_MM
+        hi = max(v.max() for v in shown.values()) + 2 * DISTRIBUTION_BIN_MM
+        edges = np.arange(lo, hi + DISTRIBUTION_BIN_MM, DISTRIBUTION_BIN_MM)
+        for axis, line_style in zip(shown, ("-", "--")):  # dashed Y can't hide X where bins coincide
+            ax.hist(shown[axis], bins=edges, histtype="step", lw=2.5, ls=line_style, color=AXIS_COLORS[axis],
+                    label=f"{axis.upper()}: median {np.median(values[axis]):.3f} mm")
+        ax.axvline(SIGMA_HODO_FLOOR_MM, color="gray", lw=2, ls=":",
+                   label=f"pitch/$\\sqrt{{12}}$ = {SIGMA_HODO_FLOOR_MM:.3f} mm (lower end)")
+        ax.set_xlim(edges[0], edges[-1])
+        ax.set_ylim(0, 1.25 * ax.get_ylim()[1])
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # run counts
+        ax.legend(loc="upper right", fontsize=20, frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+    ax.set_xlabel(f"Hodoscope resolution, upper end ({RMS_TRUNCATION_SIGMA:g}$\\sigma$-truncated RMS) [mm]",
+                  loc="right")
+    ax.set_ylabel("Runs", loc="top")
+    mh.label.exp_label(ax=ax, exp="CaloX", text=testbeam, rlabel="Hodoscope Resolution Distribution", data=True)
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300)
+    plt.close(fig)
+    print(f"Resolution distribution saved {filename}")
+
+
+def plot_testbeam_vs_energy(rows, testbeam, filename):
+    """Per-run resolution against beam energy, one panel per axis, coloured by beam type.
+
+    Explains most of the distribution's spread: multiple scattering grows as
+    1/E, so the low-energy runs sit well above the high-energy plateau.
+    """
+    ok = [row for row in _ok_rows(rows) if row["beam_energy_gev"] not in ("", None)]
+    plt.style.use(mh.style.ROOT)
+    fig, axes = plt.subplots(1, 2, figsize=(22, 10), sharey=True)
+    beam_types = sorted({row["beam_type"] for row in ok}, key=lambda b: (b not in BEAM_STYLES, b))
+    # Same 0 to twice-the-median window as plot_testbeam_distribution, so a
+    # run with no real residual peak can't flatten every other point.
+    hi = 2 * np.median([row[f"rms_{axis}_mm"] for row in ok for axis in TRACK_LABELS]) if ok else 1.0
+    for ax, axis in zip(axes, TRACK_LABELS):
+        above = [row["run"] for row in ok if row[f"rms_{axis}_mm"] > hi]
+        for i, beam in enumerate(beam_types):
+            color, marker = BEAM_STYLES.get(beam, ("gray", "D"))
+            sel = [row for row in ok if row["beam_type"] == beam and row[f"rms_{axis}_mm"] <= hi]
+            # Small per-beam offset so runs at the same energy don't hide each other.
+            energy = np.array([float(row["beam_energy_gev"]) for row in sel]) + 1.5 * (i - (len(beam_types) - 1) / 2)
+            ax.errorbar(energy, [row[f"rms_{axis}_mm"] for row in sel], yerr=[row[f"rms_{axis}_err_mm"] for row in sel],
+                        fmt=marker, ms=10, mew=1.5, color=color, mec="black", ecolor=color, capsize=2,
+                        label=f"{beam} ({len(sel)} runs)", zorder=5)
+        ax.axhline(SIGMA_HODO_FLOOR_MM, color="gray", lw=2, ls="--",
+                   label=f"pitch/$\\sqrt{{12}}$ = {SIGMA_HODO_FLOOR_MM:.3f} mm")
+        ax.set_xlabel("Beam energy [GeV]", loc="right")
+        ax.set_ylabel(f"Hodoscope {axis.upper()} resolution, upper end [mm]", loc="top")
+        ax.set_ylim(0, hi)
+        title = f"not shown, above {hi:.2f} mm: run {', '.join(map(str, above))}" if above else None
+        ax.legend(loc="lower right", fontsize=16, title=title, title_fontsize=15,
+                  frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+        mh.label.exp_label(ax=ax, exp="CaloX", text=testbeam, rlabel=f"Hodoscope {axis.upper()}", data=True)
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300)
+    plt.close(fig)
+    print(f"Resolution vs energy saved {filename}")
+
+
+def _testbeam_summary(rows, testbeam):
+    """Summary text: counts by status, then the resolution's median per (beam type, energy)."""
+    ok = _ok_rows(rows)
+    floor = SIGMA_HODO_FLOOR_MM
+    lines = [f"Hodoscope resolution distribution -- {testbeam} ({len(rows)} runs)",
+             f"  Per run: range [pitch/sqrt(12) = {floor:.3f}, {RMS_TRUNCATION_SIGMA:g}-sigma-truncated RMS] mm; "
+             "the table gives the upper end."]
+    statuses = {}
+    for row in rows:
+        statuses[row["status"]] = statuses.get(row["status"], 0) + 1
+    lines.append("  " + ", ".join(f"{status}: {n}" for status, n in sorted(statuses.items(), key=lambda s: -s[1])))
+
+    header = f"  {'Beam':<10}{'E [GeV]':>8}{'runs':>6}{'median X':>10}{'median Y':>10}{'X 16-84%':>16}{'Y 16-84%':>16}"
+    lines += ["", header, "  " + "-" * (len(header) - 2)]
+
+    def row_line(beam, energy, group):
+        cells = [f"  {beam:<10}{energy:>8}{len(group):>6}"]
+        for axis in TRACK_LABELS:
+            cells.append(f"{np.median([row[f'rms_{axis}_mm'] for row in group]):>10.3f}")
+        for axis in TRACK_LABELS:
+            lo, hi = np.percentile([row[f"rms_{axis}_mm"] for row in group], [16, 84])
+            cells.append(f"{f'{lo:.3f}-{hi:.3f}':>16}")
+        return "".join(cells)
+
+    groups = {}
+    for row in ok:
+        groups.setdefault((row["beam_type"] or "unknown", row["beam_energy_gev"]), []).append(row)
+    for (beam, energy), group in sorted(groups.items(), key=lambda g: (g[0][0], -float(g[0][1] or 0))):
+        lines.append(row_line(beam, f"{energy:g}" if energy != "" else "?", group))
+    if ok:
+        lines += ["  " + "-" * (len(header) - 2), row_line("all", "", ok)]
+    lines.append("  Multiple scattering inflates the upper end at low beam energy -- quote high-energy runs.")
+    return lines
+
+
+def run_testbeam(testbeam, workers=N_WORKERS):
+    """Every run in ``testbeam``, in parallel: CSV, resolution distribution, resolution vs energy, summary."""
+    runs = get_runs_by_testbeam(testbeam)
+    if not runs:
+        print(f"No runs found for testbeam '{testbeam}'")
+        return
+    print(f"Hodoscope resolution for {len(runs)} runs from {testbeam} using {workers} workers")
+
+    rows = []
+    with ProcessPoolExecutor(max_workers=workers) as ex:
+        futures = {ex.submit(run_resolution, run): run for run in runs}
+        for i, fut in enumerate(as_completed(futures), 1):
+            run = futures[fut]
+            try:
+                row = fut.result()
+            except Exception as e:  # the worker itself died (e.g. out of memory)
+                row = {"run": run, "status": "worker failed", "detail": str(e)}
+            rows.append(row)
+            if row["status"] == "ok":
+                result = f"X {row['rms_x_mm']:.3f}  Y {row['rms_y_mm']:.3f} mm"
+            else:
+                result = f"{row['status']} ({row.get('detail', '')})"
+            print(f"[{i}/{len(runs)}] run {run}: {result}")
+    rows.sort(key=lambda row: row["run"])
+
+    tag = testbeam.replace(" ", "_")
+    csv_path = os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_hodores.csv")
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=TESTBEAM_CSV_FIELDS, restval="")
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"\nPer-run CSV saved {csv_path}")
+
+    plot_testbeam_distribution(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution.png"))
+    plot_testbeam_vs_energy(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution_vs_energy.png"))
+
+    summary = _testbeam_summary(rows, testbeam)
+    print()
+    for line in summary:
+        print(line)
+    summary_path = os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_hodores.txt")
+    with open(summary_path, "w") as f:
+        f.write("\n".join(summary) + "\n")
+    print(f"\nSummary saved to {summary_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--run", type=str, default=None,
                         help="Run ID to process (default: every run in run_list.json, pooled)")
-    parser.add_argument("--bins", type=int, default=DEFAULT_BINS, help="Number of histogram bins")
-    parser.add_argument("--half-width", type=float, default=DEFAULT_HALF_WIDTH_MM, metavar="MM",
-                        help="Fit window half-width around each residual's own median, in mm")
+    parser.add_argument("--testbeam", type=str, default=None,
+                        help="Instead of --run, measure every run in this testbeam (e.g. TB2026) separately "
+                             "and plot the distribution of per-run resolutions")
+    parser.add_argument("--workers", type=int, default=N_WORKERS,
+                        help=f"--testbeam: parallel runs (default {N_WORKERS}, every CPU available; "
+                             f"each holds one ROOT file in memory)")
     parser.add_argument("--tracker-resolution", type=float, default=None, metavar="MM",
                         help=f"Per-station tracker resolution, if known: adds a point estimate with "
                              f"{TRACK_ERR_GAIN:.2f}x this subtracted in quadrature, alongside the range")
     args = parser.parse_args()
+
+    if args.testbeam:
+        if args.run:
+            parser.error("--run and --testbeam are mutually exclusive")
+        run_testbeam(args.testbeam, workers=args.workers)
+        return
 
     run_ids = [args.run] if args.run else sorted(load_run_list().keys(), key=int)
     run_label = args.run if args.run else "all_runs"
@@ -544,44 +758,48 @@ def main():
         print(line)
     summary_lines += info
 
-    header = (f"{'Selection':<11}{'sigma_R shift':>15}{'sigma_R cal':>13}{'sigma_err':>11}"
+    header = (f"{'Selection':<11}{'RMS shift':>11}{'RMS cal':>10}{'RMS err':>10}"
               f"{'sigma_hodo range':>20}{'n_used':>9}{'n_total':>9}")
+    info = f"  RMS = {RMS_TRUNCATION_SIGMA:g}-sigma-truncated RMS of the residual [mm]"
+    print(info)
     print(header)
     print("-" * len(header))
-    summary_lines += ["", header, "-" * len(header)]
+    summary_lines += ["", info, header, "-" * len(header)]
 
     floor = SIGMA_HODO_FLOOR_MM
-    upper_ends = {}  # axis -> (sigma_R, sigma_err)
+    upper_ends = {}  # axis -> (rms, rms_err)
     for axis, label in TRACK_LABELS.items():
         reference, hodo, reference_shift = pooled[axis]
-        fit_shift = fit_resolution(hodo - reference_shift, bins=args.bins, half_width=args.half_width)
-        fit_cal = fit_resolution(hodo - reference, bins=args.bins, half_width=args.half_width)
-        if fit_cal is None:
-            line = f"{label:<11}{'--':>15}{'--':>13}{'insufficient data':>20}"
+        res_shift, res_cal = hodo - reference_shift, hodo - reference
+        rms_shift = truncated_rms(res_shift) if len(res_shift) else None
+        rms_cal = truncated_rms(res_cal) if len(res_cal) else None
+        if rms_cal is None:
+            line = f"{label:<11}{'--':>11}{'--':>10}{'insufficient data':>20}"
             print(line)
             summary_lines.append(line)
             continue
 
-        _, _, sigma, sigma_err, n_used, n_total, _ = fit_cal
-        upper_ends[axis] = (sigma, sigma_err)
-        shift_str = f"{fit_shift[2]:.4f}" if fit_shift is not None else "--"
-        range_str = f"{floor:.3f} - {sigma:.3f}"
-        line = (f"{label:<11}{shift_str:>15}{sigma:>13.4f}{sigma_err:>11.4f}"
+        _, rms, rms_err, n_used, n_total, _ = rms_cal
+        upper_ends[axis] = (rms, rms_err)
+        shift_str = f"{rms_shift[1]:.4f}" if rms_shift is not None else "--"
+        range_str = f"{floor:.3f} - {rms:.3f}"
+        line = (f"{label:<11}{shift_str:>11}{rms:>10.4f}{rms_err:>10.4f}"
                 f"{range_str:>20}{n_used:>9d}{n_total:>9d}")
         print(line)
         summary_lines.append(line)
 
         filename = os.path.join(OUTPUT_DIR, f"hodores_track_residual_{axis}_{run_label}.png")
-        plot_track_residual(fit_shift, fit_cal, axis, f"{label} Residual", filename, runtype=runtype)
+        plot_track_residual(res_shift, rms_shift, res_cal, rms_cal, axis, f"{label} Residual", filename,
+                            runtype=runtype)
 
     quote = ["", "Hodoscope resolution (range):"]
-    for axis, (sigma, sigma_err) in upper_ends.items():
-        quote.append(f"  {axis.upper()}: {floor:.3f} - {sigma:.3f} mm   (upper end +/- {sigma_err:.3f} stat.)")
-        if sigma < floor:
-            quote.append(f"     WARNING: sigma_R is below pitch/sqrt(12) -- the Gaussian core is "
-                         f"underestimating this flat-topped residual")
+    for axis, (rms, rms_err) in upper_ends.items():
+        quote.append(f"  {axis.upper()}: {floor:.3f} - {rms:.3f} mm   (upper end +/- {rms_err:.3f} stat.)")
+        if rms < floor:
+            quote.append("     WARNING: RMS is below pitch/sqrt(12), which argmax reconstruction can't "
+                         "reach -- check the calibration")
     quote += [
-        f"  upper end = tracker resolution 0 (sigma_hodo = sigma_R)",
+        f"  upper end = tracker resolution 0 (sigma_hodo = {RMS_TRUNCATION_SIGMA:g}-sigma-truncated RMS)",
         f"  lower end = pitch/sqrt(12) = {floor:.3f} mm, the ideal single-bar resolution",
         "  Multiple scattering inflates the upper end at low beam energy -- quote high-energy runs.",
     ]
@@ -589,8 +807,8 @@ def main():
         sigma_track = TRACK_ERR_GAIN * args.tracker_resolution
         quote.append(f"  With --tracker-resolution {args.tracker_resolution:g} mm per station "
                      f"(sigma_track = {sigma_track:.4f} mm):")
-        for axis, (sigma, _) in upper_ends.items():
-            sigma_hodo = np.sqrt(max(sigma ** 2 - sigma_track ** 2, 0.0))
+        for axis, (rms, _) in upper_ends.items():
+            sigma_hodo = np.sqrt(max(rms ** 2 - sigma_track ** 2, 0.0))
             note = "  -- below pitch/sqrt(12), so this tracker resolution is too large" if sigma_hodo < floor else ""
             quote.append(f"    {axis.upper()}: {sigma_hodo:.3f} mm{note}")
     for line in quote:
