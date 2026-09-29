@@ -41,7 +41,7 @@ from utils.tracker import (
 )
 from utils.hodo import reconstruct_hodoscope 
 from utils.constants import VETO_THRESHOLD, X_MAPPING, Y_MAPPING
-from utils.data import get_run_filepath, get_run_table_position
+from utils.data import get_run_beam, get_run_filepath, get_run_table_position
 from utils.plotting import get_beam_label, get_runs_by_testbeam, TProfile1d, TProfile2d
 from utils.energy import load_energy_data
 from utils.selectors import get_branch_names
@@ -389,16 +389,25 @@ def _rescale_y_to_window(ax, x, y, x_lo, x_hi):
     pad_y = 0.1 * (hi_y - lo_y) if hi_y > lo_y else max(abs(lo_y), 1)
     ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
 
-def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
+def _output_dir(run, label, calib):
+    """Raw-HG plots go to output/energy_tracks/, calibrated ones to output/energy_tracks_calib/.
+    label=None gives the run's own directory, for plots not tied to one position detector."""
+    root = "energy_tracks_calib" if calib else "energy_tracks"
+    run_dir = os.path.join("output", root, run)
+    return run_dir if label is None else os.path.join(run_dir, label.replace(" ", "_"))
+
+def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
     '''
     Plot the energy tracks for a given run.
     Args:
         run: Run ID to process
         energy_tracks: Dictionary containing energy track data for scintillator and Cherenkov channels
         label: Label for the plot (default: "Hodoscope")
-    Will save all plots to /output/energy_tracks/{run}/{label}
+        calib: energies are calibrated (GeV, EM scale) rather than raw HG sums (ADC)
+    Will save all plots to /output/energy_tracks{_calib}/{run}/{label}
     '''
-    output_dir = os.path.join("output", "energy_tracks", run, label.replace(" ", "_"))
+    output_dir = _output_dir(run, label, calib)
+    unit = "GeV" if calib else "ADC"
     os.makedirs(output_dir, exist_ok=True)
     runtype = _beam_label_with_position(run)
     plt.style.use(mh.style.ROOT)
@@ -409,17 +418,23 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
             data = energy_tracks[ch][dim]
             if dim == "1d":
                 for axis in ["x", "y"]:
-                    exlabel = f"{ch.upper()} Energy vs {axis.upper()} Position"
                     centers, mean, error, counts = data[axis]
                     fig, ax = plt.subplots(figsize=(12, 12))
                     ax.errorbar(centers, mean, yerr=error, fmt="-o", ms=3)
-                    popt, perr, fit_mask, period, period_err = fit_sine_profile(centers, mean, error, counts=counts)
-                    x_fit = np.linspace(centers[fit_mask].min(), centers[fit_mask].max(), 200)
-                    y_fit = sine(x_fit, *popt)
-                    fit_label = (f"period={period:.3g}±{period_err:.2g} mm")
-                    ax.plot(x_fit, y_fit, "r-", linewidth=2, label=fit_label)
+                    # An unconverged fit (e.g. a sparse tracker profile) skips only this
+                    # combo's fit overlay/filtered plot/FFT, not every remaining plot of the run.
+                    try:
+                        popt, perr, fit_mask, period, period_err = fit_sine_profile(centers, mean, error, counts=counts)
+                    except RuntimeError as e:
+                        print(f"  [{run}] {label} {ch} vs {axis}: no sine fit ({e})")
+                        popt = None
+                    if popt is not None:
+                        x_fit = np.linspace(centers[fit_mask].min(), centers[fit_mask].max(), 200)
+                        y_fit = sine(x_fit, *popt)
+                        fit_label = (f"period={period:.3g}±{period_err:.2g} mm")
+                        ax.plot(x_fit, y_fit, "r-", linewidth=2, label=fit_label)
                     ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
-                    ax.set_ylabel(f"Average {ch} Energy (ADC)", loc="top")
+                    ax.set_ylabel(f"Average {ch} Energy ({unit})", loc="top")
                     ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
                     if bounds is not None:
                         x_lo, x_hi = bounds[axis]
@@ -431,11 +446,16 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                             lo, hi = np.nanpercentile(finite_mean, [5, 95])
                             pad = 0.1 * (hi - lo) if hi > lo else max(abs(lo), 1)
                             ax.set_ylim(lo - pad, hi + pad)
-                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
+                    # rlabel="" (not omitted) on every exp_label here: mplhep otherwise fills the
+                    # right slot with a default "(13 TeV)" that runs into the table-position text.
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                     ax.grid()
-                    ax.legend(fontsize=20)
-                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}.png"))
+                    if popt is not None:
+                        ax.legend(fontsize=20)
+                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}.pdf"))
                     plt.close()
+                    if popt is None:
+                        continue
 
                     freqs, power = oscillation_spectrum(centers[fit_mask], mean[fit_mask])
                     fft_by_combo[(ch, axis)] = (freqs, power, period)
@@ -468,21 +488,20 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                         y_fit_p = sine(x_fit_p, popt[0], popt[1], popt[2], 0, 0)
                         ax.plot(x_fit_p, y_fit_p, "r-", linewidth=2, label=fit_label)
                         ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
-                        ax.set_ylabel(f"{ch} Energy, background-subtracted (ADC)", loc="top")
+                        ax.set_ylabel(f"{ch} Energy, background-subtracted ({unit})", loc="top")
                         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
                         if bounds is not None:
                             vx_lo, vx_hi = bounds[axis]
                             ax.set_xlim(vx_lo, vx_hi)
                             _rescale_y_to_window(ax, centers_p, refined_1d, vx_lo, vx_hi)
-                        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
+                        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                         ax.grid()
                         ax.legend(fontsize=20)
-                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.png"))
+                        plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.pdf"))
                         plt.close()
 
 
             elif dim == "2d":
-                exlabel = f"{ch.upper()} Energy vs Position"
                 x_centers, y_centers, mean, error, counts = data
                 min_2d_counts = 5
                 mean_masked = np.where(counts >= min_2d_counts, mean, np.nan)
@@ -491,14 +510,14 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                 im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto")
                 ax.set_xlabel(f"{label} X Position (mm)", loc="right")
                 ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
-                cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy (ADC)")
+                cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy ({unit})")
                 cbar.formatter.set_powerlimits((0, 0))
                 cbar.update_ticks()
-                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel, data=True, fontsize=24)
+                mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                 if bounds is not None:
                     ax.set_xlim(*bounds["x"])
                     ax.set_ylim(*bounds["y"])
-                plt.savefig(os.path.join(output_dir, f"{ch}_{dim}.png"))
+                plt.savefig(os.path.join(output_dir, f"{ch}_{dim}.pdf"))
                 plt.close()
 
                 # Band-pass: light smoothing to kill per-pixel shot noise, minus a much
@@ -515,14 +534,14 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
                                     aspect="auto", cmap="RdBu_r", vmin=-vabs, vmax=vabs)
                     ax.set_xlabel(f"{label} X Position (mm)", loc="right")
                     ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
-                    cbar = plt.colorbar(im, ax=ax, label=f"{ch} Energy, background-subtracted (ADC)")
+                    cbar = plt.colorbar(im, ax=ax, label=f"{ch} Energy, background-subtracted ({unit})")
                     cbar.formatter.set_powerlimits((0, 0))
                     cbar.update_ticks()
-                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=exlabel + " (filtered)", data=True, fontsize=24)
+                    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                     if bounds is not None:
                         ax.set_xlim(*bounds["x"])
                         ax.set_ylim(*bounds["y"])
-                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered.png"))
+                    plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_filtered.pdf"))
                     plt.close()
 
     combos = [(ch, axis) for ch in ["sci", "cer"] for axis in ["x", "y"] if (ch, axis) in fft_by_combo]
@@ -538,14 +557,14 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope"):
             ax.grid()
             ax.legend(fontsize=14)
         axes[-1].set_xlabel("Angular frequency (rad/mm)", loc="right")
-        mh.label.exp_label(ax=axes[0], exp="CaloX", text=runtype, rlabel=f"{label} Oscillation FFT", data=True, fontsize=24)
+        mh.label.exp_label(ax=axes[0], exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
         plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, "oscillation_fft.png"))
+        plt.savefig(os.path.join(output_dir, "oscillation_fft.pdf"))
         plt.close()
 
     print(f"Saved energy track plots to {output_dir}")
 
-def plot_significant_peaks(run, energy_tracks, label="Hodoscope"):
+def plot_significant_peaks(run, energy_tracks, label="Hodoscope", calib=False):
     """Plot each axis's FFT power spectrum (SCI and CER overlaid) with every
     peak find_significant_peaks judges real marked and labeled, alongside
     the search window and local-comparison band it was judged against.
@@ -554,10 +573,10 @@ def plot_significant_peaks(run, energy_tracks, label="Hodoscope"):
     based per-axis plots) rather than replacing anything there -- this is
     the new, validated peak-search approach, additive so the existing
     plots keep working exactly as before regardless of how this one turns
-    out. Saved as oscillation_peaks.png alongside plot_energy_tracks's own
+    out. Saved as oscillation_peaks.pdf alongside plot_energy_tracks's own
     output for the same run/label.
     """
-    output_dir = os.path.join("output", "energy_tracks", run, label.replace(" ", "_"))
+    output_dir = _output_dir(run, label, calib)
     os.makedirs(output_dir, exist_ok=True)
     runtype = _beam_label_with_position(run)
     plt.style.use(mh.style.ROOT)
@@ -594,20 +613,71 @@ def plot_significant_peaks(run, energy_tracks, label="Hodoscope"):
         ax.set_yscale("log")
         ax.set_xlabel("Angular frequency (rad/mm)", loc="right")
         ax.set_ylabel("Power", loc="top")
-        ax.legend(fontsize=11, loc="upper right")
-        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"{label} {axis.upper()}", data=True, fontsize=24)
+        # Panel identity (X/Y) lives in the legend title; the full beam + table-position
+        # label only fits across one of two side-by-side panels at a smaller font size.
+        ax.legend(fontsize=11, loc="upper right", title=f"{label} {axis.upper()}", title_fontsize=14)
+        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=17)
 
     plt.tight_layout()
-    outpath = os.path.join(output_dir, "oscillation_peaks.png")
+    outpath = os.path.join(output_dir, "oscillation_peaks.pdf")
     plt.savefig(outpath, dpi=150)
     plt.close(fig)
     print(f"Peak-search plot saved to {outpath}")
 
-def process_run(run):
+def plot_energy_histogram(run, sci, cer, sel, calib=False):
+    """Histogram each event's total SCI and CER energy, as a check on the energy calibration.
+
+    Shows all events and the selection the hodoscope profiles use (sel). With
+    calib the energies are GeV at the EM scale, so for e+ both should peak near
+    the beam energy (marked); pions are expected to peak below it -- the
+    calorimeter's hadron response is lower than its EM response, CER more so
+    than SCI. Saved as energy_hist.pdf in the run's output directory.
+    """
+    output_dir = _output_dir(run, None, calib)
+    os.makedirs(output_dir, exist_ok=True)
+    runtype = _beam_label_with_position(run)
+    plt.style.use(mh.style.ROOT)
+    _, beam_energy = get_run_beam(run)
+    unit = "GeV" if calib else "ADC"
+
+    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    summary = []
+    for ax, (ch, energy, color) in zip(axes, [("sci", sci, "tab:blue"), ("cer", cer, "tab:orange")]):
+        e_sel = energy[sel]
+        if calib and beam_energy:
+            edges = np.linspace(0, 1.5 * beam_energy, 151)
+        else:
+            edges = np.linspace(0, np.percentile(e_sel, 99.5) * 1.1, 151)
+        centers = 0.5 * (edges[1:] + edges[:-1])
+        peak_all = centers[np.argmax(np.histogram(energy, bins=edges)[0])]
+        peak = centers[np.argmax(np.histogram(e_sel, bins=edges)[0])]
+        median_all, median = np.median(energy), np.median(e_sel)
+        summary.append(f"{ch.upper()} peak/median all {peak_all:.3g}/{median_all:.3g}, selected {peak:.3g}/{median:.3g} {unit}")
+        ax.hist(energy, bins=edges, histtype="step", color="grey", lw=1.5,
+                label=f"all events ({len(energy)})\npeak {peak_all:.3g}, median {median_all:.3g} {unit}")
+        ax.hist(e_sel, bins=edges, histtype="stepfilled", color=color, alpha=0.5,
+                label=f"hodo + veto selected ({len(e_sel)})\npeak {peak:.3g}, median {median:.3g} {unit}")
+        if calib and beam_energy:
+            ax.axvline(beam_energy, color="k", ls="--", lw=2, label=f"beam energy {beam_energy:g} GeV")
+        ax.set_xlabel(f"Total {ch.upper()} energy ({unit})", loc="right")
+        ax.set_ylabel("Events", loc="top")
+        ax.set_xlim(edges[0], edges[-1])
+        ax.legend(fontsize=13, loc="upper left")
+        mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=17)
+
+    plt.tight_layout()
+    outpath = os.path.join(output_dir, "energy_hist.pdf")
+    plt.savefig(outpath)
+    plt.close(fig)
+    beam_s = f"beam {beam_energy:g} GeV" if beam_energy else "beam energy unknown"
+    print(f"  [{run}] energy check ({beam_s}): " + "; ".join(summary) + f" -> {outpath}")
+
+def process_run(run, calib=False):
     """
     Build and save all energy track plots for a single run.
     Args:
         run: Run ID to process (str or int)
+        calib: use calibrated energies (load_energy_data calib_data=True) instead of raw HG sums
     """
     run = str(run)
     try:
@@ -626,7 +696,7 @@ def process_run(run):
         #Load Tracker data
         si_data = load_tracker_run(int(run))
         #Load energy data
-        total_sci_energy, total_cer_energy = load_energy_data(int(run), calib_data=False)
+        total_sci_energy, total_cer_energy = load_energy_data(int(run), calib_data=calib)
 
         tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
         x1_raw, y1_raw = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
@@ -645,15 +715,16 @@ def process_run(run):
         return
 
     try:
-        hodo_energy_tracks = build_energy_tracks(hx, hy, total_sci_energy, total_cer_energy, good_hodo & veto_sel, calib_data=False, is_hodo=True)
-        trk1_energy_tracks = build_energy_tracks(x1, y1, total_sci_energy, total_cer_energy, si_mask, calib_data=False, is_hodo=False)
-        trk2_energy_tracks = build_energy_tracks(x2, y2, total_sci_energy, total_cer_energy, si_mask, calib_data=False, is_hodo=False)
-        plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope")
-        plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1")
-        plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2")
-        plot_significant_peaks(run, hodo_energy_tracks, label="Hodoscope")
-        plot_significant_peaks(run, trk1_energy_tracks, label="Tracker 1")
-        plot_significant_peaks(run, trk2_energy_tracks, label="Tracker 2")
+        plot_energy_histogram(run, total_sci_energy, total_cer_energy, good_hodo & veto_sel, calib=calib)
+        hodo_energy_tracks = build_energy_tracks(hx, hy, total_sci_energy, total_cer_energy, good_hodo & veto_sel, calib_data=calib, is_hodo=True)
+        trk1_energy_tracks = build_energy_tracks(x1, y1, total_sci_energy, total_cer_energy, si_mask, calib_data=calib, is_hodo=False)
+        trk2_energy_tracks = build_energy_tracks(x2, y2, total_sci_energy, total_cer_energy, si_mask, calib_data=calib, is_hodo=False)
+        plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope", calib=calib)
+        plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1", calib=calib)
+        plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2", calib=calib)
+        plot_significant_peaks(run, hodo_energy_tracks, label="Hodoscope", calib=calib)
+        plot_significant_peaks(run, trk1_energy_tracks, label="Tracker 1", calib=calib)
+        plot_significant_peaks(run, trk2_energy_tracks, label="Tracker 2", calib=calib)
     except Exception as e:
         print(f"Error plotting run {run}: {e}")
 
@@ -665,6 +736,10 @@ def main():
     parser.add_argument("--testbeam", type=str,
                          help="Process every run belonging to this testbeam/run period "
                               "(e.g. TB2025, TB2026, 'Cosmic 2025'), instead of a single --run")
+    parser.add_argument("--calib", action="store_true",
+                         help="Use calibrated energies (pedestal-subtracted, HG/LG-mixed, per-channel "
+                              "response; data/energy_calibration_<testbeam>.json) instead of raw HG sums. "
+                              "Plots go to output/energy_tracks_calib/")
     args = parser.parse_args()
 
     if args.testbeam:
@@ -675,7 +750,7 @@ def main():
         print(f"Processing {len(runs)} runs from {args.testbeam} using {N_WORKERS} workers")
         with tqdm(total=len(runs), desc=args.testbeam, unit="run") as pbar, \
             ProcessPoolExecutor(max_workers=N_WORKERS) as ex:
-            futures = {ex.submit(process_run, run): run for run in runs}
+            futures = {ex.submit(process_run, run, args.calib): run for run in runs}
             for fut in as_completed(futures):
                 run = futures[fut]
                 pbar.set_postfix_str(f"run {run}")
@@ -685,7 +760,7 @@ def main():
                     tqdm.write(f"Error processing run {run}: {e}")
                 pbar.update(1)
     elif args.run:
-        process_run(args.run)
+        process_run(args.run, args.calib)
     else:
         parser.error("one of --run or --testbeam is required")
 

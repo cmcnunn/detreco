@@ -3,6 +3,7 @@ import json
 import uproot
 
 from .data import get_run_filepath
+from .plotting import get_runtype
 
 def check_file(run, DRS_START = 1820):
     if run <= DRS_START:
@@ -11,22 +12,34 @@ def check_file(run, DRS_START = 1820):
         return False
 
 
-def load_configs():
+def _config_suffix(run):
+    """Filename suffix for this run's channel lists / energy calibration in data/.
+
+    TB2026 moved the 3mm (central) boards to Board6/7 and made Board9/10 6mm
+    (CaloXDataAnalysis channels/channel_map.py, run >= 1720), so its runs use
+    the *_tb2026.json files; every other run uses the older layout (*_tb2025.json,
+    3mm = Board9/10).
+    """
+    return "_tb2026" if get_runtype(run) == "TB2026" else "_tb2025"
+
+def load_configs(run):
     '''
     Load scintillator and Cherenkov channel configurations from JSON files.
      - sci_setup: dict with keys "boards" and "sci_channels" for scintillator channels
      - cer_setup: dict with keys "boards" and "cer_channels" for Cherenkov channels
      Returns: sci_setup, cer_setup
-     Note: sci_channels and cer_channels should be lists of channel numbers (as strings) 
-     corresponding to the channels used for energy sum in the analysis. 
+     Note: sci_channels and cer_channels should be lists of channel numbers (as strings)
+     corresponding to the channels used for energy sum in the analysis.
      Boards should be a list of board numbers (as strings) that contain those channels.
      Example JSON structure:
 {
     "Boardn": [Channeln]
+     The file set is chosen per run by _config_suffix.
     '''
-    with open("data/channels_sci.json", "r") as f:
+    suffix = _config_suffix(run)
+    with open(f"data/channels_sci{suffix}.json", "r") as f:
         sci_setup = json.load(f)
-    with open("data/channels_cer.json", "r") as f:
+    with open(f"data/channels_cer{suffix}.json", "r") as f:
         cer_setup = json.load(f)
     return sci_setup, cer_setup
 
@@ -58,7 +71,7 @@ def reconstruct_energy(b, ch, HG_matrix, LG_matrix, calib_data, saturation_thres
 def load_energy_data(run, calib_data=False):
     check = check_file(run)
     file_path = get_run_filepath(run)
-    sci_setup, cer_setup = load_configs() # Load configs for energy boards and channels once and pass to analysis
+    sci_setup, cer_setup = load_configs(run) # Load configs for energy boards and channels once and pass to analysis
 
     if check:
         with uproot.open(file_path) as f:
@@ -69,7 +82,9 @@ def load_energy_data(run, calib_data=False):
 
             boards = list(sci_setup.keys())
             if calib_data:
-                with open("data/energy_calibration.json", "r") as f:
+                # data/energy_calibration_tb2026.json is CaloXDataAnalysis's (preliminary)
+                # TB2026 set: FERS_pedestals/HG2LG/response_tb2026.json, dead channels -> factor 0
+                with open(f"data/energy_calibration{_config_suffix(run)}.json", "r") as f:
                     calib_data = json.load(f)
             for b in boards:
                 hg_branch = f"FERS_{b}_energyHG"
