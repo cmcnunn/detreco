@@ -59,6 +59,27 @@ def get_run_table_position(run_id, path=RUN_LIST_PATH):
     return entry.get("table_x_mm"), entry.get("table_y_mm")
 
 
+def get_run_hodo_rotation(run_id, path=RUN_LIST_PATH):
+    """Return the hodoscope-vs-tracker cross-slopes ``(dx_dy, dy_dx)`` (rad)
+    recorded for ``run_id``, or ``None`` if the run has none (e.g. TB2025
+    runs, which have no tracker to measure it against).
+
+    Stored under the run's ``hodo_rotation`` key by ``scripts.hodores
+    --update-run-list`` -- ``dx_dy_mrad``/``dy_dx_mrad`` plus ``from_runs``,
+    the run(s) whose fit supplied them (the run itself, or the median of the
+    nearest runs with a trusted fit). Applied by
+    ``utils.hodo.reconstruct_hodoscope(run_id=...)``.
+    """
+    run_list = load_run_list(path)
+    run_id = str(run_id)
+    if run_id not in run_list:
+        raise KeyError(f"Run {run_id} not found in {path}")
+    rotation = run_list[run_id].get("hodo_rotation")
+    if rotation is None:
+        return None
+    return 1e-3 * rotation["dx_dy_mrad"], 1e-3 * rotation["dy_dx_mrad"]
+
+
 def get_runs_by_beam(beam_type=None, beam_energy_gev=None, path=RUN_LIST_PATH, include_flagged=False):
     """Return the sorted run IDs (as ints) matching the given beam filters.
 

@@ -26,7 +26,7 @@ def hodoreco(run_data):
             hg_x = np.stack(tree[X_HG].array(library="np"))[:, X_MAPPING]
             hg_y = np.stack(tree[Y_HG].array(library="np"))[:, Y_MAPPING]
 
-            xh, yh, mask = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)
+            xh, yh, mask = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, run_id=run_id)
 
             results = {
                 "xh": xh[mask],

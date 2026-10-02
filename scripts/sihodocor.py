@@ -108,7 +108,7 @@ def load_run_data(run):
             root_tstamp = tree["FERS_Board1_tstamp_us"].array(library="np")
             hg_x = np.stack(tree["FERS_Board1_energyHG"].array(library="np"))[:, X_MAPPING]
             hg_y = np.stack(tree["FERS_Board0_energyHG"].array(library="np"))[:, Y_MAPPING]
-            xh, yh, maskh = reconstruct_hodoscope(hg_x, hg_y, threshold=4000, pitch=0.6)
+            xh, yh, maskh = reconstruct_hodoscope(hg_x, hg_y, threshold=4000, pitch=0.6, run_id=run)
             veto_wf = np.stack(tree[veto_branch].array(library="np"))
             maskv = passes_veto(veto_wf)
             if has_counters:

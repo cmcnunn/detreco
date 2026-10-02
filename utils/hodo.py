@@ -4,12 +4,14 @@ Every script that uses the hodoscope had its own copy of this logic. It's the
 same recipe every time: threshold the per-bar HG amplitudes, check that the
 pattern of hits is consistent with a single particle passing through (one or
 two *adjacent* bars fired), and convert the best bar index into a transverse
-position in mm.
+position in mm. Given a run ID, the positions are then rotated into the
+silicon tracker's frame (``rotate_to_tracker_frame``).
 """
 
 import numpy as np
 
 from .constants import HG_THRESHOLD, PITCH
+from .data import get_run_hodo_rotation
 
 # Hodoscope has 64 bars per plane. Bar index 0 corresponds to one edge,
 # bar index 63 to the other; the geometric center sits between bar 31 and
@@ -24,6 +26,30 @@ def calculate_bar_position(bar_index, pitch=PITCH):
     Position is zero at the geometric center of the hodoscope.
     """
     return (np.asarray(bar_index) - BAR_CENTER_OFFSET) * pitch
+
+
+def rotate_to_tracker_frame(x, y, dx_dy, dy_dx):
+    """Undo the hodoscope's rotation relative to the silicon tracker.
+
+    ``scripts.hodores`` measures, per run, how the hodoscope sees a
+    two-station track extrapolated to its z:
+
+        hodo_x - x_track = dx_dy * y_track + c_x
+        hodo_y - y_track = dy_dx * x_track + c_y
+
+    i.e. hodo = M @ track + c with M = [[1, dx_dy], [dy_dx, 1]] -- a ~27-31
+    mrad rotation, (dx_dy - dy_dx) / 2, plus a ~5 mrad non-orthogonality
+    between the X and Y bar planes, dx_dy + dy_dx. This applies M^-1 about
+    the hodoscope's own centre. The offsets c are not applied: the hodoscope
+    keeps its own origin, which was never surveyed to the tracker's.
+
+    Mixes the two planes, so an event that fails the goodness cut on one
+    plane carries that plane's meaningless position into the other -- mask
+    with ``good_hodo_mask`` as before, not one plane's
+    ``hodo_axis_good_masks``.
+    """
+    det = 1.0 - dx_dy * dy_dx
+    return (x - dx_dy * y) / det, (y - dy_dx * x) / det
 
 
 def hodo_axis_good_masks(hg_x, hg_y, threshold=HG_THRESHOLD):
@@ -68,7 +94,7 @@ def good_hodo_mask(hg_x, hg_y, threshold=HG_THRESHOLD):
 
 
 def reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH,
-                          method="argmax"):
+                          method="argmax", run_id=None):
     """Reconstruct (x, y) per event and return with a goodness mask.
 
     Parameters
@@ -84,6 +110,13 @@ def reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH,
         when two adjacent bars fired). ``"mean"`` returns the mean index of
         all hit bars (equivalent for 1-hit events; halfway between centers for
         2-hit events).
+    run_id : optional
+        If given, rotate the positions into the silicon tracker's frame with
+        this run's ``hodo_rotation`` from run_list.json (see
+        ``rotate_to_tracker_frame``). They then no longer sit exactly on the
+        bar grid. ``None`` (the default) returns the unrotated bar frame --
+        what ``scripts.hodores`` needs to measure the rotation in the first
+        place.
 
     Returns
     -------
@@ -118,5 +151,13 @@ def reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH,
         y_rec = calculate_bar_position(mean_y, pitch)
     else:
         raise ValueError(f"Unknown method {method!r}; expected 'argmax' or 'mean'.")
+
+    if run_id is not None:
+        rotation = get_run_hodo_rotation(run_id)
+        if rotation is None:
+            print(f"  No hodoscope rotation recorded for run {run_id} in run_list.json; "
+                  f"using the unrotated bar frame.")
+        else:
+            x_rec, y_rec = rotate_to_tracker_frame(x_rec, y_rec, *rotation)
 
     return x_rec, y_rec, good_hodo

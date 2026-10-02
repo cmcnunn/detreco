@@ -105,7 +105,7 @@ def _read_hodo_and_timing(run_id):
     veto_wf = arrs[veto_branch]
 
     mask_v = passes_veto(veto_wf)
-    xh, yh, good_hodo = reconstruct_hodoscope(xh, yh, threshold=HG_THRESHOLD)
+    xh, yh, good_hodo = reconstruct_hodoscope(xh, yh, threshold=HG_THRESHOLD, run_id=run_id)
     return trigger_n, root_tstamp, xh, yh, good_hodo, mask_v
 
 
@@ -280,7 +280,7 @@ def load_axis_report(run_id):
     hg_y = arrs["FERS_Board0_energyHG"][:, Y_MAPPING]
 
     hodo_x, hodo_y = hodo_axis_good_masks(hg_x, hg_y, threshold=HG_THRESHOLD)
-    xh, _, _ = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD)
+    xh, _, _ = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, run_id=run_id)
     root_mask1, root_mask2, x1_mask, y1_mask, x2_mask, y2_mask = _tracker_hit_masks(
         run_id, trigger_n, root_tstamp, per_axis=True, x_root=xh, good_root=hodo_x & hodo_y)
 

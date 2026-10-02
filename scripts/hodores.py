@@ -35,6 +35,16 @@ Each residual against its *own* coordinate is flat (< 0.5 mrad), so no
 scale term is fitted. Validated on held-out events: fitting on even events
 flattens the odd events' cross-slopes to < 1 mrad (``plot_rotation_signature``).
 
+This script is where the rotation is *measured*; everything else gets it from
+the hodoscope reconstruction. ``--update-run-list`` writes each run's
+cross-slopes from a ``--testbeam`` CSV into data/run_list.json
+(``hodo_rotation``), and ``utils.hodo.reconstruct_hodoscope(run_id=...)``
+applies them. It is not one constant: ~27 mrad for TB2026 runs up to 1820,
+~31 mrad from 1829, across the 1824-1828 test runs where the 1cm/3cm
+counters went in. This script itself reconstructs the hodoscope without
+``run_id`` -- on already-rotated positions ``calibrate_track`` would only
+find the leftover, not the rotation.
+
 The width is a 3-sigma-truncated RMS (``truncated_rms``), not a Gaussian
 fit: the calibrated residual is flat-topped (a 0.6mm bar blurred by the
 track's error), which a Gaussian doesn't describe, and pitch/sqrt(12) at the
@@ -91,11 +101,13 @@ zero -- the width is the target, the mean just a by-product.
 Usage:
     python -m scripts.hodores --run <run_id>          # one run
     python -m scripts.hodores --testbeam TB2026       # per-run distribution across a testbeam
+    python -m scripts.hodores --update-run-list TB2026   # write that CSV's rotations into run_list.json
     python -m scripts.hodores                         # every run in run_list.json, pooled
 """
 
 import argparse
 import csv
+import json
 import os
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -108,7 +120,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import MaxNLocator
 
 from utils.constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING, Z_H, Z_Si1, Z_Si2
-from utils.data import get_run_filepath, load_run_list
+from utils.data import RUN_LIST_PATH, get_run_filepath, load_run_list
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
 from utils.plotting import get_beam_label, get_run_beam, get_runs_by_testbeam
@@ -159,6 +171,18 @@ TESTBEAM_CSV_FIELDS = [
     "rms_x_mm", "rms_x_err_mm", "n_used_x", "rms_y_mm", "rms_y_err_mm", "n_used_y", "detail",
 ]
 
+# --update-run-list: a run's own fit is written only if its residual has a
+# real peak (RMS under one pitch -- run 1881, e+ 40 GeV, reads 8.9mm) and its
+# non-orthogonality is within this of the testbeam median. The angle between
+# the X and Y bar planes is fixed by the hodoscope's construction, so a run
+# far off it is a bad fit, not a real change (run 1870: -16 mrad against a
+# +5.5 median, while its neighbours sit at +3 to +5).
+MAX_NON_ORTHOGONALITY_DEVIATION_MRAD = 10.0
+# A run without a trusted fit of its own takes the median of this many nearest
+# trusted runs, so one noisy low-statistics fit isn't copied across a long
+# stretch (TB2026's 160 tracker-less runs after 1882).
+N_NEAREST_TRUSTED = 5
+
 # Straight-line weights putting the two-station track at the hodoscope's z
 # (see module docstring): x_track = TRACK_W1 * x1 + TRACK_W2 * x2.
 TRACK_W1 = (Z_H - Z_Si2) / (Z_Si1 - Z_Si2)  # -0.915
@@ -174,6 +198,9 @@ def load_run_data(run_id):
     (tracker) and "xh", "yh" (hodoscope), for the reference-selected events
     (good hodoscope hit, veto pass) that also registered a real hit on
     *both* stations -- no sentinel rows.
+
+    Hodoscope positions are the unrotated bar frame (no ``run_id`` to
+    ``reconstruct_hodoscope``): this is the sample the rotation is measured on.
 
     Tracker positions are the raw hardware scale (x10 cm -> mm), not
     ``utils.tracker.calibrate_tracker_positions``'s per-station Hodo-vs-Tracker
@@ -195,7 +222,7 @@ def load_run_data(run_id):
         hg_y = np.stack(tree["FERS_Board0_energyHG"].array(library="np"))[:, Y_MAPPING]
         veto_wf = np.stack(tree[veto_branch].array(library="np"))
 
-    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)
+    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)  # unrotated
     veto_sel = passes_veto(veto_wf)
 
     si_data = load_tracker_run(run_id)
@@ -678,6 +705,65 @@ def run_testbeam(testbeam, workers=N_WORKERS):
     print(f"\nSummary saved to {summary_path}")
 
 
+def update_run_list(testbeam):
+    """Write each run's rotation from ``run_testbeam``'s CSV into data/run_list.json.
+
+    Every run in the CSV gets a ``hodo_rotation`` key: ``dx_dy_mrad`` and
+    ``dy_dx_mrad`` (``calibrate_track``'s a and b) and ``from_runs``. A run
+    with a trusted fit (see MAX_NON_ORTHOGONALITY_DEVIATION_MRAD) uses its
+    own; any other -- no tracker data, failed alignment, refused by the
+    correlation gate -- takes the median of the N_NEAREST_TRUSTED nearest
+    trusted runs by run number, which stay on the right side of a
+    mid-testbeam change like TB2026's (see module docstring). Runs not in
+    the CSV are left untouched.
+    """
+    tag = testbeam.replace(" ", "_")
+    csv_path = os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_hodores.csv")
+    with open(csv_path, newline="") as f:
+        rows = list(csv.DictReader(f))
+    ok = [row for row in rows if row["status"] == "ok"]
+    if not ok:
+        raise SystemExit(f"No ok runs in {csv_path}; run_list.json not changed")
+
+    median_non_orth = np.median([float(row["non_orthogonality_mrad"]) for row in ok])
+    trusted = {}
+    for row in ok:
+        rotation, non_orth = float(row["rotation_mrad"]), float(row["non_orthogonality_mrad"])
+        if max(float(row["rms_x_mm"]), float(row["rms_y_mm"])) >= PITCH:
+            print(f"  run {row['run']}: no residual peak (RMS >= {PITCH} mm), not trusted")
+            continue
+        if abs(non_orth - median_non_orth) > MAX_NON_ORTHOGONALITY_DEVIATION_MRAD:
+            print(f"  run {row['run']}: non-orthogonality {non_orth:+.1f} mrad vs median "
+                  f"{median_non_orth:+.1f}, not trusted")
+            continue
+        # rotation = (a - b) / 2, non-orthogonality = a + b (see calibrate_track)
+        trusted[int(row["run"])] = (rotation + non_orth / 2, non_orth / 2 - rotation)
+    trusted_runs = np.array(sorted(trusted))
+
+    run_list = load_run_list()
+    n_own = n_borrowed = 0
+    for row in rows:
+        run = int(row["run"])
+        if str(run) not in run_list:
+            continue
+        if run in trusted:
+            sources = [run]
+            n_own += 1
+        else:
+            nearest = np.argsort(np.abs(trusted_runs - run), kind="stable")[:N_NEAREST_TRUSTED]
+            sources = sorted(int(r) for r in trusted_runs[nearest])
+            n_borrowed += 1
+        dx_dy, dy_dx = np.median([trusted[s] for s in sources], axis=0)
+        run_list[str(run)]["hodo_rotation"] = {
+            "dx_dy_mrad": round(float(dx_dy), 2), "dy_dx_mrad": round(float(dy_dx), 2), "from_runs": sources,
+        }
+    with open(RUN_LIST_PATH, "w") as f:
+        json.dump(run_list, f, indent=4)
+        f.write("\n")
+    print(f"Wrote hodo_rotation for {n_own + n_borrowed} {testbeam} runs to {RUN_LIST_PATH}: "
+          f"{n_own} from their own fit, {n_borrowed} from the median of the {N_NEAREST_TRUSTED} nearest trusted runs")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -686,6 +772,10 @@ def main():
     parser.add_argument("--testbeam", type=str, default=None,
                         help="Instead of --run, measure every run in this testbeam (e.g. TB2026) separately "
                              "and plot the distribution of per-run resolutions")
+    parser.add_argument("--update-run-list", type=str, default=None, metavar="TESTBEAM",
+                        help="Write each run's rotation from this testbeam's --testbeam CSV into "
+                             "data/run_list.json (hodo_rotation, applied by reconstruct_hodoscope(run_id=...)); "
+                             "reprocesses nothing")
     parser.add_argument("--workers", type=int, default=N_WORKERS,
                         help=f"--testbeam: parallel runs (default {N_WORKERS}, every CPU available; "
                              f"each holds one ROOT file in memory)")
@@ -694,6 +784,11 @@ def main():
                              f"{TRACK_ERR_GAIN:.2f}x this subtracted in quadrature, alongside the range")
     args = parser.parse_args()
 
+    if args.update_run_list:
+        if args.run or args.testbeam:
+            parser.error("--update-run-list reads an existing --testbeam CSV; don't combine it with --run/--testbeam")
+        update_run_list(args.update_run_list)
+        return
     if args.testbeam:
         if args.run:
             parser.error("--run and --testbeam are mutually exclusive")

@@ -692,7 +692,7 @@ def process_run(run, calib=False):
             root_tstamp = t["FERS_Board1_tstamp_us"].array(library="np")
 
         veto_sel = passes_veto(veto_wf, threshold=VETO_THRESHOLD)
-        hx, hy, good_hodo = reconstruct_hodoscope(HGx, HGy)
+        hx, hy, good_hodo = reconstruct_hodoscope(HGx, HGy, run_id=run)
         #Load Tracker data
         si_data = load_tracker_run(int(run))
         #Load energy data

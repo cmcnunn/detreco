@@ -55,6 +55,7 @@ import matplotlib.pyplot as plt
 import mplhep as mh
 import numpy as np
 import uproot
+from matplotlib.colors import Normalize
 from scipy.optimize import curve_fit
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -64,7 +65,7 @@ from utils.data import get_run_filepath
 from utils.fit_funcs import erf_box, erf_disk
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import _hist_edges, get_beam_label
+from utils.plotting import _FIT_OUTLINE, _hist_edges, get_beam_label
 from utils.selectors import (
     COUNTER_1CM_3CM_FIRST_RUN,
     counter_1cm_hit_mask,
@@ -91,15 +92,18 @@ X_HG_BRANCH = "FERS_Board1_energyHG"
 COUNTER_1CM_HALF_SIDE_MM = 5.0
 COUNTER_3CM_HALF_SIDE_MM = 15.0
 
-# Half-width (mm) of the veto_fit_*.png plot crop around the fitted disk
-# center, on top of the fitted radius -- same idea as energy_tracks.py's
-# veto-shape zoom, applied here directly from this fit's own (x0, y0, r)
-# instead of a hardcoded box, since fit_veto already gives us the disk's
-# real per-run center and radius. This crops the *plot* only; fit_veto's
-# own window (x0 +/- (VETO_RADIUS_MM + margin=20), same for y) is left
-# alone, since that extra margin is real data the fit needs to see the
-# eff=0 plateau and constrain the sigmoid edge.
-VETO_FIT_PLOT_MARGIN_MM = 5.0
+# Margin (mm) of the *_fit_*.png plot crop around the fitted shape, on top
+# of its fitted radius/half-sides -- same idea as energy_tracks.py's
+# veto-shape zoom, applied here directly from this fit's own center and
+# size instead of a hardcoded box. This crops the *plot* only; the fit_*
+# functions' own windows (fitted size + a larger margin) are left alone,
+# since that extra margin is real data the fit needs to see the eff=0
+# plateau and constrain the sigmoid edge.
+FIT_PLOT_MARGIN_MM = 5.0
+
+# Bin width (mm) the fit panel's model is drawn on -- it's a closed-form
+# function, so there's no reason to show it pixelated at the data's binning.
+MODEL_PLOT_BIN_MM = 0.1
 
 # Tracker/hodoscope scale calibration (fitted Hodo-vs-Tracker slope,
 # per-run with a testbeam-mean fallback) now lives in utils/tracker.py --
@@ -110,6 +114,9 @@ VETO_FIT_PLOT_MARGIN_MM = 5.0
 # --- Bin widths for the efficiency-map grids ---
 VETO_BIN_MM = 1.0
 COUNTER_BIN_MM = 0.5
+
+# Minimum reference hits for a bin to enter the fit (see fit_shape).
+MIN_REF_COUNT = 10
 
 # A fitted parameter's uncertainty this large (mm) means curve_fit's
 # covariance blew up -- the data don't constrain it at all (e.g. the
@@ -152,8 +159,12 @@ def _aligned_edges(x_ref, x_range, bin_mm):
 
 
 def fit_shape(x_ref, y_ref, x_sel, y_sel, model, p0, bounds, x_range, y_range, bin_mm,
-              min_ref_count=10):
+              min_ref_count=MIN_REF_COUNT):
     """Fit ``model`` to the (x_ref, y_ref, x_sel, y_sel) efficiency map.
+
+    Only bins with at least ``min_ref_count`` reference hits enter the fit,
+    but the returned ``eff`` map covers every bin with at least one (NaN
+    only where there are none), so the plots show the whole footprint.
 
     Returns ``(popt, perr, (eff, h_ref, xedges, yedges))``, or ``None`` if
     there aren't enough well-populated bins to fit.
@@ -162,13 +173,15 @@ def fit_shape(x_ref, y_ref, x_sel, y_sel, model, p0, bounds, x_range, y_range, b
     yedges = _aligned_edges(y_ref, y_range, bin_mm)
     h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[xedges, yedges])
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[xedges, yedges])
-    eff = np.divide(h_sel, h_ref, out=np.zeros_like(h_sel, dtype=float), where=h_ref > 0)
-    eff = np.where(h_ref >= min_ref_count, eff, np.nan)
+    eff = np.divide(h_sel, h_ref, out=np.full_like(h_sel, np.nan, dtype=float), where=h_ref > 0)
     xc = 0.5 * (xedges[:-1] + xedges[1:])
     yc = 0.5 * (yedges[:-1] + yedges[1:])
     X, Y = np.meshgrid(xc, yc, indexing="ij")
 
-    finite = np.isfinite(eff)
+    # A low-count bin's binomial error is unreliable (a 1-hit bin reads
+    # exactly 0 or 1 with only the SYSTEMATIC_ERR_FLOOR as its error), so
+    # those bins are left out of the fit.
+    finite = h_ref >= min_ref_count
     if finite.sum() < len(p0) + 1:
         return None
 
@@ -231,45 +244,98 @@ def fit_counter_3cm(x_ref, y_ref, x_sel, y_sel):
                      x_range, y_range, COUNTER_BIN_MM)
 
 
-def _param_str(name, value, err, nominal):
+def _is_constrained(err):
     # err <= 0 is just as degenerate as err too large: it means curve_fit's
     # Jacobian was singular in this direction (zero sensitivity), not a
     # genuinely perfect measurement.
-    if not np.isfinite(err) or err <= 0 or err > UNCONSTRAINED_ERR_MM:
+    return np.isfinite(err) and 0 < err <= UNCONSTRAINED_ERR_MM
+
+
+def _param_str(name, value, err, nominal):
+    if not _is_constrained(err):
         return f"{name}={value:.2f} mm (UNCONSTRAINED -- edge not visible in this reference's footprint)"
     pull = (value - nominal) / err
     return f"{name}={value:.2f}+/-{err:.2f} mm (nominal {nominal:.1f} mm, pull {pull:+.1f} sigma)"
 
 
-def plot_fit_diagnostic(model, popt, eff, xedges, yedges, title, filename, ref_label, xlim=None, ylim=None):
+def _legend_value(value, err):
+    if not _is_constrained(err):
+        return f"{value:.2f} mm (unconstrained)"
+    return f"{value:.2f} $\\pm$ {err:.2f} mm"
+
+
+def _plot_window(h_ref, xedges, yedges, center, half_span):
+    """Plot crop: the fitted shape's own box (``center`` +/- ``half_span``),
+    shrunk further to the bounding box of bins that entered the fit -- the
+    reference detector's footprint often doesn't cover the whole box, and
+    past the fitted bins there's only a sparse, mostly-empty fringe.
+    """
+    ix, iy = np.nonzero(h_ref >= MIN_REF_COUNT)
+    window = []
+    for c, h, edges, idx in ((center[0], half_span[0], xedges, ix), (center[1], half_span[1], yedges, iy)):
+        lo, hi = max(c - h, edges[idx.min()]), min(c + h, edges[idx.max() + 1])
+        window.append((lo, hi) if lo < hi else (c - h, c + h))
+    return window
+
+
+def _legend_loc(center, xlim, ylim):
+    """The axes corner farthest from the fitted shape's center, so the
+    legend sits over the eff=0 plateau rather than the shape's edge."""
+    fx = (center[0] - xlim[0]) / (xlim[1] - xlim[0])
+    fy = (center[1] - ylim[0]) / (ylim[1] - ylim[0])
+    return f"{'upper' if fy < 0.5 else 'lower'} {'right' if fx < 0.5 else 'left'}"
+
+
+def plot_fit_diagnostic(model, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
+                        beam_label, rlabel, ref_label, center, xlim, ylim):
+    """Save the data, fit and residual (data - fit) maps as three separate
+    plots, ``<filename_stem>_{data,model,residual}.png``, each overlaid with
+    the fitted shape's ``outline`` (an (xs, ys) closed curve) and a legend
+    reading ``fit_label``, in the same CaloX style as the correlation plots
+    (``utils.plotting.draw_fit``).
+    """
     xc = 0.5 * (xedges[:-1] + xedges[1:])
     yc = 0.5 * (yedges[:-1] + yedges[1:])
     X, Y = np.meshgrid(xc, yc, indexing="ij")
-    model_eff = model((X, Y), *popt)
-    residual = eff - model_eff
+    residual = eff - model((X, Y), *popt)
+
+    fine_xedges = np.linspace(*xlim, max(2, int(np.ceil((xlim[1] - xlim[0]) / MODEL_PLOT_BIN_MM))) + 1)
+    fine_yedges = np.linspace(*ylim, max(2, int(np.ceil((ylim[1] - ylim[0]) / MODEL_PLOT_BIN_MM))) + 1)
+    FX, FY = np.meshgrid(0.5 * (fine_xedges[:-1] + fine_xedges[1:]),
+                         0.5 * (fine_yedges[:-1] + fine_yedges[1:]), indexing="ij")
+    model_eff = model((FX, FY), *popt)
+
+    panels = [("data", eff, xedges, yedges, "Efficiency (data)", "viridis", (0, 1)),
+              ("model", model_eff, fine_xedges, fine_yedges, "Efficiency (fit)", "viridis", (0, 1)),
+              ("residual", residual, xedges, yedges, "Data $-$ Fit", "coolwarm", (-0.3, 0.3))]
+
+    # Figure height scaled to the window's aspect so that, under
+    # set_aspect("equal"), the axes keep the same width for any window --
+    # otherwise a tall window narrows the axes and the CaloX header runs
+    # into the run label. bbox_inches="tight" trims whatever's left over.
+    figsize = (10, 10 * (ylim[1] - ylim[0]) / (xlim[1] - xlim[0]))
 
     plt.style.use(mh.style.ROOT)
-    fig, axes = plt.subplots(1, 3, figsize=(21, 7))
-    panels = [(eff, "Data", "viridis", (0, 1)),
-              (model_eff, "Fit", "viridis", (0, 1)),
-              (residual, "Residual (data - fit)", "coolwarm", (-0.3, 0.3))]
-    for ax, (data, subtitle, cmap, (vmin, vmax)) in zip(axes, panels):
-        im = ax.imshow(data.T, origin="lower",
-                       extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
-                       cmap=cmap, vmin=vmin, vmax=vmax, aspect="equal")
-        plt.colorbar(im, ax=ax)
-        ax.set_title(subtitle)
-        ax.set_xlabel(f"{ref_label} X [mm]")
-        ax.set_ylabel(f"{ref_label} Y [mm]")
-        if xlim is not None:
-            ax.set_xlim(*xlim)
-        if ylim is not None:
-            ax.set_ylim(*ylim)
-    fig.suptitle(title)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=200)
-    plt.close(fig)
-    print(f"  Diagnostic plot saved to {filename}")
+    for suffix, values, xe, ye, zlabel, cmap, (vmin, vmax) in panels:
+        fig, ax = plt.subplots(figsize=figsize)
+        # cbarextend=False: hist2dplot's default of widening the figure for
+        # the colorbar collapses the axes once set_aspect("equal") is applied.
+        cb = mh.hist2dplot(values, xe, ye, ax=ax, cmap=cmap, norm=Normalize(vmin, vmax),
+                           flow=None, cbarextend=False)
+        cb.cbar.set_label(zlabel, loc="top")
+        ax.plot(*outline, color="white", lw=2, path_effects=_FIT_OUTLINE, label=fit_label)
+        ax.legend(loc=_legend_loc(center, xlim, ylim), fontsize=16, frameon=True,
+                  facecolor="white", edgecolor="black", framealpha=0.8)
+        mh.label.exp_label(ax=ax, exp="CaloX", text=beam_label, rlabel=rlabel, data=True)
+        ax.set_xlabel(f"{ref_label} X [mm]", loc="right")
+        ax.set_ylabel(f"{ref_label} Y [mm]", loc="top")
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        ax.set_aspect("equal")
+        filename = f"{filename_stem}_{suffix}.png"
+        plt.savefig(filename, dpi=200, bbox_inches="tight", pad_inches=0.05)
+        plt.close(fig)
+    print(f"  Diagnostic plots saved to {filename_stem}_{{data,model,residual}}.png")
 
 
 def report_veto(ref_label, result, output_dir, run_id, beam_label):
@@ -284,11 +350,16 @@ def report_veto(ref_label, result, output_dir, run_id, beam_label):
           f"center = ({x0:.1f}, {y0:.1f}) mm, plateau eff = {eff0:.3f}")
     eff, h_ref, xedges, yedges = maps
     tag = ref_label.lower().replace(" ", "_")
-    filename = os.path.join(output_dir, f"veto_fit_{tag}.png")
-    title = f"Run {run_id} ({beam_label})\nVeto vs {ref_label}: R={r:.2f}$\\pm${r_err:.2f} mm"
-    half_span = r + VETO_FIT_PLOT_MARGIN_MM
-    plot_fit_diagnostic(erf_disk, popt, eff, xedges, yedges, title, filename, ref_label,
-                         xlim=(x0 - half_span, x0 + half_span), ylim=(y0 - half_span, y0 + half_span))
+    filename_stem = os.path.join(output_dir, f"veto_fit_{tag}")
+    t = np.linspace(0, 2 * np.pi, 400)
+    outline = (x0 + r * np.cos(t), y0 + r * np.sin(t))
+    fit_label = (f"Veto vs {ref_label}\n"
+                 f"R = {_legend_value(r, r_err)}\n"
+                 f"$\\sigma$ = {_legend_value(sigma, sigma_err)}")
+    half_span = r + FIT_PLOT_MARGIN_MM
+    xlim, ylim = _plot_window(h_ref, xedges, yedges, (x0, y0), (half_span, half_span))
+    plot_fit_diagnostic(erf_disk, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
+                        beam_label, f"Run {run_id}", ref_label, (x0, y0), xlim, ylim)
 
 
 def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_id, beam_label):
@@ -309,9 +380,15 @@ def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_
     eff, h_ref, xedges, yedges = maps
     tag = ref_label.lower().replace(" ", "_")
     slug = name.replace(" ", "_").lower()
-    filename = os.path.join(output_dir, f"{slug}_fit_{tag}.png")
-    title = f"Run {run_id} ({beam_label})\n{name} vs {ref_label}: {side_x:.2f}$\\pm${side_x_err:.2f} mm"
-    plot_fit_diagnostic(erf_box, popt, eff, xedges, yedges, title, filename, ref_label)
+    filename_stem = os.path.join(output_dir, f"{slug}_fit_{tag}")
+    outline = (x0 + hx * np.array([-1, 1, 1, -1, -1]), y0 + hy * np.array([-1, -1, 1, 1, -1]))
+    fit_label = (f"{name} vs {ref_label}\n"
+                 f"Side X = {_legend_value(side_x, side_x_err)}\n"
+                 f"Side Y = {_legend_value(side_y, side_y_err)}")
+    xlim, ylim = _plot_window(h_ref, xedges, yedges, (x0, y0),
+                              (hx + FIT_PLOT_MARGIN_MM, hy + FIT_PLOT_MARGIN_MM))
+    plot_fit_diagnostic(erf_box, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
+                        beam_label, f"Run {run_id}", ref_label, (x0, y0), xlim, ylim)
 
 
 def report_counter_1cm(ref_label, result, output_dir, run_id, beam_label):
@@ -352,7 +429,7 @@ def process_run(run_id):
     veto_sel = passes_veto(veto_wf, threshold=VETO_THRESHOLD)
     one_cm_hit = counter_1cm_hit_mask(one_cm_wf) if has_counters else None
     three_cm_hit = counter_3cm_hit_mask(three_cm_wf) if has_counters else None
-    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)
+    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, run_id=run_id)
 
     si_data = load_tracker_run(run_id)
     # run_id here is what makes build_aligned_tracker_branches add the

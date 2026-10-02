@@ -121,7 +121,7 @@ def process_single_run(run_data):
                 three_cm_wf = np.stack(tree[THREE_CM].array(library="np"))
 
         xh, yh, good_hodo = reconstruct_hodoscope(
-            hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, method="mean",
+            hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, method="mean", run_id=run_id,
         )
 
         veto_sel = passes_veto(veto, threshold=VETO_THRESHOLD)
@@ -205,7 +205,7 @@ def process_tracker_referenced_run(run_id, output_dir):
             one_cm_wf = np.stack(tree[one_cm_branch].array(library="np"))
             three_cm_wf = np.stack(tree[three_cm_branch].array(library="np"))
 
-    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH)
+    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, run_id=run_id)
     veto_sel = passes_veto(veto_wf, threshold=VETO_THRESHOLD)
     mcp1_hit = _mcp_hit_mask(mcp1_wf, pulse_window_ns)
     mcp2_hit = _mcp_hit_mask(mcp2_wf, pulse_window_ns)
