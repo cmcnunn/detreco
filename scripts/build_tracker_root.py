@@ -13,7 +13,7 @@ pipeline (spill-boundary finding, per-segment offset search, loading the
 raw .dat files) every time it wants tracker positions.
 
 Also includes ``tracker_x{1,2}_mm``/``tracker_y{1,2}_mm``: the raw
-positions rescaled onto the hodoscope's calibrated mm scale (see
+positions calibrated into the hodoscope's frame, in mm (see
 ``utils.tracker.calibrate_tracker_positions`` / ``scripts.sihodocor
 --testbeam``) -- this is the reconstruction-time calibration step, so any
 other analysis reading this file gets calibrated positions without having

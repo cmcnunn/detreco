@@ -5326,8 +5326,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.2,
-            "dy_dx_mrad": -23.59,
+            "dx_dy_mrad": 30.54,
+            "dy_dx_mrad": -23.93,
             "from_runs": [
                 1762
             ]
@@ -5348,8 +5348,8 @@
         "flagged": false,
         "notes": "file is 2026 FM 95",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.56,
-            "dy_dx_mrad": -24.16,
+            "dx_dy_mrad": 29.31,
+            "dy_dx_mrad": -23.89,
             "from_runs": [
                 1763
             ]
@@ -5370,8 +5370,8 @@
         "flagged": false,
         "notes": "file is 2026 FM 95",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.02,
-            "dy_dx_mrad": -23.27,
+            "dx_dy_mrad": 29.26,
+            "dy_dx_mrad": -22.96,
             "from_runs": [
                 1764
             ]
@@ -5392,14 +5392,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.48,
-            "dy_dx_mrad": -23.43,
+            "dx_dy_mrad": 29.64,
+            "dy_dx_mrad": -24.5,
             "from_runs": [
-                1762,
-                1763,
-                1764,
-                1766,
-                1767
+                1765
             ]
         }
     },
@@ -5419,7 +5415,7 @@
         "notes": "Center of the detector. First pi+ energy in energy scan. Chrenkov Chamber 474 pressure does not go below .025 when trying to set at .005 bar.  Cherenkov Chamber 519 .226 and goes to .235\nThe expected cc pressure is in log book. Board 12 and 13 T is 21 C and 19 C respectivley. Highest of the boards",
         "hodo_rotation": {
             "dx_dy_mrad": 29.22,
-            "dy_dx_mrad": -23.04,
+            "dy_dx_mrad": -23.49,
             "from_runs": [
                 1766
             ]
@@ -5440,8 +5436,8 @@
         "flagged": false,
         "notes": "Center of detector. Boards 12 and 13 still hotter than the rest. Boards 10 and 11 are about 8 degrees  BEND.042.049 is going in and out being red",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.48,
-            "dy_dx_mrad": -23.43,
+            "dx_dy_mrad": 29.52,
+            "dy_dx_mrad": -23.65,
             "from_runs": [
                 1767
             ]
@@ -5463,7 +5459,7 @@
         "notes": "e+ center of detector. Changed to e+ for sake of time when changing the cc. Will alternate pi+ and e+",
         "hodo_rotation": {
             "dx_dy_mrad": 30.34,
-            "dy_dx_mrad": -24.21,
+            "dy_dx_mrad": -24.38,
             "from_runs": [
                 1768
             ]
@@ -5484,8 +5480,8 @@
         "flagged": false,
         "notes": "Center of detector. pi+ with new cc pressure",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.88,
-            "dy_dx_mrad": -24.26,
+            "dx_dy_mrad": 29.85,
+            "dy_dx_mrad": -24.23,
             "from_runs": [
                 1769
             ]
@@ -5506,8 +5502,8 @@
         "flagged": true,
         "notes": "Center of detector. PSB ring down, less intensity. Lots of muon contamination in this beam so will take more events",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.43,
+            "dx_dy_mrad": 30.32,
+            "dy_dx_mrad": -24.48,
             "from_runs": [
                 1770
             ]
@@ -5528,8 +5524,8 @@
         "flagged": true,
         "notes": "Center of detector. PSB ring down",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.95,
-            "dy_dx_mrad": -24.01,
+            "dx_dy_mrad": 29.94,
+            "dy_dx_mrad": -23.62,
             "from_runs": [
                 1771
             ]
@@ -5550,8 +5546,8 @@
         "flagged": true,
         "notes": "Center of detector. PSB ring down",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.88,
-            "dy_dx_mrad": -25.74,
+            "dx_dy_mrad": 30.63,
+            "dy_dx_mrad": -26.08,
             "from_runs": [
                 1772
             ]
@@ -5572,8 +5568,8 @@
         "flagged": true,
         "notes": "Center of detector. PSB ring down. Beam spot is much larger for e+ so will just do pi+ until PSB is back",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.57,
-            "dy_dx_mrad": -24.51,
+            "dx_dy_mrad": 29.63,
+            "dy_dx_mrad": -24.42,
             "from_runs": [
                 1773
             ]
@@ -5594,8 +5590,8 @@
         "flagged": false,
         "notes": "Center of detector, PSB ring back",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.93,
-            "dy_dx_mrad": -24.28,
+            "dx_dy_mrad": 30.02,
+            "dy_dx_mrad": -24.35,
             "from_runs": [
                 1774
             ]
@@ -5616,8 +5612,8 @@
         "flagged": false,
         "notes": "Center of detector. WIFI went out in the middle of the run but the DAQ still took data",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.57,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 30.34,
+            "dy_dx_mrad": -24.46,
             "from_runs": [
                 1775
             ]
@@ -5638,8 +5634,8 @@
         "flagged": false,
         "notes": "Center of detector",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -23.87,
+            "dx_dy_mrad": 29.39,
+            "dy_dx_mrad": -23.99,
             "from_runs": [
                 1776
             ]
@@ -5660,14 +5656,14 @@
         "flagged": true,
         "notes": "JUNK RUN No current on board 8",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.35,
             "from_runs": [
-                1773,
                 1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780
             ]
         }
     },
@@ -5686,14 +5682,14 @@
         "flagged": true,
         "notes": "JUNK RUN No current on board 8",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.35,
             "from_runs": [
-                1773,
                 1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780
             ]
         }
     },
@@ -5712,8 +5708,8 @@
         "flagged": true,
         "notes": "JUNK RUN No current on board 8",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.25,
-            "dy_dx_mrad": -25.59,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -25.94,
             "from_runs": [
                 1779
             ]
@@ -5734,14 +5730,10 @@
         "flagged": true,
         "notes": "JUNK RUN No current on board 8",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.73,
+            "dy_dx_mrad": -24.04,
             "from_runs": [
-                1773,
-                1774,
-                1775,
-                1776,
-                1779
+                1780
             ]
         }
     },
@@ -5763,14 +5755,14 @@
         "flagged": true,
         "notes": "JUNK RUN No current on board 8",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.35,
             "from_runs": [
-                1773,
                 1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780
             ]
         }
     },
@@ -5789,14 +5781,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.28,
             "from_runs": [
-                1773,
-                1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780,
+                1790
             ]
         }
     },
@@ -5815,14 +5807,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.28,
             "from_runs": [
-                1773,
-                1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780,
+                1790
             ]
         }
     },
@@ -5841,14 +5833,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.28,
             "from_runs": [
-                1773,
-                1774,
                 1775,
                 1776,
-                1779
+                1779,
+                1780,
+                1790
             ]
         }
     },
@@ -5867,14 +5859,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.93,
+            "dx_dy_mrad": 29.95,
             "dy_dx_mrad": -24.28,
             "from_runs": [
-                1774,
                 1775,
                 1776,
                 1779,
-                1797
+                1780,
+                1790
             ]
         }
     },
@@ -5893,14 +5885,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.69,
-            "dy_dx_mrad": -24.38,
+            "dx_dy_mrad": 29.95,
+            "dy_dx_mrad": -24.28,
             "from_runs": [
-                1775,
                 1776,
                 1779,
-                1797,
-                1798
+                1780,
+                1790,
+                1797
             ]
         }
     },
@@ -5919,14 +5911,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.22,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.0,
+            "dy_dx_mrad": -24.43,
             "from_runs": [
-                1776,
                 1779,
+                1780,
+                1790,
                 1797,
-                1798,
-                1799
+                1798
             ]
         }
     },
@@ -5945,14 +5937,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.0,
+            "dy_dx_mrad": -24.43,
             "from_runs": [
                 1779,
+                1780,
+                1790,
                 1797,
-                1798,
-                1799,
-                1801
+                1798
             ]
         }
     },
@@ -5971,14 +5963,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 35.21,
+            "dy_dx_mrad": -24.28,
             "from_runs": [
-                1779,
-                1797,
-                1798,
-                1799,
-                1801
+                1790
             ]
         }
     },
@@ -5997,14 +5985,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
-                1779,
+                1790,
                 1797,
                 1798,
                 1799,
-                1801
+                1800
             ]
         }
     },
@@ -6023,14 +6011,14 @@
         "flagged": false,
         "notes": "Pedestal Run (Beam off for 2 hours)",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
+                1790,
                 1797,
                 1798,
                 1799,
-                1801,
-                1804
+                1800
             ]
         }
     },
@@ -6049,14 +6037,14 @@
         "flagged": false,
         "notes": "Pedestal Run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
+                1790,
                 1797,
                 1798,
                 1799,
-                1801,
-                1804
+                1800
             ]
         }
     },
@@ -6075,14 +6063,14 @@
         "flagged": false,
         "notes": "Pedestal Run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
+                1790,
                 1797,
                 1798,
                 1799,
-                1801,
-                1804
+                1800
             ]
         }
     },
@@ -6101,14 +6089,14 @@
         "flagged": false,
         "notes": "Pedestal Run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
+                1790,
                 1797,
                 1798,
                 1799,
-                1801,
-                1804
+                1800
             ]
         }
     },
@@ -6127,14 +6115,14 @@
         "flagged": false,
         "notes": "Pedestal Run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
                 1797,
                 1798,
                 1799,
-                1801,
-                1804
+                1800,
+                1801
             ]
         }
     },
@@ -6153,8 +6141,8 @@
         "flagged": false,
         "notes": "40 GeV positrons",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -23.08,
+            "dx_dy_mrad": 30.0,
+            "dy_dx_mrad": -24.43,
             "from_runs": [
                 1797
             ]
@@ -6175,8 +6163,8 @@
         "flagged": false,
         "notes": "20 GeV pions",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.42,
-            "dy_dx_mrad": -25.58,
+            "dx_dy_mrad": 30.07,
+            "dy_dx_mrad": -24.45,
             "from_runs": [
                 1798
             ]
@@ -6197,8 +6185,8 @@
         "flagged": false,
         "notes": "Table moved but it should be back to where it was +/- cm",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.22,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.26,
+            "dy_dx_mrad": -25.68,
             "from_runs": [
                 1799
             ]
@@ -6219,14 +6207,10 @@
         "flagged": false,
         "notes": "Table supposed to be in the center. Stop and restart to test the event display",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 30.92,
+            "dy_dx_mrad": -25.29,
             "from_runs": [
-                1797,
-                1798,
-                1799,
-                1801,
-                1804
+                1800
             ]
         }
     },
@@ -6245,8 +6229,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.32,
-            "dy_dx_mrad": -22.92,
+            "dx_dy_mrad": 31.85,
+            "dy_dx_mrad": -24.39,
             "from_runs": [
                 1801
             ]
@@ -6267,14 +6251,10 @@
         "flagged": true,
         "notes": "JUNK RUN root monitor disappeared; had to terminate run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.24,
-            "dy_dx_mrad": -24.94,
+            "dx_dy_mrad": 28.39,
+            "dy_dx_mrad": -26.28,
             "from_runs": [
-                1797,
-                1798,
-                1799,
-                1801,
-                1804
+                1802
             ]
         }
     },
@@ -6293,14 +6273,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.54,
-            "dy_dx_mrad": -24.99,
+            "dx_dy_mrad": 30.92,
+            "dy_dx_mrad": -25.1,
             "from_runs": [
-                1798,
-                1799,
+                1800,
                 1801,
+                1802,
                 1804,
-                1807
+                1806
             ]
         }
     },
@@ -6319,8 +6299,8 @@
         "flagged": true,
         "notes": "callibration run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.54,
-            "dy_dx_mrad": -24.99,
+            "dx_dy_mrad": 30.73,
+            "dy_dx_mrad": -24.92,
             "from_runs": [
                 1804
             ]
@@ -6341,14 +6321,10 @@
         "flagged": true,
         "notes": "callibration run",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.54,
-            "dy_dx_mrad": -24.96,
+            "dx_dy_mrad": 31.08,
+            "dy_dx_mrad": -25.1,
             "from_runs": [
-                1804,
-                1807,
-                1808,
-                1809,
-                1810
+                1806
             ]
         }
     },
@@ -6367,8 +6343,8 @@
         "flagged": true,
         "notes": "callibration run",
         "hodo_rotation": {
-            "dx_dy_mrad": 31.23,
-            "dy_dx_mrad": -25.4,
+            "dx_dy_mrad": 30.61,
+            "dy_dx_mrad": -25.61,
             "from_runs": [
                 1807
             ]
@@ -6389,8 +6365,8 @@
         "flagged": false,
         "notes": "pion energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.12,
-            "dy_dx_mrad": -24.27,
+            "dx_dy_mrad": 30.51,
+            "dy_dx_mrad": -25.0,
             "from_runs": [
                 1808
             ]
@@ -6411,8 +6387,8 @@
         "flagged": false,
         "notes": "pion energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.29,
-            "dy_dx_mrad": -24.96,
+            "dx_dy_mrad": 30.19,
+            "dy_dx_mrad": -25.13,
             "from_runs": [
                 1809
             ]
@@ -6433,8 +6409,8 @@
         "flagged": false,
         "notes": "pion energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 31.45,
-            "dy_dx_mrad": -24.66,
+            "dx_dy_mrad": 31.02,
+            "dy_dx_mrad": -24.92,
             "from_runs": [
                 1810
             ]
@@ -6455,8 +6431,8 @@
         "flagged": false,
         "notes": "pion energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 29.09,
-            "dy_dx_mrad": -19.28,
+            "dx_dy_mrad": 31.59,
+            "dy_dx_mrad": -24.7,
             "from_runs": [
                 1811
             ]
@@ -6477,8 +6453,8 @@
         "flagged": false,
         "notes": "Starting center energy scan runs, cut short of 100k events bc of time, but close enough",
         "hodo_rotation": {
-            "dx_dy_mrad": 31.15,
-            "dy_dx_mrad": -25.9,
+            "dx_dy_mrad": 31.41,
+            "dy_dx_mrad": -25.4,
             "from_runs": [
                 1812
             ]
@@ -6499,8 +6475,8 @@
         "flagged": false,
         "notes": "center energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.01,
-            "dy_dx_mrad": -25.21,
+            "dx_dy_mrad": 31.79,
+            "dy_dx_mrad": -25.33,
             "from_runs": [
                 1813
             ]
@@ -6521,8 +6497,8 @@
         "flagged": false,
         "notes": "center energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.26,
-            "dy_dx_mrad": -25.16,
+            "dx_dy_mrad": 30.65,
+            "dy_dx_mrad": -24.56,
             "from_runs": [
                 1814
             ]
@@ -6543,8 +6519,8 @@
         "flagged": false,
         "notes": "center energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.89,
-            "dy_dx_mrad": -25.15,
+            "dx_dy_mrad": 30.61,
+            "dy_dx_mrad": -25.42,
             "from_runs": [
                 1815
             ]
@@ -6565,8 +6541,8 @@
         "flagged": false,
         "notes": "center energy scan; root file monitor closed but should be good",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.15,
-            "dy_dx_mrad": -26.79,
+            "dx_dy_mrad": 30.59,
+            "dy_dx_mrad": -26.09,
             "from_runs": [
                 1816
             ]
@@ -6588,7 +6564,7 @@
         "notes": "center energy scan",
         "hodo_rotation": {
             "dx_dy_mrad": 31.05,
-            "dy_dx_mrad": -25.33,
+            "dy_dx_mrad": -25.53,
             "from_runs": [
                 1817
             ]
@@ -6609,8 +6585,8 @@
         "flagged": false,
         "notes": "center energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 31.33,
-            "dy_dx_mrad": -25.85,
+            "dx_dy_mrad": 31.2,
+            "dy_dx_mrad": -25.61,
             "from_runs": [
                 1818
             ]
@@ -6631,8 +6607,8 @@
         "flagged": false,
         "notes": "center energy scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 31.36,
-            "dy_dx_mrad": -25.89,
+            "dx_dy_mrad": 31.26,
+            "dy_dx_mrad": -25.75,
             "from_runs": [
                 1819
             ]
@@ -6653,8 +6629,8 @@
         "flagged": false,
         "notes": "center energy scan Beam off before we could hit 100K",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.12,
-            "dy_dx_mrad": -26.35,
+            "dx_dy_mrad": 31.68,
+            "dy_dx_mrad": -26.59,
             "from_runs": [
                 1820
             ]
@@ -6675,13 +6651,13 @@
         "flagged": true,
         "notes": "TEST/JUNK RUN",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.12,
-            "dy_dx_mrad": -26.35,
+            "dx_dy_mrad": 33.72,
+            "dy_dx_mrad": -29.67,
             "from_runs": [
-                1818,
                 1819,
                 1820,
                 1827,
+                1828,
                 1829
             ]
         }
@@ -6705,14 +6681,14 @@
         "flagged": true,
         "notes": "TEST/JUNK RUN",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.57,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 34.18,
+            "dy_dx_mrad": -29.67,
             "from_runs": [
                 1820,
                 1827,
+                1828,
                 1829,
-                1831,
-                1832
+                1831
             ]
         }
     },
@@ -6731,8 +6707,8 @@
         "flagged": true,
         "notes": "TEST/JUNK RUN",
         "hodo_rotation": {
-            "dx_dy_mrad": 37.22,
-            "dy_dx_mrad": -28.04,
+            "dx_dy_mrad": 33.72,
+            "dy_dx_mrad": -29.67,
             "from_runs": [
                 1827
             ]
@@ -6753,14 +6729,10 @@
         "flagged": true,
         "notes": "TEST/JUNK RUN-",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.57,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 36.53,
+            "dy_dx_mrad": -31.18,
             "from_runs": [
-                1827,
-                1829,
-                1831,
-                1832,
-                1834
+                1828
             ]
         }
     },
@@ -6779,8 +6751,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.57,
-            "dy_dx_mrad": -31.18,
+            "dx_dy_mrad": 34.18,
+            "dy_dx_mrad": -29.81,
             "from_runs": [
                 1829
             ]
@@ -6801,14 +6773,14 @@
         "flagged": true,
         "notes": "run was stopped early due to very few events. Probably because the beam file loading was stuck. The issue is gone after reloading the 120 GeV positron file.",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.57,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 34.18,
+            "dy_dx_mrad": -29.67,
             "from_runs": [
                 1827,
+                1828,
                 1829,
                 1831,
-                1832,
-                1834
+                1832
             ]
         }
     },
@@ -6827,8 +6799,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.69,
-            "dy_dx_mrad": -29.87,
+            "dx_dy_mrad": 34.19,
+            "dy_dx_mrad": -29.27,
             "from_runs": [
                 1831
             ]
@@ -6850,7 +6822,7 @@
         "notes": "beam was off for an hour (starting at 4:48 AM).. Beam came back around 6:30 AM",
         "hodo_rotation": {
             "dx_dy_mrad": 33.53,
-            "dy_dx_mrad": -28.4,
+            "dy_dx_mrad": -28.42,
             "from_runs": [
                 1832
             ]
@@ -6871,14 +6843,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.57,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 34.85,
+            "dy_dx_mrad": -29.33,
             "from_runs": [
-                1827,
-                1829,
-                1831,
-                1832,
-                1834
+                1833
             ]
         }
     },
@@ -6897,8 +6865,8 @@
         "flagged": false,
         "notes": "DRS only center of detector",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -26.7,
+            "dx_dy_mrad": 33.92,
+            "dy_dx_mrad": -28.56,
             "from_runs": [
                 1834
             ]
@@ -6919,14 +6887,10 @@
         "flagged": false,
         "notes": "Test RUN For MCP biasing",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 35.31,
+            "dy_dx_mrad": -30.71,
             "from_runs": [
-                1829,
-                1831,
-                1832,
-                1834,
-                1841
+                1835
             ]
         }
     },
@@ -6945,14 +6909,10 @@
         "flagged": false,
         "notes": "Test RUN For MCP biasing",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 34.66,
+            "dy_dx_mrad": -29.29,
             "from_runs": [
-                1829,
-                1831,
-                1832,
-                1834,
-                1841
+                1836
             ]
         }
     },
@@ -6971,14 +6931,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 33.92,
+            "dy_dx_mrad": -28.56,
             "from_runs": [
-                1831,
-                1832,
                 1834,
-                1841,
-                1844
+                1835,
+                1836,
+                1838,
+                1839
             ]
         }
     },
@@ -6997,14 +6957,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 29.74,
+            "dy_dx_mrad": -25.83,
             "from_runs": [
-                1831,
-                1832,
-                1834,
-                1841,
-                1844
+                1838
             ]
         }
     },
@@ -7023,14 +6979,10 @@
         "flagged": false,
         "notes": "Data Taking post DRS checks - 2 3mm channels were moved to oscilliscope: Bridge0_Board0_Group3_ channels 5 and 6. 5 is C and 6 is S",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.4,
+            "dx_dy_mrad": 33.54,
+            "dy_dx_mrad": -28.07,
             "from_runs": [
-                1832,
-                1834,
-                1841,
-                1844,
-                1845
+                1839
             ]
         }
     },
@@ -7049,14 +7001,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.41,
+            "dx_dy_mrad": 34.26,
+            "dy_dx_mrad": -28.57,
             "from_runs": [
-                1834,
-                1841,
-                1844,
-                1845,
-                1846
+                1840
             ]
         }
     },
@@ -7075,8 +7023,8 @@
         "flagged": false,
         "notes": "First \"good run\" for DRS. 3mm channels are back from oscilloscope. The MCP inverter is gone and was taken out in one of the commisioning runs above",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.09,
-            "dy_dx_mrad": -28.22,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -29.25,
             "from_runs": [
                 1841
             ]
@@ -7097,14 +7045,10 @@
         "flagged": false,
         "notes": "3mm is 28V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.46,
-            "dy_dx_mrad": -28.94,
+            "dx_dy_mrad": 34.74,
+            "dy_dx_mrad": -28.55,
             "from_runs": [
-                1841,
-                1844,
-                1845,
-                1846,
-                1847
+                1842
             ]
         }
     },
@@ -7123,14 +7067,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.46,
-            "dy_dx_mrad": -28.94,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.73,
             "from_runs": [
+                1840,
                 1841,
+                1842,
                 1844,
-                1845,
-                1846,
-                1847
+                1845
             ]
         }
     },
@@ -7149,8 +7093,8 @@
         "flagged": false,
         "notes": "3mm is 27V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 36.65,
-            "dy_dx_mrad": -30.12,
+            "dx_dy_mrad": 36.39,
+            "dy_dx_mrad": -29.82,
             "from_runs": [
                 1844
             ]
@@ -7171,8 +7115,8 @@
         "flagged": false,
         "notes": "3mm is 26V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.4,
-            "dy_dx_mrad": -28.41,
+            "dx_dy_mrad": 34.45,
+            "dy_dx_mrad": -28.73,
             "from_runs": [
                 1845
             ]
@@ -7193,8 +7137,8 @@
         "flagged": false,
         "notes": "3mm is 26V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.77,
-            "dy_dx_mrad": -30.57,
+            "dx_dy_mrad": 33.71,
+            "dy_dx_mrad": -28.3,
             "from_runs": [
                 1846
             ]
@@ -7215,8 +7159,8 @@
         "flagged": false,
         "notes": "3mm is 29V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.46,
-            "dy_dx_mrad": -28.94,
+            "dx_dy_mrad": 35.48,
+            "dy_dx_mrad": -28.06,
             "from_runs": [
                 1847
             ]
@@ -7237,8 +7181,8 @@
         "flagged": false,
         "notes": "3mm is 29V 6mm is 29V",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.6,
-            "dy_dx_mrad": -29.21,
+            "dx_dy_mrad": 34.66,
+            "dy_dx_mrad": -28.96,
             "from_runs": [
                 1848
             ]
@@ -7259,8 +7203,8 @@
         "flagged": false,
         "notes": "First 160 events are 120 GeV muons.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -25.51,
+            "dx_dy_mrad": 34.17,
+            "dy_dx_mrad": -29.11,
             "from_runs": [
                 1849
             ]
@@ -7281,14 +7225,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 34.46,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 34.66,
+            "dy_dx_mrad": -28.96,
             "from_runs": [
                 1847,
                 1848,
                 1849,
                 1851,
-                1853
+                1852
             ]
         }
     },
@@ -7307,8 +7251,8 @@
         "flagged": false,
         "notes": "A service cable came out and it was reconnected before the angle scane (may be T1)",
         "hodo_rotation": {
-            "dx_dy_mrad": 37.15,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 34.78,
+            "dy_dx_mrad": -30.03,
             "from_runs": [
                 1851
             ]
@@ -7329,14 +7273,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.85,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 33.45,
+            "dy_dx_mrad": -27.94,
             "from_runs": [
-                1848,
-                1849,
-                1851,
-                1853,
-                1855
+                1852
             ]
         }
     },
@@ -7355,8 +7295,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.13,
-            "dy_dx_mrad": -31.51,
+            "dx_dy_mrad": 35.17,
+            "dy_dx_mrad": -30.13,
             "from_runs": [
                 1853
             ]
@@ -7377,14 +7317,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.85,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 34.93,
+            "dy_dx_mrad": -29.47,
             "from_runs": [
-                1851,
-                1853,
-                1855,
-                1856,
-                1857
+                1854
             ]
         }
     },
@@ -7403,8 +7339,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.85,
-            "dy_dx_mrad": -27.02,
+            "dx_dy_mrad": 34.57,
+            "dy_dx_mrad": -29.18,
             "from_runs": [
                 1855
             ]
@@ -7425,8 +7361,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.07,
-            "dy_dx_mrad": -28.87,
+            "dx_dy_mrad": 33.88,
+            "dy_dx_mrad": -29.22,
             "from_runs": [
                 1856
             ]
@@ -7447,8 +7383,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.92,
-            "dy_dx_mrad": -29.71,
+            "dx_dy_mrad": 34.64,
+            "dy_dx_mrad": -29.33,
             "from_runs": [
                 1857
             ]
@@ -7469,14 +7405,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.85,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 32.89,
+            "dy_dx_mrad": -30.31,
             "from_runs": [
-                1851,
-                1853,
-                1855,
-                1856,
-                1857
+                1858
             ]
         }
     },
@@ -7495,14 +7427,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.85,
-            "dy_dx_mrad": -29.16,
+            "dx_dy_mrad": 34.56,
+            "dy_dx_mrad": -29.64,
             "from_runs": [
-                1851,
-                1853,
-                1855,
-                1856,
-                1857
+                1859
             ]
         }
     },
@@ -7521,14 +7449,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.13,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 35.47,
+            "dy_dx_mrad": -29.04,
             "from_runs": [
-                1853,
-                1855,
-                1856,
-                1857,
-                1868
+                1860
             ]
         }
     },
@@ -7547,14 +7471,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.13,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 35.1,
+            "dy_dx_mrad": -26.99,
             "from_runs": [
-                1853,
-                1855,
-                1856,
-                1857,
-                1868
+                1861
             ]
         }
     },
@@ -7573,14 +7493,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.13,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.94,
+            "dy_dx_mrad": -26.38,
             "from_runs": [
-                1853,
-                1855,
-                1856,
-                1857,
-                1868
+                1862
             ]
         }
     },
@@ -7599,14 +7515,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.13,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 33.79,
+            "dy_dx_mrad": -27.71,
             "from_runs": [
-                1853,
-                1855,
-                1856,
-                1857,
-                1868
+                1863
             ]
         }
     },
@@ -7628,14 +7540,14 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.07,
-            "dy_dx_mrad": -28.87,
+            "dx_dy_mrad": 34.97,
+            "dy_dx_mrad": -27.71,
             "from_runs": [
-                1855,
-                1856,
-                1857,
-                1868,
-                1874
+                1861,
+                1862,
+                1863,
+                1865,
+                1866
             ]
         }
     },
@@ -7654,14 +7566,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.07,
-            "dy_dx_mrad": -28.87,
+            "dx_dy_mrad": 35.08,
+            "dy_dx_mrad": -28.74,
             "from_runs": [
-                1855,
-                1856,
-                1857,
-                1868,
-                1874
+                1865
             ]
         }
     },
@@ -7680,14 +7588,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.07,
-            "dy_dx_mrad": -28.87,
+            "dx_dy_mrad": 34.97,
+            "dy_dx_mrad": -28.73,
             "from_runs": [
-                1855,
-                1856,
-                1857,
-                1868,
-                1874
+                1866
             ]
         }
     },
@@ -7706,14 +7610,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.07,
-            "dy_dx_mrad": -28.87,
+            "dx_dy_mrad": 36.59,
+            "dy_dx_mrad": -29.05,
             "from_runs": [
-                1855,
-                1856,
-                1857,
-                1868,
-                1874
+                1867
             ]
         }
     },
@@ -7732,8 +7632,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.52,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.55,
+            "dy_dx_mrad": -28.56,
             "from_runs": [
                 1868
             ]
@@ -7754,14 +7654,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.82,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 33.98,
+            "dy_dx_mrad": -29.47,
             "from_runs": [
-                1857,
-                1868,
-                1874,
-                1879,
-                1880
+                1869
             ]
         }
     },
@@ -7780,14 +7676,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.15,
+            "dy_dx_mrad": -28.77,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1870
             ]
         }
     },
@@ -7806,14 +7698,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.56,
+            "dy_dx_mrad": -28.88,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1871
             ]
         }
     },
@@ -7832,14 +7720,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.74,
+            "dy_dx_mrad": -27.82,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1872
             ]
         }
     },
@@ -7858,14 +7742,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.01,
+            "dy_dx_mrad": -29.1,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1873
             ]
         }
     },
@@ -7884,8 +7764,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -27.55,
+            "dx_dy_mrad": 34.25,
+            "dy_dx_mrad": -27.81,
             "from_runs": [
                 1874
             ]
@@ -7906,14 +7786,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 33.79,
+            "dy_dx_mrad": -30.31,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1875
             ]
         }
     },
@@ -7932,14 +7808,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 35.13,
+            "dy_dx_mrad": -28.96,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1876
             ]
         }
     },
@@ -7958,14 +7830,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.33,
+            "dy_dx_mrad": -28.96,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1877
             ]
         }
     },
@@ -7984,14 +7852,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -29.27,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1878
             ]
         }
     },
@@ -8010,8 +7874,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.82,
-            "dy_dx_mrad": -27.25,
+            "dx_dy_mrad": 35.31,
+            "dy_dx_mrad": -28.18,
             "from_runs": [
                 1879
             ]
@@ -8032,8 +7896,8 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 33.89,
-            "dy_dx_mrad": -30.88,
+            "dx_dy_mrad": 35.43,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
                 1880
             ]
@@ -8054,14 +7918,10 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 33.88,
+            "dy_dx_mrad": -28.87,
             "from_runs": [
-                1868,
-                1874,
-                1879,
-                1880,
-                1882
+                1881
             ]
         }
     },
@@ -8080,8 +7940,8 @@
         "flagged": false,
         "notes": "Had to increase rotation interval",
         "hodo_rotation": {
-            "dx_dy_mrad": 30.41,
-            "dy_dx_mrad": -31.45,
+            "dx_dy_mrad": 33.92,
+            "dy_dx_mrad": -27.86,
             "from_runs": [
                 1882
             ]
@@ -8102,13 +7962,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8128,13 +7988,13 @@
         "flagged": false,
         "notes": "Rotation scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8154,13 +8014,13 @@
         "flagged": false,
         "notes": "Rotaion scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8180,13 +8040,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8206,13 +8066,13 @@
         "flagged": false,
         "notes": "Going back to 19 degrees to cover the odd angles skipped",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8232,13 +8092,13 @@
         "flagged": false,
         "notes": "Changing to pi+ to do angle coarse angle scan [+20/-20]",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8258,13 +8118,13 @@
         "flagged": true,
         "notes": "Junk Run (Moniter did not show up)",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8284,13 +8144,13 @@
         "flagged": false,
         "notes": "Checking the US MCP so this run was stoped early to fix it",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8310,13 +8170,13 @@
         "flagged": false,
         "notes": "Restart the run after checking.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8336,13 +8196,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8362,13 +8222,13 @@
         "flagged": true,
         "notes": "Early stop because beam is gone and we need to access.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8388,13 +8248,13 @@
         "flagged": true,
         "notes": "Start the run when beam was not there. There is no beam for the whole run.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8414,13 +8274,13 @@
         "flagged": false,
         "notes": "DRS pedestal run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8440,13 +8300,13 @@
         "flagged": false,
         "notes": "Test run with the new DRS map after recabling (PHASE 2)",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8466,13 +8326,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8492,13 +8352,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8518,13 +8378,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8544,13 +8404,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8570,13 +8430,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8596,13 +8456,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8622,13 +8482,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8648,13 +8508,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8674,13 +8534,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8700,13 +8560,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8726,13 +8586,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8752,13 +8612,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8778,13 +8638,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8804,13 +8664,13 @@
         "flagged": false,
         "notes": "CC1 pressure said \"0\" for some reason and we do not know how long this was the case. It has been changed back to .02 starting at the next run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8830,13 +8690,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8856,13 +8716,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8882,13 +8742,13 @@
         "flagged": true,
         "notes": "Beam down at 1:51 AM, CPS issue RF  cavity more news in 30 min Beam back on @ 2:30",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8908,13 +8768,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8934,13 +8794,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8960,13 +8820,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -8986,13 +8846,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9012,13 +8872,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9038,13 +8898,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9064,13 +8924,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9090,13 +8950,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9116,13 +8976,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9142,13 +9002,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9168,13 +9028,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9194,13 +9054,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9220,13 +9080,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9246,13 +9106,13 @@
         "flagged": false,
         "notes": "slightly larger z step than 1 cm (11.6 mm)",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9272,13 +9132,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9298,13 +9158,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9324,13 +9184,13 @@
         "flagged": true,
         "notes": "PS access issue - No beam. 10 min after starting the run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9350,13 +9210,13 @@
         "flagged": true,
         "notes": "Pedestal run when there is no beam.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9376,13 +9236,13 @@
         "flagged": true,
         "notes": "Start the run again after beam is back; tracker issue (most events not saved)",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9402,13 +9262,13 @@
         "flagged": true,
         "notes": "tracker issue (most events not saved)",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9428,13 +9288,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9454,13 +9314,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9480,13 +9340,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9506,13 +9366,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9532,13 +9392,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9558,13 +9418,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9584,13 +9444,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9610,13 +9470,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9636,13 +9496,13 @@
         "flagged": false,
         "notes": "Beam on the fibers",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9662,13 +9522,13 @@
         "flagged": false,
         "notes": "Start of the angle scan",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9688,13 +9548,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9714,13 +9574,13 @@
         "flagged": true,
         "notes": "Beam is gone soon after this run. PS access system tripped.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9740,13 +9600,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9766,13 +9626,13 @@
         "flagged": true,
         "notes": "Run was stopped due to low event count- beam was not hitting us",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9792,13 +9652,13 @@
         "flagged": false,
         "notes": "Was working on test fibers but we can not make an access to the beam area so we can't assemble the test fiber stand. Everything else is ready for test fibers except assembly",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9818,13 +9678,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9844,13 +9704,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9870,13 +9730,13 @@
         "flagged": false,
         "notes": "Tested the full angle range from [45:0] to test cables and everything was fine",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9896,13 +9756,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9922,13 +9782,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9948,13 +9808,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -9974,13 +9834,13 @@
         "flagged": false,
         "notes": "CC 1 and 2 were a little high and this was noticed on this run. Next run will bring them back down",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10000,13 +9860,13 @@
         "flagged": false,
         "notes": "The pressures were not able to be changed. Beam is down from start of run until about 10:10",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10026,13 +9886,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10052,13 +9912,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10078,13 +9938,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10104,13 +9964,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10130,13 +9990,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10156,13 +10016,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10182,13 +10042,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10208,13 +10068,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10234,13 +10094,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10260,13 +10120,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10286,13 +10146,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10312,13 +10172,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10338,13 +10198,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10364,13 +10224,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10390,13 +10250,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10416,13 +10276,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10442,13 +10302,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10468,13 +10328,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10494,13 +10354,13 @@
         "flagged": true,
         "notes": "Beam was down for a bit",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10523,13 +10383,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10549,13 +10409,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10575,13 +10435,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10601,13 +10461,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10627,13 +10487,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10653,13 +10513,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10679,13 +10539,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10705,13 +10565,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10731,13 +10591,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10757,13 +10617,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10783,13 +10643,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10809,13 +10669,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10835,13 +10695,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10861,13 +10721,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10887,13 +10747,13 @@
         "flagged": false,
         "notes": "accidentally went backwards in angle for one run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10913,13 +10773,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10939,13 +10799,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10965,13 +10825,13 @@
         "flagged": true,
         "notes": "JUNK RUN",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -10991,13 +10851,13 @@
         "flagged": false,
         "notes": "First run with test fibers. HG-DREAM SiPMs are still connected. MCPs have been moved; Slow start but events/spill ramped up late in the run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11017,13 +10877,13 @@
         "flagged": true,
         "notes": "JUNK RUN SWITCHING ENERGY, Pressures were not changed for these 40GeV runs",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11043,13 +10903,13 @@
         "flagged": true,
         "notes": "JUNK RUN",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11069,13 +10929,13 @@
         "flagged": false,
         "notes": "Switched to 80 GeV e+, starting from 62.4 table position",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11095,13 +10955,13 @@
         "flagged": false,
         "notes": "changing energy to 40 GeV e+, pressure is staying unchanged",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11121,13 +10981,13 @@
         "flagged": false,
         "notes": "Moving in 2cm steps so from 60.4 to 40.4",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11147,13 +11007,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11173,13 +11033,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11199,13 +11059,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11225,13 +11085,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11251,13 +11111,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11277,13 +11137,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11303,13 +11163,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11329,13 +11189,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11355,13 +11215,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11381,13 +11241,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11407,13 +11267,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11433,13 +11293,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11459,13 +11319,13 @@
         "flagged": false,
         "notes": "Moved Lead brick 48.2 cm towards Saleve, and moved table back to x=107.0 mm",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11485,13 +11345,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11511,13 +11371,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11537,13 +11397,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11563,13 +11423,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11589,13 +11449,13 @@
         "flagged": false,
         "notes": "Swapping to 40 GeV pion beam here because we forgot to do it in the last run",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11615,13 +11475,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions. THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11641,13 +11501,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11667,13 +11527,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11693,13 +11553,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11719,13 +11579,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11745,13 +11605,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11771,13 +11631,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11797,13 +11657,13 @@
         "flagged": false,
         "notes": "tracker beam profile looks identical to pions.  THIS IS 40 GEV PION BEAM. Beam file 71 was mistakenly modified to have the same setting as 93.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11823,13 +11683,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11849,13 +11709,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11875,13 +11735,13 @@
         "flagged": false,
         "notes": "The CC pressure in the previous runs were not changed to the desired values. Changed to 60 GeV setings from this run.",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11901,13 +11761,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11927,13 +11787,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11953,13 +11813,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -11979,13 +11839,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12005,13 +11865,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12031,13 +11891,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12057,13 +11917,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12083,13 +11943,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12109,13 +11969,13 @@
         "flagged": false,
         "notes": "going back and taking runs with no positron runs due to the issue with beam profile",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12135,13 +11995,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12161,13 +12021,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12187,13 +12047,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12213,13 +12073,13 @@
         "flagged": false,
         "notes": "using muons for 90 deg",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }
@@ -12239,13 +12099,13 @@
         "flagged": false,
         "notes": "",
         "hodo_rotation": {
-            "dx_dy_mrad": 32.73,
-            "dy_dx_mrad": -29.31,
+            "dx_dy_mrad": 34.65,
+            "dy_dx_mrad": -28.41,
             "from_runs": [
-                1868,
-                1874,
+                1878,
                 1879,
                 1880,
+                1881,
                 1882
             ]
         }

@@ -20,27 +20,15 @@ tracker team's own documentation:
     27. Nr of event within the spill (duplicate of field 18)
     28. Global event nr (same value as field 25)
 
-Field 24 is "the timestamp *sent to* DREAM", not an independent
-tracker-only clock -- in principle DREAM should have recorded that same
-value somewhere, which would let events be matched by exact equality
-instead of the statistical alignment this module actually has to do. That
-received value doesn't appear to survive the ROOT conversion into any
-accessible branch (checked ``timestampbegin``/``timestampend``/``device_n``/
-``event_flag``, across multiple runs -- all constant or all-zero
-placeholders), so ``align_tracker_to_root_by_timestamp`` remains
-inference, not an exact lookup. Same story for field 26 (``dream_event_nr``):
-genuinely populated, but only in a handful of early pre-TB2026 runs, always
-zero in every official run since.
-
-``align_tracker_to_root_by_timestamp`` calibrates its per-segment clock fit
-against ``trigger_n``, not ``event_n``, for the same reason: ``event_n`` is
-a perfectly dense 0..N-1 range with zero gaps, so *any* candidate offset
-that keeps shifted values in-bounds "matches" 100% of the time regardless
-of whether it's the right one -- it can't discriminate at all. ``trigger_n``
-has a handful of real gaps, which at least gives that calibration something
-to constrain against (a counting-only approach was tried first and
-abandoned -- see that function's docstring for why real clock time works
-better than counting events).
+Field 24 is "the timestamp *sent to* DREAM". The value DREAM received
+doesn't survive the ROOT conversion as a per-event key (checked
+``timestampbegin``/``timestampend``/``device_n``/``event_flag``, across
+multiple runs -- all constant or all-zero placeholders), and field 26
+(``dream_event_nr``) is zero in every official run. But DREAM keeps its own
+microsecond clock (``FERS_Board*_tstamp_us``, see ``root_timestamp_us``),
+and field 24 follows it on one straight line per run to ~0.3 us, while
+triggers are ~1-8 ms apart -- so ``align_tracker_to_root_by_timestamp``
+matches events by time alone, no event counting.
 """
 
 from __future__ import annotations
@@ -217,41 +205,6 @@ def find_spill_boundaries(counter, threshold_factor: float = 300, merge_gap: int
     return segment_end, next_start_minus_1
 
 
-def _match_boundary_offset(tracker_boundaries, root_boundaries,
-                           max_shift: int = 10, min_segments: int = 5):
-    """Find which (tracker boundary, root boundary) pair to start counting from.
-
-    Tries small relative shifts at the start of each boundary list (a
-    boundary right at the very start/end of a run can be caught by one
-    clock and missed by the other) and scores each candidate alignment by
-    how *consistent* the ratio of inter-boundary event counts is across
-    segments -- root records a different, but roughly constant, fraction
-    more triggers per spill than the tracker, so the true alignment has a
-    low-scatter ratio while a wrong shift looks essentially random.
-
-    Returns ``(t_start, r_start, n_segments, score)`` for the best
-    candidate, or ``None`` if there aren't enough boundaries in common to
-    judge confidently.
-    """
-    t_counts = np.diff(tracker_boundaries).astype(float)
-    r_counts = np.diff(root_boundaries).astype(float)
-    best = None
-    for t_off in range(max(len(t_counts) - min_segments + 1, 0)):
-        if t_off > max_shift:
-            break
-        for r_off in range(max(len(r_counts) - min_segments + 1, 0)):
-            if r_off > max_shift:
-                break
-            n = min(len(t_counts) - t_off, len(r_counts) - r_off)
-            if n < min_segments:
-                continue
-            ratio = r_counts[r_off:r_off + n] / t_counts[t_off:t_off + n]
-            score = float(np.std(ratio) / np.mean(ratio))
-            if best is None or score < best[3]:
-                best = (t_off, r_off, n, score)
-    return best
-
-
 def scan_alignment_correlation(x_tracker, root_idx, x_root, good_root,
                                shift_range: int = 15, min_n: int = 50):
     """QA check: is this run's alignment finding a real correspondence, or noise?
@@ -279,13 +232,10 @@ def scan_alignment_correlation(x_tracker, root_idx, x_root, good_root,
     alignment likely isn't finding true correspondences for this run,
     whatever match_frac claims.
 
-    A weak-but-real peak at shift 0 does not by itself prove the
-    alignment is imprecise, either: some of the gap between this and the
-    tracker's own internal station1-vs-station2 correlation (~0.98, since
-    those two columns come from the same raw row and need no alignment at
-    all) is plausibly genuine physics -- multiple scattering between the
-    hodoscope and tracker planes -- not a matching error. This function
-    reports the data; it does not attempt to separate those two causes.
+    The weak peaks quoted above (r ~0.4-0.8) came from the old
+    counting-based matcher and turned out to be mismatched whole spills, not
+    physics: with the time-coincidence matcher the same runs read r ~0.97-0.997
+    against the hodoscope (see ``align_tracker_to_root_by_timestamp``).
 
     Parameters
     ----------
@@ -333,61 +283,79 @@ def scan_alignment_correlation(x_tracker, root_idx, x_root, good_root,
     return results
 
 
-def _fit_segment_time_calibration(run_event_nr, root_key_local, t_raw_seg, r_raw_seg,
-                                  local_search_range: int = 200, min_anchor_count: int = 10,
-                                  min_fit_r: float = 0.999):
-    """Fit ``root_raw_ticks = slope * tracker_raw_ticks + intercept`` for one
-    segment, using the existing counting-based match as a source of trusted
-    anchor points -- not as the final answer, just to calibrate a real
-    physical clock relationship between the two streams.
+def root_timestamp_us(root_tstamp_us):
+    """Exact DREAM event time (int64 us) from a ``FERS_Board*_tstamp_us`` branch.
 
-    Confirmed on real data (run 1774, run 1832): a genuine spill segment
-    fits this line essentially perfectly (r >= 0.999999, slope landing
-    almost exactly on 0.4 -- i.e. the tracker's clock runs at 2.5 ticks per
-    root-microsecond -- consistently across dozens of independent segments
-    in both runs). A segment that *isn't* real, continuous spill activity
-    (confirmed: run 1832's very first segment, a long beam-off dead period
-    with at most a couple of genuine events, where the counting-based
-    "anchors" are mostly spurious ties rather than real matches) fits
-    badly (r=0.41 in that case) -- ``min_fit_r`` rejects segments like that
-    rather than building a matching scheme on a meaningless fit.
-
-    Returns
-    -------
-    (slope, intercept, r, n_anchors, resid_rms) or None if there aren't
-    enough anchor points, or the fit quality doesn't clear ``min_fit_r``.
-    ``resid_rms`` is the RMS of the anchors' own fit residuals (in
-    ``r_raw_seg`` units) -- a per-segment scale for how far a nearest-time
-    match can be trusted, since it comes from points already confirmed to
-    be real tracker<->root correspondences.
+    The ROOT conversion stores the 32-bit microsecond timestamp T as the
+    64-bit word ``(T << 32) | T`` cast to float64 (``FERS_Board*_trigger_id``
+    is packed the same way: n * 2**32 + n). A float64 keeps 53 bits, so the
+    upper copy survives exactly while the lower one is rounded -- to 4 us
+    early in a run, 1-2 ms late in it. This module used to read the lower
+    word, which left neighbouring triggers (~1-8 ms apart) indistinguishable
+    by time. Raises if the two copies disagree by more than that rounding,
+    i.e. if a branch isn't packed this way.
     """
-    naive_offset = int(run_event_nr.min() - root_key_local.min())
-    best_offset, best_n = naive_offset, -1
-    for delta in range(-local_search_range, local_search_range + 1):
-        offset = naive_offset + delta
-        cnt = np.isin(run_event_nr - offset, root_key_local).sum()
-        if cnt > best_n:
-            best_offset, best_n = offset, cnt
+    u = np.asarray(root_tstamp_us).astype(np.uint64)
+    upper = (u >> np.uint64(32)).astype(np.int64)
+    lower = (u & np.uint64(0xFFFFFFFF)).astype(np.int64)
+    if len(u) and np.max(np.abs(upper - lower)) > 4096:
+        raise ValueError("tstamp_us isn't packed as (T << 32) | T; can't decode the DREAM timestamp.")
+    return upper
 
-    anchor_mask = np.isin(run_event_nr - best_offset, root_key_local)
-    if anchor_mask.sum() < min_anchor_count:
-        return None
 
-    anchor_i = np.where(anchor_mask)[0]
-    lookup = {}
-    for idx, v in enumerate(root_key_local):
-        lookup.setdefault(v, idx)
-    anchor_j = np.array([lookup[run_event_nr[i] - best_offset] for i in anchor_i])
+# DREAM microseconds per tracker ``timestamp_to_dream`` tick (2.5 ticks/us),
+# 0.3999977-0.3999981 per spill on every run checked. Only seeds a spill's
+# offset search -- the slope is refitted per spill -- where a 5e-7 error is
+# ~6 us over a ~5 s spill, well inside the search window.
+TRACKER_CLOCK_SLOPE = 0.399998
 
-    t_anchor = t_raw_seg[anchor_i].astype(np.float64)
-    r_anchor = r_raw_seg[anchor_j].astype(np.float64)
-    slope, intercept = np.polyfit(t_anchor, r_anchor, 1)
-    r_corr = float(np.corrcoef(t_anchor, r_anchor)[0, 1])
-    if r_corr < min_fit_r:
-        return None
-    resid = r_anchor - (slope * t_anchor + intercept)
-    resid_rms = float(np.sqrt(np.mean(resid ** 2)))
-    return slope, intercept, r_corr, int(anchor_mask.sum()), resid_rms
+
+def _nearest(sorted_times, x):
+    """Index of, and signed distance to, the nearest ``sorted_times`` entry for each ``x``."""
+    j = np.clip(np.searchsorted(sorted_times, x), 1, len(sorted_times) - 1)
+    j = np.where(x - sorted_times[j - 1] <= sorted_times[j] - x, j - 1, j)
+    return j, sorted_times[j] - x
+
+
+def _fit_spill_clock(t_spill, root_us, guess, rng, slope0, search_window_us, match_window_us,
+                     n_probe, min_peak_frac):
+    """``root_us = slope * tracker_ticks + intercept`` for one tracker spill, by time coincidence.
+
+    ``guess`` is the previous spill's ``(slope, intercept)``, or None. The
+    clock relationship is one line across a whole run (the intercept drifts
+    ~1 us per spill), so it's tried first. Failing that, ``n_probe`` random
+    rows each vote for the intercept that would put them on every ROOT
+    event, at ``slope0``: only the true intercept collects (nearly) all of
+    them -- chance coincidences are ~1e-3 per probe in a 20 us window. The
+    slope and intercept are then refitted on the coincident rows as the
+    window tightens to ``match_window_us``.
+
+    Returns ``(slope, intercept, peak_frac)`` -- ``peak_frac`` the fraction
+    of probe rows that coincided -- or None if under ``min_peak_frac`` did.
+    """
+    probe = t_spill[rng.choice(len(t_spill), min(n_probe, len(t_spill)), replace=False)]
+    found = None
+    if guess is not None:
+        _, d = _nearest(root_us, guess[0] * probe + guess[1])
+        hit = np.abs(d) < search_window_us
+        if hit.mean() >= min_peak_frac:
+            found = guess[0], guess[1] + np.median(d[hit]), hit.mean()
+    if found is None:
+        votes = np.sort((root_us[None, :] - slope0 * probe[:, None]).ravel())
+        in_window = np.searchsorted(votes, votes + search_window_us) - np.arange(len(votes))
+        k = int(np.argmax(in_window))
+        if in_window[k] < min_peak_frac * len(probe):
+            return None
+        found = slope0, votes[k] + search_window_us / 2, in_window[k] / len(probe)
+
+    slope, intercept, peak_frac = found
+    for window in (search_window_us, 5.0, match_window_us):
+        j, d = _nearest(root_us, slope * t_spill + intercept)
+        ok = np.abs(d) < window
+        if ok.sum() < 2:
+            return None
+        slope, intercept = np.polyfit(t_spill[ok], root_us[j[ok]], 1)
+    return slope, intercept, peak_frac
 
 
 def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept, max_residual=None):
@@ -405,9 +373,10 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept, max_residu
     max_residual : float, optional -- if given, a tracker row whose nearest
         root row is farther than this (in ``r_raw_seg`` units) is rejected
         (``matched=False``) rather than force-matched to it anyway. ``j``
-        still advances past it, since it was still each side's mutual
-        nearest neighbor at this point in the walk -- rejecting the match
-        doesn't free the root row up for a different tracker row. Omit (or
+        does not advance past a rejected row's root row: a tracker trigger
+        DREAM never recorded is nearest to the *next* trigger's root row, and
+        consuming it cost that next row its real match (confirmed: 0-11 rows
+        per run, 0.2 us from their partner, before this was fixed). Omit (or
         None) to keep the old always-match behavior.
 
     Returns
@@ -435,6 +404,7 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept, max_residu
         local_root_idx[i] = j
         if max_residual is not None and abs(r_raw_seg[j] - tt) > max_residual:
             matched[i] = False
+            continue  # leave root row j for the next tracker row
         j += 1  # strictly increasing -- guarantees no root row is reused
 
     return matched, local_root_idx
@@ -451,60 +421,55 @@ def _time_based_segment_match(t_raw_seg, r_raw_seg, slope, intercept, max_residu
 # comfortably above min_match_frac, on runs whose real correlation was
 # indistinguishable from zero -- across 23 same-energy runs checked this
 # way, real correlation strength predicted measured si-tracker efficiency
-# far better than match_frac did, Pearson r=0.92 vs 0.87).
+# far better than match_frac did, Pearson r=0.92 vs 0.87). Those numbers
+# are from the old counting-based matcher; with time coincidence genuine
+# runs read r ~0.97+, so this is now only a backstop.
 MIN_ALIGNMENT_CORRELATION = 0.2
 
 
 def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tstamp_us,
                                       threshold_factor: float = 300, merge_gap: int = 3,
-                                      max_shift: int = 10, min_segments: int = 5,
-                                      max_ratio_cv: float = 0.1, local_search_range: int = 200,
-                                      min_anchor_count: int = 10, min_fit_r: float = 0.999,
-                                      min_match_frac: float = 0.5,
-                                      max_residual_sigma: float = 5.0,
+                                      clock_slope: float = TRACKER_CLOCK_SLOPE,
+                                      search_window_us: float = 20.0, match_window_us: float = 3.0,
+                                      n_probe: int = 50, min_peak_frac: float = 0.5,
+                                      min_spill_rows: int = 10, min_match_frac: float = 0.5,
                                       x_root=None, good_root=None,
                                       min_correlation: float = MIN_ALIGNMENT_CORRELATION):
-    """Match tracker events to ROOT by real physical time, not by counting.
+    """Match tracker events to ROOT events by their clock times.
 
-    Finds spill boundaries independently in each stream (see
-    ``find_spill_boundaries`` / ``_match_boundary_offset``), then within
-    each matched segment fits an actual clock relationship (``root_ticks =
-    slope * tracker_ticks + intercept``, see
-    ``_fit_segment_time_calibration``) using a brute-force count-based
-    match only as a calibration aid to find trusted anchor points, then
-    matches every tracker row to its nearest root row in that fitted real
-    time -- not by counting at all.
+    The tracker's ``timestamp_to_dream`` and DREAM's microsecond clock
+    (``root_timestamp_us``) follow one straight line per run to ~0.3 us RMS,
+    while triggers are ~1-8 ms apart, so a tracker event's counterpart is
+    just the ROOT event at its predicted time. Per tracker spill
+    (``find_spill_boundaries``; ROOT's own spills aren't needed):
+    ``_fit_spill_clock`` finds the line by time coincidence, then each row
+    is matched to its nearest ROOT event within ``match_window_us``
+    (``_time_based_segment_match``). Rows with no ROOT event that close stay
+    unmatched. ``trigger_n`` is unused, kept for callers.
 
-    An earlier version of this module matched purely by counting
-    (walking ``run_event_nr``/``trigger_n`` row by row, guessing which
-    side had dropped an event whenever the running offset didn't line up).
-    That approach is gone now: confirmed directly on real data that
-    matching by real time does measurably better on every run tested (raw
-    per-event position correlation 0.66-0.81 under counting -> 0.74-0.82
-    under time fitting), because the underlying clock relationship is
-    extremely stable (r >= 0.999999 in nearly every segment tested) --
-    counting has to guess where individual events were dropped; time
-    doesn't need to guess, it just needs an accurate clock.
-
-    A segment whose fit doesn't clear ``min_fit_r`` (see
-    ``_fit_segment_time_calibration`` -- confirmed to reliably flag
-    segments that aren't real continuous spill activity, e.g. a long
-    beam-off dead period with only a couple of genuine events) is skipped
-    entirely rather than matched on a meaningless calibration.
+    Replaced (2026-10-15) a matcher that paired tracker and ROOT spills by
+    their boundaries, took each spill's offset from counting events, and
+    read the rounded lower timestamp word (see ``root_timestamp_us``). Its
+    errors came in whole spills: a count off by a few events shifted every
+    match in the spill, and the straight-line clock fit still looked
+    perfect. Checked against the hodoscope (|hodo - two-station track| <
+    1 mm in x and y), it left 17-36% of matched events inconsistent on runs
+    1774/1813/1832 and ~100% on 1765/1866; this leaves 1.3-4%, with ~100% of
+    tracker rows matched and no ROOT event used twice. At 0.3 us timing the
+    remainder isn't mismatches -- it's highest at e+ 40 GeV, so most likely
+    scattering/showering tails.
 
     Parameters
     ----------
-    max_residual_sigma : float, optional -- a tracker row is only kept
-        matched if its nearest root row (in fitted time) lands within
-        ``max_residual_sigma * resid_rms`` of the prediction, where
-        ``resid_rms`` is that segment's own anchor-fit residual RMS (see
-        ``_fit_segment_time_calibration``) -- a per-segment, self-calibrated
-        scale, since it comes from points already confirmed to be real
-        correspondences. A nearest-neighbor match beyond that isn't a real
-        counterpart, just whatever root row happened to be closest; such
-        rows are dropped (not force-matched) rather than counted as a
-        (wrong) match. Set to ``None`` to disable and force-match every row
-        to its nearest neighbor regardless of distance (the old behavior).
+    clock_slope : seeds each spill's offset search (``_fit_spill_clock``).
+    search_window_us : coincidence window for finding a spill's offset.
+    match_window_us : a row farther than this from every ROOT event (after
+        the spill's refit) stays unmatched.
+    n_probe, min_peak_frac : rows sampled per spill to find its offset, and
+        the fraction of them that must coincide for the spill to be matched
+        at all.
+    min_spill_rows : smaller tracker "spills" (straggler clusters) are skipped.
+    min_match_frac : refuse a run where fewer tracker rows than this match.
     x_root, good_root : optional -- an independent reference position (e.g.
         hodoscope x) and its goodness mask, both full ROOT-event length.
         When given, the result is additionally checked against
@@ -518,73 +483,51 @@ def align_tracker_to_root_by_timestamp(tracker: np.ndarray, trigger_n, root_tsta
     -------
     tracker_mask : ndarray of bool, shape (len(tracker),)
     root_idx : ndarray of int, one entry per True in ``tracker_mask``
-    fit_diagnostics : list of (t_lo, t_hi, fit_or_None) per segment, where
-        ``fit_or_None`` is ``(slope, intercept, r, n_anchors, resid_rms)``
-        or ``None`` for a rejected segment -- for inspecting which parts of
-        a run this trusted enough to match at all.
+    fit_diagnostics : list of (t_lo, t_hi, fit_or_None) per tracker spill,
+        ``fit_or_None`` being ``(slope, intercept, peak_frac, n_matched,
+        resid_rms_us)`` or ``None`` for a spill whose offset wasn't found.
     match_frac : float
     """
-    trigger_n = np.asarray(trigger_n)
-    root_ts = (np.asarray(root_tstamp_us).astype(np.uint64) & np.uint64(0xFFFFFFFF)).astype(np.int64)
-    t_raw = _unwrap_counter(tracker["timestamp_to_dream"], modulus=2 ** 31)
-    r_raw = _unwrap_counter(root_ts, modulus=2 ** 32)
+    root_us = _unwrap_counter(root_timestamp_us(root_tstamp_us), modulus=2 ** 32).astype(np.float64)
+    t_raw = _unwrap_counter(tracker["timestamp_to_dream"], modulus=2 ** 31).astype(np.float64)
+    ends, next_starts = find_spill_boundaries(tracker["timestamp_to_dream"], threshold_factor,
+                                              merge_gap, modulus=2 ** 31)
+    starts = np.concatenate(([0], next_starts + 1))
+    stops = np.concatenate((ends + 1, [len(tracker)]))
 
-    t_boundaries, t_next_start = find_spill_boundaries(tracker["timestamp_to_dream"], threshold_factor,
-                                                       merge_gap, modulus=2 ** 31)
-    r_boundaries, r_next_start = find_spill_boundaries(root_ts, threshold_factor, merge_gap,
-                                                       modulus=2 ** 32)
-    match = _match_boundary_offset(t_boundaries, r_boundaries, max_shift, min_segments)
-    if match is None:
-        raise ValueError(
-            f"Not enough spill boundaries to align by time fit "
-            f"(tracker: {len(t_boundaries)}, root: {len(r_boundaries)}; need >= {min_segments} segments)."
-        )
-    t_off, r_off, n, score = match
-    if score > max_ratio_cv:
-        raise ValueError(
-            f"Best spill-boundary match is still inconsistent (cv={score:.3f} > "
-            f"{max_ratio_cv}); refusing to trust time-fit-based alignment."
-        )
-
-    t_cuts = t_boundaries[t_off:t_off + n + 1]
-    t_cuts_next = t_next_start[t_off:t_off + n + 1]
-    r_cuts = r_boundaries[r_off:r_off + n + 1]
-    r_cuts_next = r_next_start[r_off:r_off + n + 1]
-    t_starts = np.concatenate(([0], t_cuts_next + 1))
-    t_ends = np.concatenate((t_cuts + 1, [len(tracker)]))
-    r_starts = np.concatenate(([0], r_cuts_next + 1))
-    r_ends = np.concatenate((r_cuts + 1, [len(trigger_n)]))
-
+    rng = np.random.default_rng(0)  # picks probe rows only; fixed so a run always aligns the same
     tracker_mask = np.zeros(len(tracker), dtype=bool)
     root_idx_parts = []
     fit_diagnostics = []
-    for t_lo, t_hi, r_lo, r_hi in zip(t_starts, t_ends, r_starts, r_ends):
-        if t_hi <= t_lo or r_hi <= r_lo:
+    guess = None
+    for t_lo, t_hi in zip(starts, stops):
+        if t_hi - t_lo < min_spill_rows:
             continue
-        run_event_nr = tracker["run_event_nr"][t_lo:t_hi]
-        root_key_local = trigger_n[r_lo:r_hi]
-
-        fit = _fit_segment_time_calibration(run_event_nr, root_key_local,
-                                            t_raw[t_lo:t_hi], r_raw[r_lo:r_hi],
-                                            local_search_range, min_anchor_count, min_fit_r)
-        fit_diagnostics.append((int(t_lo), int(t_hi), fit))
+        t_spill = t_raw[t_lo:t_hi]
+        fit = _fit_spill_clock(t_spill, root_us, guess, rng, clock_slope, search_window_us,
+                               match_window_us, n_probe, min_peak_frac)
         if fit is None:
+            fit_diagnostics.append((int(t_lo), int(t_hi), None))
             continue
-        slope, intercept, r_corr, n_anchor, resid_rms = fit
-        max_residual = max_residual_sigma * resid_rms if max_residual_sigma is not None else None
+        slope, intercept, peak_frac = fit
+        guess = slope, intercept
 
-        seg_matched, seg_local_root_idx = _time_based_segment_match(
-            t_raw[t_lo:t_hi], r_raw[r_lo:r_hi], slope, intercept, max_residual)
-
-        seg_indices = np.arange(t_lo, t_hi)[seg_matched]
-        tracker_mask[seg_indices] = True
-        root_idx_parts.append(r_lo + seg_local_root_idx[seg_matched])
+        pred = slope * t_spill + intercept
+        r_lo = max(int(np.searchsorted(root_us, pred[0] - search_window_us)) - 1, 0)
+        r_hi = int(np.searchsorted(root_us, pred[-1] + search_window_us)) + 1
+        matched, local_idx = _time_based_segment_match(t_spill, root_us[r_lo:r_hi], slope, intercept,
+                                                       match_window_us)
+        resid = root_us[r_lo + local_idx[matched]] - pred[matched]
+        resid_rms = float(np.sqrt(np.mean(resid ** 2))) if matched.any() else float("nan")
+        fit_diagnostics.append((int(t_lo), int(t_hi), (slope, intercept, peak_frac, int(matched.sum()), resid_rms)))
+        tracker_mask[t_lo + np.flatnonzero(matched)] = True
+        root_idx_parts.append(r_lo + local_idx[matched])
 
     root_idx = np.concatenate(root_idx_parts) if root_idx_parts else np.empty(0, dtype=np.int64)
     match_frac = tracker_mask.sum() / len(tracker) if len(tracker) else 0.0
     if match_frac < min_match_frac:
         raise ValueError(
-            f"Only {match_frac:.1%} of tracker events matched a ROOT event by time fit; "
+            f"Only {match_frac:.1%} of tracker events matched a ROOT event in time; "
             f"refusing to align (min_match_frac={min_match_frac:.1%})."
         )
 
@@ -639,18 +582,27 @@ def root_matched_mask(tracker: np.ndarray, trigger_n, root_tstamp_us, n_root=Non
 
 
 # ---------------------------------------------------------------------------
-# Tracker/hodoscope scale calibration
+# Tracker -> hodoscope frame calibration
 # ---------------------------------------------------------------------------
 #
-# The tracker's raw x1/y1/x2/y2 (cm) are on its own hardware's mm-per-unit
-# scale, which isn't exactly 1:1 with the hodoscope's independently
-# calibrated mm scale -- see ``scripts/sihodocor.py --testbeam``, which
-# fits that Hodo-vs-Tracker slope directly from real, aligned, veto-selected
-# data. build_aligned_tracker_branches (below) applies that fitted slope
-# when given a ``run_id``, so every consumer of tracker positions -- not
-# just scripts/tracker_shapefit.py, where this was first added -- can get
-# the same calibrated positions "for free" as part of reconstruction,
-# instead of each analysis re-deriving or forgetting to apply it.
+# ``scripts/sihodocor.py --testbeam`` fits, per run, station and axis,
+# tracker_mm = slope * hodo_mm + intercept on veto-selected, time-matched
+# events (the hodoscope already rotated into the tracker frame by
+# ``reconstruct_hodoscope(run_id=...)``). ``calibrate_tracker_positions``
+# inverts it, (tracker_mm - intercept) / slope, so each station reads in the
+# hodoscope's own coordinates: its HodoX-vs-Tracker plot fits y = x.
+# build_aligned_tracker_branches (below) applies it when given a ``run_id``.
+#
+# The slope is not a detector scale: it is the beam's position-angle
+# correlation projected over each station's gap to the hodoscope (Si1, 90 cm
+# upstream, departs from 1 about twice as much as Si2, 43 cm), so it moves
+# with the beam optics, 0.98-1.07 across TB2026. That makes the calibrated
+# positions right for single-station use -- each station's on-average
+# estimate of where the particle crosses the hodoscope -- but never build a
+# two-station track from them: a track needs the raw scale (see
+# scripts/hodores.py). The intercept is geometry (the two detectors'
+# unsurveyed origins, ~49-56 mm) and holds to ~1 mm across TB2026, table
+# moves included.
 
 # Minimum |Pearson r| / profile points for a run's own fitted Hodo-vs-Tracker
 # slope (from the calibration CSV below) to be trusted rather than noise --
@@ -661,22 +613,7 @@ def root_matched_mask(tracker: np.ndarray, trigger_n, root_tstamp_us, n_root=Non
 TRACKER_HODO_MIN_FIT_R = 0.8
 TRACKER_HODO_MIN_FIT_POINTS = 4
 
-# Fallback per-testbeam mean trusted slope, used only for a run that's
-# missing or untrusted in its own testbeam's calibration CSV. A single
-# testbeam-wide average hides real run-to-run variation (confirmed: using a
-# run's own slope instead of TB2026's mean here visibly closed most of a
-# ~3% Tracker-vs-Hodoscope veto-radius gap that the mean didn't touch), so
-# this is deliberately just the fallback, not the primary source. TB2026's
-# values are that testbeam's mean trusted slope per (tracker, axis) as of
-# 2026-09-14.
-TRACKER_HODO_SLOPE_MEAN = {
-    "TB2026": {
-        ("Tracker1", "x"): 1.0043,
-        ("Tracker1", "y"): 0.9826,
-        ("Tracker2", "x"): 0.9970,
-        ("Tracker2", "y"): 0.9896,
-    },
-}
+TRACKER_HODO_KEYS = [("Tracker1", "x"), ("Tracker1", "y"), ("Tracker2", "x"), ("Tracker2", "y")]
 
 # Versioned (not gitignored, unlike output/) copy of each testbeam's
 # ``scripts.sihodocor --testbeam`` bigplot CSV -- this is what makes that
@@ -689,59 +626,69 @@ TRACKER_HODO_SLOPES_DIR = os.path.join(project_root(), "data", "tracker_hodo_slo
 
 
 def get_tracker_hodo_calibration(run_id):
-    """Return this run's {("Tracker1"|"Tracker2", "x"|"y"): slope} calibration.
+    """Return this run's {("Tracker1"|"Tracker2", "x"|"y"): (slope, intercept_mm)}.
 
     Prefers run_id's own row in
     ``data/tracker_hodo_slopes/<testbeam>_slopes.csv`` (quality-gated by
     TRACKER_HODO_MIN_FIT_R / TRACKER_HODO_MIN_FIT_POINTS -- a run's own fit
     can itself be a degenerate/garbage outlier, e.g. a near-zero-statistics
-    run reduced to a 2-point fit). Falls back to TRACKER_HODO_SLOPE_MEAN,
-    then to no correction (empty dict) if neither is available for this
-    run's testbeam.
+    run reduced to a 2-point fit). A key without a trusted fit of its own
+    takes the median of the testbeam's trusted fits. Empty dict if the
+    testbeam has no CSV. A CSV written before the intercept column
+    (2026-10-15) reads as intercept 0, i.e. scale only.
     """
     runtype = get_runtype(run_id)
-    mean_calib = TRACKER_HODO_SLOPE_MEAN.get(runtype, {})
-    calib = dict(mean_calib)
-    used_own = set()
-
     csv_path = os.path.join(TRACKER_HODO_SLOPES_DIR, f"{runtype.replace(' ', '_')}_slopes.csv")
-    if os.path.exists(csv_path):
-        with open(csv_path, newline="") as f:
-            for row in csv.DictReader(f):
-                if row["run"] != str(int(run_id)):
-                    continue
-                for trackern, axis in [("1", "x"), ("1", "y"), ("2", "x"), ("2", "y")]:
-                    slope, r, n_points = (row.get(f"tracker{trackern}_{axis}_slope"),
-                                          row.get(f"tracker{trackern}_{axis}_r"),
-                                          row.get(f"tracker{trackern}_{axis}_n_points"))
-                    if not slope or not r or not n_points:
-                        continue
-                    if (abs(float(r)) >= TRACKER_HODO_MIN_FIT_R
-                            and int(n_points) >= TRACKER_HODO_MIN_FIT_POINTS):
-                        calib[(f"Tracker{trackern}", axis)] = float(slope)
-                        used_own.add((f"Tracker{trackern}", axis))
-                break
+    if not os.path.exists(csv_path):
+        return {}
 
+    trusted = {}  # run -> {key: (slope, intercept)}
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        if "tracker1_x_intercept" not in (reader.fieldnames or []):
+            print(f"  {csv_path} has no intercepts (written before 2026-10-15); applying slopes only -- "
+                  f"regenerate it with scripts.sihodocor --testbeam {runtype}.")
+        for row in reader:
+            for station, axis in TRACKER_HODO_KEYS:
+                prefix = f"tracker{station[-1]}_{axis}"
+                slope, r, n_points = row.get(f"{prefix}_slope"), row.get(f"{prefix}_r"), row.get(f"{prefix}_n_points")
+                if not (slope and r and n_points):
+                    continue
+                if abs(float(r)) >= TRACKER_HODO_MIN_FIT_R and int(n_points) >= TRACKER_HODO_MIN_FIT_POINTS:
+                    trusted.setdefault(row["run"], {})[(station, axis)] = (
+                        float(slope), float(row.get(f"{prefix}_intercept") or 0.0))
+
+    own = trusted.get(str(int(run_id)), {})
+    calib = {}
+    for key in TRACKER_HODO_KEYS:
+        if key in own:
+            calib[key] = own[key]
+        else:
+            fits = [run_fits[key] for run_fits in trusted.values() if key in run_fits]
+            if fits:
+                calib[key] = tuple(float(v) for v in np.median(fits, axis=0))
     if calib:
-        source = ("this run's own fit" if len(used_own) == 4
-                  else f"this run's own fit for {sorted(used_own)}, testbeam mean for the rest" if used_own
-                  else "testbeam mean (run not found/not trusted in the calibration CSV)")
+        source = ("this run's own fit" if len(own) == len(TRACKER_HODO_KEYS)
+                  else f"this run's own fit for {sorted(own)}, testbeam median for the rest" if own
+                  else "testbeam median (run not found/not trusted in the calibration CSV)")
         print(f"  Tracker/hodo calibration ({runtype}): {source}")
     return calib
 
 
 def calibrate_tracker_positions(x1, y1, x2, y2, run_id):
     """Convert raw tracker positions (cm, as from load_tracker_run /
-    build_aligned_tracker_branches) onto the hodoscope's calibrated mm
-    scale (see get_tracker_hodo_calibration).
+    build_aligned_tracker_branches) into the hodoscope's frame, in mm:
+    (10 * x - intercept) / slope per station and axis (see
+    get_tracker_hodo_calibration and the section comment above -- fine for
+    single-station use, not for building tracks).
 
     No-hit sentinel rows (SENTINEL_X1 etc) are converted to their exact
-    mm-scale companion (SENTINEL_X1_MM etc) rather than being divided by a
-    calibration factor -- a sentinel is a flag, not a physical position, so
-    scaling it would both be meaningless and silently break a downstream
+    mm-scale companion (SENTINEL_X1_MM etc) rather than being calibrated --
+    a sentinel is a flag, not a physical position, so transforming it would
+    both be meaningless and silently break a downstream
     ``!= SENTINEL_X1_MM`` check. Returns (x1_mm, y1_mm, x2_mm, y2_mm); if no
     calibration is known for this run's testbeam, positions are still
-    converted cm -> mm but not rescaled (a printed warning notes this).
+    converted cm -> mm but not calibrated (a printed warning notes this).
     """
     x1, y1, x2, y2 = (np.asarray(a, dtype=float) for a in (x1, y1, x2, y2))
     calib = get_tracker_hodo_calibration(run_id)
@@ -756,8 +703,9 @@ def calibrate_tracker_positions(x1, y1, x2, y2, run_id):
         (x2, SENTINEL_X2, SENTINEL_X2_MM, ("Tracker2", "x")),
         (y2, SENTINEL_Y2, SENTINEL_Y2_MM, ("Tracker2", "y")),
     ]:
+        slope, intercept = calib.get(key, (1.0, 0.0))
         hit = x != sentinel_raw
-        x_mm = np.where(hit, 10 * x / calib.get(key, 1.0), sentinel_mm)
+        x_mm = np.where(hit, (10 * x - intercept) / slope, sentinel_mm)
         out.append(x_mm)
     return tuple(out)
 
@@ -777,8 +725,8 @@ def build_aligned_tracker_branches(tracker: np.ndarray, trigger_n, root_tstamp_u
     ``align_tracker_to_root_by_timestamp`` (real clock time, see that
     function's docstring for how it works and why).
 
-    Passing ``run_id`` additionally rescales the positions onto the
-    hodoscope's calibrated mm scale (see ``calibrate_tracker_positions``)
+    Passing ``run_id`` additionally calibrates the positions into the
+    hodoscope's frame, in mm (see ``calibrate_tracker_positions``)
     and adds them as ``tracker_x1_mm`` etc, alongside the untouched raw cm
     branches -- this is the reconstruction-time calibration step, so any
     caller that wants calibrated positions (e.g. ``scripts.tracker_shapefit``,

@@ -22,9 +22,8 @@ from .tracker import (
     load_tracker_run,
 )
 
-# Runs this short can't contain enough spill boundaries for
-# align_tracker_to_root_by_timestamp to fit a clock relationship (it needs
-# >= 5 spill segments) -- they're short calibration/threshold-scan blips
+# Runs this short are too small to align or measure an efficiency on
+# meaningfully -- they're short calibration/threshold-scan blips
 # tagged with a physics beam_type/energy in run_list.json, not real
 # data-taking runs. Filtering them out before attempting the (expensive)
 # alignment avoids both wasted work and a silent, event-count-driven bias in
@@ -146,15 +145,10 @@ def _tracker_hit_masks(run_id, trigger_n, root_tstamp, per_axis=False, x_root=No
     """
     si_data = load_tracker_run(run_id)
 
-    # build_aligned_tracker_branches matches tracker events to ROOT by real
-    # clock time (see align_tracker_to_root_by_timestamp's docstring), and
+    # build_aligned_tracker_branches matches tracker events to ROOT by clock
+    # time (see align_tracker_to_root_by_timestamp's docstring), and
     # re-indexes tracker x1/y1/x2/y2 onto ROOT's own event ordering, filling
-    # unmatched events with the tracker's existing no-hit sentinels. An
-    # earlier counting-based version of this alignment silently mismatched
-    # a run-dependent fraction of events whenever the true tracker<->ROOT
-    # offset drifted within a run; matching by time instead measurably
-    # improved per-event correctness (confirmed: raw position correlation
-    # against the hodoscope up from 0.66-0.81 to 0.74-0.82 across test runs).
+    # unmatched events with the tracker's existing no-hit sentinels.
     tracker_branches, match_frac = build_aligned_tracker_branches(
         si_data, trigger_n, root_tstamp, x_root=x_root, good_root=good_root)
     x1, y1 = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]

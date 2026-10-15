@@ -28,6 +28,28 @@ def calculate_bar_position(bar_index, pitch=PITCH):
     return (np.asarray(bar_index) - BAR_CENTER_OFFSET) * pitch
 
 
+def hodo_bin_edges(lo, hi, pitch=PITCH):
+    """Bin edges one bar ``pitch`` wide covering ``[lo, hi]`` -- use these for
+    every histogram or profile binned in hodoscope position.
+
+    Edges sit on the fixed grid ``k * pitch``, halfway between the bar
+    centres at ``(i - 31.5) * pitch``, so each bin holds one bar whatever
+    ``lo``/``hi`` are. A grid sized to the data instead (N bins over
+    ``(min, max)``) comes out a few percent off the pitch, and its phase
+    against the bars drifts across the range: every ~pitch/|pitch - width|
+    bins one falls between two bars and reads empty (or straddles two and
+    reads double). Snapping edges to the data's unique values
+    (``utils.plotting._hist_edges``) used to catch that, but positions
+    rotated into the tracker frame (``reconstruct_hodoscope(run_id=...)``)
+    are no longer exact bar values, so it no longer triggers -- and the
+    rotation tilts the empty bins into diagonal stripes (confirmed: run
+    1813's energy_tracks sci_2d, 0.57mm bins).
+    """
+    k_lo = np.floor(lo / pitch)
+    k_hi = max(np.ceil(hi / pitch), k_lo + 1)
+    return np.arange(k_lo, k_hi + 1) * pitch
+
+
 def rotate_to_tracker_frame(x, y, dx_dy, dy_dx):
     """Undo the hodoscope's rotation relative to the silicon tracker.
 

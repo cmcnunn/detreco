@@ -83,11 +83,9 @@ def filter_scannable_runs(run_ids):
 
     A handful of "runs" in run_list.json are short calibration/threshold-scan
     blips (tens of events) tagged with a physics beam_type/energy anyway --
-    too short to contain the >= 5 spill boundaries
-    align_tracker_to_root_by_timestamp needs to fit a clock relationship, so
-    they'd fail the load regardless. Filtering by event count (cheap:
-    metadata-only) up front avoids paying for the full tracker load +
-    alignment just to hit that same failure, and -- more importantly --
+    too short to align or measure an efficiency on meaningfully. Filtering
+    by event count (cheap: metadata-only) up front avoids paying for the
+    full tracker load + alignment on them, and -- more importantly --
     surfaces them as an explicit, logged skip rather than leaving "which
     runs happened to be long enough" as a silent, energy-correlated bias in
     which runs make it into the pooled average.

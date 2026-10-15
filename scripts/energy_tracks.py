@@ -39,7 +39,7 @@ from utils.tracker import (
     build_aligned_tracker_branches,
     load_tracker_run,
 )
-from utils.hodo import reconstruct_hodoscope 
+from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.constants import VETO_THRESHOLD, X_MAPPING, Y_MAPPING
 from utils.data import get_run_beam, get_run_filepath, get_run_table_position
 from utils.plotting import get_beam_label, get_runs_by_testbeam, TProfile1d, TProfile2d
@@ -56,16 +56,29 @@ N_WORKERS = len(os.sched_getaffinity(0))
 EXPECTED_PITCH_MM = 4.0
 
 # Target bin width (mm) for the silicon tracker's energy-vs-position profiles.
-# The hodoscope's fixed 64 bins over its ~38mm-wide illuminated footprint
-# works out to ~0.6mm/bin, which is what actually gives it its smooth-looking
-# profile. Reusing a fixed *bin count* (250) for the tracker's own, typically
-# much wider (~70mm), footprint spreads the same number of events over far
-# more bins -- ~26 events/bin on a real run, vs ~100+/bin for the hodoscope --
-# so each tracker bin's mean energy is dominated by shot noise rather than
-# tracing the real modulation. Deriving the tracker's bin count from this
-# fixed physical width instead keeps its per-bin statistics (and resolution
-# relative to EXPECTED_PITCH_MM) comparable to the hodoscope's.
+# The hodoscope is binned one bar pitch (0.6mm) per bin (utils.hodo.hodo_bin_edges),
+# which is what gives it its smooth-looking profile. Reusing a fixed *bin
+# count* (250) for the tracker's own, typically much wider (~70mm), footprint
+# spreads the same number of events over far more bins -- ~26 events/bin on a
+# real run, vs ~100+/bin for the hodoscope -- so each tracker bin's mean energy
+# is dominated by shot noise rather than tracing the real modulation. Deriving
+# the tracker's bin count from this fixed physical width instead keeps its
+# per-bin statistics (and resolution relative to EXPECTED_PITCH_MM) comparable
+# to the hodoscope's.
 TRACKER_TARGET_BIN_MM = 0.6
+
+# Width (Gaussian sigma, mm) of the broad smoothing bandpass_filter subtracts
+# as the background trend. It used to be 10% of the array size, in bins: 3.8mm
+# for the hodoscope's 64 bins, but 8.6mm for a tracker array spanning its whole
+# ~85mm range, which blanked all but the middle of the ~22mm beam spot
+# (bandpass_filter drops cells whose smoothing window is under half data) and
+# left the beam-profile trend in. Checked on run 1813 sci at 3/6/9mm: 3 and
+# 6mm show the same fiber grid on the hodoscope and both trackers, 9mm blanks
+# the whole spot, and shuffling energies among events (null test) leaves no
+# grid. The ~4mm fiber response is set by the fine smoothing, not by this --
+# this only decides how much longer-wavelength trend passes. 3mm keeps the
+# most of the spot.
+BANDPASS_BROAD_MM = 3.0
 
 def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
     """
@@ -90,7 +103,8 @@ def build_energy_tracks(x, y, sci, cer, sel, calib_data=True, is_hodo=True):
     cer_sel = cer[sel]
 
     if is_hodo:
-        bx = by = 64
+        bx = hodo_bin_edges(np.min(x_sel), np.max(x_sel))
+        by = hodo_bin_edges(np.min(y_sel), np.max(y_sel))
     else:
         bx = max(8, int(round((np.max(x_sel) - np.min(x_sel)) / TRACKER_TARGET_BIN_MM)))
         by = max(8, int(round((np.max(y_sel) - np.min(y_sel)) / TRACKER_TARGET_BIN_MM)))
@@ -128,19 +142,20 @@ def _nan_gaussian_filter(data, sigma):
     result[weight < 0.5] = np.nan
     return result
 
-def bandpass_filter(data, fine_sigma=1.0, broad_frac=0.1):
+def bandpass_filter(data, bin_mm, fine_sigma=1.0, broad_mm=BANDPASS_BROAD_MM):
     """Isolate fine periodic structure in a 1D or 2D map: smooth lightly to
     suppress per-bin shot noise, then subtract a much broader smoothing (the
     overall beam-profile shape) so only structure finer than that broad scale
     survives.
 
-    broad_frac is a fraction of the array's size, not a physical length -- this
-    doesn't assume any particular period, it just separates "smooth large-scale
-    trend" from "everything finer than that", whatever that turns out to be.
+    ``fine_sigma`` is in bins; ``broad_mm`` is a physical width (see
+    BANDPASS_BROAD_MM), converted with ``bin_mm`` -- the bin width, or one
+    per axis for a 2D map -- so every detector is filtered on the same scale
+    whatever area its array covers.
     """
-    broad_sigma = max(data.shape[0] * broad_frac, fine_sigma * 4)
+    broad_sigma = tuple(np.atleast_1d(broad_mm / np.asarray(bin_mm, dtype=float)))
     fine = _nan_gaussian_filter(data, fine_sigma)
-    broad = _nan_gaussian_filter(data, broad_sigma)
+    broad = _nan_gaussian_filter(data, broad_sigma if len(broad_sigma) > 1 else broad_sigma[0])
     return fine - broad
 
 def _fit_sine_window(x, y, yerr, p0):
@@ -473,7 +488,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                     plateau = (centers >= x_lo) & (centers <= x_hi)
                     centers_p = centers[plateau]
                     mean_masked_1d = np.where(counts[plateau] >= 5, mean[plateau], np.nan)
-                    refined_1d = bandpass_filter(mean_masked_1d)
+                    refined_1d = bandpass_filter(mean_masked_1d, centers[1] - centers[0])
                     finite_refined_1d = refined_1d[np.isfinite(refined_1d)]
                     if finite_refined_1d.size:
                         fig, ax = plt.subplots(figsize=(12, 12))
@@ -505,9 +520,9 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                 x_centers, y_centers, mean, error, counts = data
                 min_2d_counts = 5
                 mean_masked = np.where(counts >= min_2d_counts, mean, np.nan)
-                fig, ax = plt.subplots(figsize=(14, 14))
+                fig, ax = plt.subplots(figsize=(16, 14))
                 finite_mean = mean_masked[np.isfinite(mean_masked)]
-                im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto")
+                im = ax.imshow(mean_masked.T, origin="lower", extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]], aspect="auto", cmap="RdBu_r")
                 ax.set_xlabel(f"{label} X Position (mm)", loc="right")
                 ax.set_ylabel(f"{label} Y Position (mm)", loc="top")
                 cbar = plt.colorbar(im, ax=ax, label=f"Average {ch} Energy ({unit})")
@@ -524,11 +539,11 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                 # broader smoothing (the overall beam-profile shape) to remove that
                 # trend -- whatever fine structure is left over is shown on its own,
                 # without assuming what scale it should be at.
-                refined = bandpass_filter(mean_masked)
+                refined = bandpass_filter(mean_masked, (x_centers[1] - x_centers[0], y_centers[1] - y_centers[0]))
                 finite_refined = refined[np.isfinite(refined)]
                 if finite_refined.size:
                     vabs = np.nanpercentile(np.abs(finite_refined), 95)
-                    fig, ax = plt.subplots(figsize=(14, 14))
+                    fig, ax = plt.subplots(figsize=(16, 14))
                     im = ax.imshow(refined.T, origin="lower",
                                     extent=[x_centers[0], x_centers[-1], y_centers[0], y_centers[-1]],
                                     aspect="auto", cmap="RdBu_r", vmin=-vabs, vmax=vabs)
@@ -537,6 +552,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                     cbar = plt.colorbar(im, ax=ax, label=f"{ch} Energy, background-subtracted ({unit})")
                     cbar.formatter.set_powerlimits((0, 0))
                     cbar.update_ticks()
+                    im.set_clim(0, vabs)
                     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                     if bounds is not None:
                         ax.set_xlim(*bounds["x"])
@@ -642,7 +658,7 @@ def plot_energy_histogram(run, sci, cer, sel, calib=False):
 
     fig, axes = plt.subplots(1, 2, figsize=(18, 8))
     summary = []
-    for ax, (ch, energy, color) in zip(axes, [("sci", sci, "tab:blue"), ("cer", cer, "tab:orange")]):
+    for ax, (ch, energy, color) in zip(axes, [("sci", sci, "tab:blue"), ("cer", cer, "tab:red")]):
         e_sel = energy[sel]
         if calib and beam_energy:
             edges = np.linspace(0, 1.5 * beam_energy, 151)
@@ -722,9 +738,6 @@ def process_run(run, calib=False):
         plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope", calib=calib)
         plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1", calib=calib)
         plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2", calib=calib)
-        plot_significant_peaks(run, hodo_energy_tracks, label="Hodoscope", calib=calib)
-        plot_significant_peaks(run, trk1_energy_tracks, label="Tracker 1", calib=calib)
-        plot_significant_peaks(run, trk2_energy_tracks, label="Tracker 2", calib=calib)
     except Exception as e:
         print(f"Error plotting run {run}: {e}")
 

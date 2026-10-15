@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.constants import HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH, VETO_THRESHOLD
 from utils.data import get_run_filepath
-from utils.hodo import reconstruct_hodoscope
+from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.io import ensure_output_dir
 from utils.plotting import get_beam_label, intrinsic_efficiency, plot_effhist2d
 from utils.selectors import (
@@ -66,8 +66,11 @@ def _mcp_hit_mask(mcp_bs, pulse_window_ns):
     return mcp_bs[:, w_start:w_end + 1].min(axis=1) < thresh
 
 def get_intrinsic_efficiency(x_ref, y_ref, x_sel, y_sel, return_uncertainty=True):
-    """Calculate the intrinsic efficiency of a detector given a reference and selected hit pattern."""
-    h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=64)
+    """Calculate the intrinsic efficiency of a detector given a reference and selected hit pattern
+    (the reference being hodoscope positions, binned one bar pitch per bin)."""
+    xedges = hodo_bin_edges(np.min(x_ref), np.max(x_ref))
+    yedges = hodo_bin_edges(np.min(y_ref), np.max(y_ref))
+    h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[xedges, yedges])
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[xedges, yedges])
 
     eff = np.divide(h_sel, h_ref, out=np.zeros_like(h_sel, dtype=float), where=h_ref > 0)

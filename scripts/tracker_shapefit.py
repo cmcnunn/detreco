@@ -31,17 +31,18 @@ reference but not the other two points at that one detector; a
 discrepancy that's consistent across all three points at the counter's own
 geometry differing from the assumed nominal value instead.
 
-Tracker1/Tracker2 positions come back already calibrated onto the
-hodoscope's mm scale -- ``build_aligned_tracker_branches(..., run_id=...)``
+Tracker1/Tracker2 positions come back already calibrated into the
+hodoscope's frame -- ``build_aligned_tracker_branches(..., run_id=...)``
 applies utils.tracker.get_tracker_hodo_calibration's fitted Hodo-vs-Tracker
-conversion coefficient (this run's own, from
+slope and offset (this run's own, from
 ``data/tracker_hodo_slopes/<testbeam>_slopes.csv`` -- see
-``scripts.sihodocor --testbeam``; falling back to that testbeam's mean, or
+``scripts.sihodocor --testbeam``; falling back to that testbeam's median, or
 no correction) as a reconstruction step, so a tracker-referenced fit
-reports a size in the same calibrated mm scale as the hodoscope-referenced
-fit -- without this, a run's tracker-vs-hodo scale mismatch alone (not any
-real physical difference) would show up as the tracker references
-disagreeing with the hodoscope reference on the veto/counter dimensions.
+reports a size, and a centre, in the same coordinates as the
+hodoscope-referenced fit -- without this, a run's tracker-vs-hodo scale
+mismatch alone (not any real physical difference) would show up as the
+tracker references disagreeing with the hodoscope reference on the
+veto/counter dimensions.
 
 Usage:
     python -m scripts.tracker_shapefit --run 1832
@@ -63,7 +64,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.constants import HG_THRESHOLD, PITCH, VETO_RADIUS_MM, VETO_THRESHOLD, X_MAPPING, Y_MAPPING
 from utils.data import get_run_filepath
 from utils.fit_funcs import erf_box, erf_disk
-from utils.hodo import reconstruct_hodoscope
+from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.io import ensure_output_dir
 from utils.plotting import _FIT_OUTLINE, _hist_edges, get_beam_label
 from utils.selectors import (
@@ -105,8 +106,8 @@ FIT_PLOT_MARGIN_MM = 5.0
 # function, so there's no reason to show it pixelated at the data's binning.
 MODEL_PLOT_BIN_MM = 0.1
 
-# Tracker/hodoscope scale calibration (fitted Hodo-vs-Tracker slope,
-# per-run with a testbeam-mean fallback) now lives in utils/tracker.py --
+# Tracker -> hodoscope frame calibration (fitted Hodo-vs-Tracker slope and
+# offset, per-run with a testbeam-median fallback) lives in utils/tracker.py --
 # build_aligned_tracker_branches applies it directly when given a run_id
 # (see its and utils.tracker.get_tracker_hodo_calibration's docstrings),
 # since every consumer of tracker positions benefits from it, not just this
@@ -145,7 +146,10 @@ def _aligned_edges(x_ref, x_range, bin_mm):
     documents and avoids for its own hodoscope-referenced maps). Positions
     that don't repeat exact values (e.g. the silicon tracker's, effectively
     continuous) fall back to a plain evenly-spaced grid via
-    ``utils.plotting._hist_edges``.
+    ``utils.plotting._hist_edges``. The hodoscope reference itself no longer
+    comes through here: rotated into the tracker frame its positions aren't
+    exact bar values, so ``fit_shape(hodo=True)`` uses
+    ``utils.hodo.hodo_bin_edges`` instead.
     """
     n_bins = max(4, int(round((x_range[1] - x_range[0]) / bin_mm)))
     in_window = x_ref[(x_ref >= x_range[0]) & (x_ref <= x_range[1])]
@@ -159,18 +163,23 @@ def _aligned_edges(x_ref, x_range, bin_mm):
 
 
 def fit_shape(x_ref, y_ref, x_sel, y_sel, model, p0, bounds, x_range, y_range, bin_mm,
-              min_ref_count=MIN_REF_COUNT):
+              min_ref_count=MIN_REF_COUNT, hodo=False):
     """Fit ``model`` to the (x_ref, y_ref, x_sel, y_sel) efficiency map.
 
     Only bins with at least ``min_ref_count`` reference hits enter the fit,
     but the returned ``eff`` map covers every bin with at least one (NaN
     only where there are none), so the plots show the whole footprint.
+    With ``hodo=True`` (hodoscope reference) the grid is one bar pitch per
+    bin and ``bin_mm`` is ignored.
 
     Returns ``(popt, perr, (eff, h_ref, xedges, yedges))``, or ``None`` if
     there aren't enough well-populated bins to fit.
     """
-    xedges = _aligned_edges(x_ref, x_range, bin_mm)
-    yedges = _aligned_edges(y_ref, y_range, bin_mm)
+    if hodo:
+        xedges, yedges = hodo_bin_edges(*x_range), hodo_bin_edges(*y_range)
+    else:
+        xedges = _aligned_edges(x_ref, x_range, bin_mm)
+        yedges = _aligned_edges(y_ref, y_range, bin_mm)
     h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[xedges, yedges])
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[xedges, yedges])
     eff = np.divide(h_sel, h_ref, out=np.full_like(h_sel, np.nan, dtype=float), where=h_ref > 0)
@@ -197,7 +206,7 @@ def fit_shape(x_ref, y_ref, x_sel, y_sel, model, p0, bounds, x_range, y_range, b
     return popt, perr, (eff, h_ref, xedges, yedges)
 
 
-def fit_veto(x_ref, y_ref, x_sel, y_sel):
+def fit_veto(x_ref, y_ref, x_sel, y_sel, hodo=False):
     if len(x_sel) == 0:
         return None
     x0, y0 = float(np.median(x_sel)), float(np.median(y_sel))
@@ -209,10 +218,10 @@ def fit_veto(x_ref, y_ref, x_sel, y_sel):
     bounds = ([x0 - margin, y0 - margin, 5.0, 0.1, 0.0],
               [x0 + margin, y0 + margin, 60.0, 20.0, 1.2])
     return fit_shape(x_ref, y_ref, x_sel, y_sel, erf_disk, p0, bounds,
-                     x_range, y_range, VETO_BIN_MM)
+                     x_range, y_range, VETO_BIN_MM, hodo=hodo)
 
 
-def fit_counter_1cm(x_ref, y_ref, x_sel, y_sel):
+def fit_counter_1cm(x_ref, y_ref, x_sel, y_sel, hodo=False):
     if len(x_sel) == 0:
         return None
     x0, y0 = float(np.median(x_sel)), float(np.median(y_sel))
@@ -225,10 +234,10 @@ def fit_counter_1cm(x_ref, y_ref, x_sel, y_sel):
     bounds = ([x0 - margin, y0 - margin, 0.5, 0.5, 0.05, 0.05, 0.0],
               [x0 + margin, y0 + margin, max_half_side, max_half_side, 10.0, 10.0, 1.2])
     return fit_shape(x_ref, y_ref, x_sel, y_sel, erf_box, p0, bounds,
-                     x_range, y_range, COUNTER_BIN_MM)
+                     x_range, y_range, COUNTER_BIN_MM, hodo=hodo)
 
 
-def fit_counter_3cm(x_ref, y_ref, x_sel, y_sel):
+def fit_counter_3cm(x_ref, y_ref, x_sel, y_sel, hodo=False):
     if len(x_sel) == 0:
         return None
     x0, y0 = float(np.median(x_sel)), float(np.median(y_sel))
@@ -241,7 +250,7 @@ def fit_counter_3cm(x_ref, y_ref, x_sel, y_sel):
     bounds = ([x0 - margin, y0 - margin, 0.5, 0.5, 0.05, 0.05, 0.0],
               [x0 + margin, y0 + margin, max_half_side, max_half_side, 10.0, 10.0, 1.2])
     return fit_shape(x_ref, y_ref, x_sel, y_sel, erf_box, p0, bounds,
-                     x_range, y_range, COUNTER_BIN_MM)
+                     x_range, y_range, COUNTER_BIN_MM, hodo=hodo)
 
 
 def _is_constrained(err):
@@ -451,7 +460,7 @@ def process_run(run_id):
     # Three independent reference "rulers" -- each detector's own (x, y) in
     # mm, and the mask of events where that detector reports a real
     # position. The Tracker1/Tracker2 positions above are already
-    # calibrated onto the hodoscope's mm scale.
+    # calibrated into the hodoscope's frame.
 
     references = {
         "Tracker1": (x1_mm, y1_mm, (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)),
@@ -466,9 +475,10 @@ def process_run(run_id):
             print(f"  {ref_label}: no reference hits, skipping")
             continue
         x_ref, y_ref = x_r[ref], y_r[ref]
+        hodo = ref_label == "Hodoscope"
 
         sel = ref & veto_sel
-        result = fit_veto(x_ref, y_ref, x_r[sel], y_r[sel])
+        result = fit_veto(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
         report_veto(ref_label, result, output_dir, run_id, beam_label)
 
         if not has_counters:
@@ -477,11 +487,11 @@ def process_run(run_id):
             continue
 
         sel = ref & one_cm_hit
-        result = fit_counter_1cm(x_ref, y_ref, x_r[sel], y_r[sel])
+        result = fit_counter_1cm(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
         report_counter_1cm(ref_label, result, output_dir, run_id, beam_label)
 
         sel = ref & three_cm_hit
-        result = fit_counter_3cm(x_ref, y_ref, x_r[sel], y_r[sel])
+        result = fit_counter_3cm(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
         report_counter_3cm(ref_label, result, output_dir, run_id, beam_label)
 
 

@@ -17,6 +17,7 @@ from scipy.optimize import curve_fit
 from utils.fit_funcs import line
 from utils.constants import PITCH
 from utils.data import get_run_beam, load_run_list
+from utils.hodo import hodo_bin_edges
 
 
 # ---------------------------------------------------------------------------
@@ -295,6 +296,9 @@ def _hist_edges(x, bins=64):
     zero, showing up as a dead row/column with real data on both sides.
     When ``x`` has few enough unique values, edges are placed exactly
     halfway between consecutive values instead (one bin per value).
+    Hodoscope positions rotated into the tracker frame are no longer exact
+    bar values, so this can't detect them -- bin those with
+    ``utils.hodo.hodo_bin_edges``.
     """
     unique_x = np.unique(x)
     if len(unique_x) <= bins and len(unique_x) > 1:
@@ -305,13 +309,19 @@ def _hist_edges(x, bins=64):
     return np.linspace(x.min(), x.max(), bins + 1)
 
 
-def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/detreco", label="Profile 2D", fname="profile2d"):
+def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/detreco", label="Profile 2D", fname="profile2d",
+                 edges=None):
+    """2D occupancy of ``(xh, yh)``. ``edges`` is an optional ``(x_edges,
+    y_edges)`` pair -- pass ``utils.hodo.hodo_bin_edges`` for hodoscope
+    positions; otherwise each axis gets ``_hist_edges``."""
     if runtype == "":
         runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
     xh, yh = np.asarray(xh), np.asarray(yh)
-    H = np.histogram2d(xh, yh, bins=[_hist_edges(xh), _hist_edges(yh)])
+    if edges is None:
+        edges = (_hist_edges(xh), _hist_edges(yh))
+    H = np.histogram2d(xh, yh, bins=list(edges))
     cb = mh.hist2dplot(*H, ax=ax, cmin=0)
     cb.cbar.set_label("Events", loc='top')
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
@@ -320,7 +330,7 @@ def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/det
     plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
     print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
 
-def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=5):
+def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=5, x_edges=None):
     """Bin ``x`` and take the most-probable (peak) ``y`` value in each bin.
 
     A raw event-by-event fit gets dragged off the visible ridge by the wide,
@@ -354,12 +364,19 @@ def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=
     bin width generally doesn't match the true spacing, so some bins
     straddle two positions and others fall empty, producing unevenly
     spaced profile points and sometimes a visible "kink" that isn't real.
+    Hodoscope positions rotated into the tracker frame no longer take exact
+    bar values, so pass ``x_edges`` (``utils.hodo.hodo_bin_edges``) for them.
     """
     x = np.asarray(x)
     y = np.asarray(y)
 
     unique_x = np.unique(x)
-    if len(unique_x) <= bins:
+    if x_edges is not None:
+        x_edges = np.asarray(x_edges)
+        x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+        x_bin = np.digitize(x, x_edges) - 1
+        n_x_bins = len(x_centers)
+    elif len(unique_x) <= bins:
         x_centers = unique_x
         x_bin = np.searchsorted(unique_x, x)
         n_x_bins = len(unique_x)
@@ -417,7 +434,7 @@ def profile_mode(x, y, bins=64, min_frac=0.1, min_prominence=1.3, smooth_window=
 
 _FIT_OUTLINE = [pe.withStroke(linewidth=3, foreground="black")]
 
-def fit_profile_line(x, y, n_sigma_clip=3.0, max_iter=5):
+def fit_profile_line(x, y, n_sigma_clip=3.0, max_iter=5, x_edges=None):
     """Fit a straight line through the per-bin peak (``profile_mode``) of
     ``y`` vs ``x``, not the raw events.
 
@@ -436,8 +453,9 @@ def fit_profile_line(x, y, n_sigma_clip=3.0, max_iter=5):
     returns a dict with ``m``, ``m_err``, ``b``, ``b_err``, ``r`` (Pearson
     correlation of the kept profile points), ``prof_x``, ``prof_y``,
     ``prof_w`` and ``keep`` (boolean mask into the profile arrays).
+    ``x_edges`` is passed through to ``profile_mode``.
     """
-    prof_x, prof_y, prof_w = profile_mode(x, y)
+    prof_x, prof_y, prof_w = profile_mode(x, y, x_edges=x_edges)
     if len(prof_x) < 2:
         return None
 
@@ -461,7 +479,7 @@ def fit_profile_line(x, y, n_sigma_clip=3.0, max_iter=5):
         "prof_x": prof_x, "prof_y": prof_y, "prof_w": prof_w, "keep": keep,
     }
 
-def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
+def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None, x_edges=None):
     """Overlay a straight-line fit (through the per-bin peak, not raw events) and
     its equation/correlation directly on the plot.
 
@@ -483,10 +501,12 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None):
       that background, so a much lower value than r_profile usually means
       a real population of mismatched/uncorrelated pairs, not a fit
       problem.
+
+    ``x_edges`` is passed through to ``profile_mode``.
     """
     global_r = np.corrcoef(x, y)[0, 1] if len(x) > 1 else np.nan
-    fit = fit_profile_line(x, y, n_sigma_clip=n_sigma_clip, max_iter=max_iter)
-    prof_x, prof_y = (fit["prof_x"], fit["prof_y"]) if fit else profile_mode(x, y)[:2]
+    fit = fit_profile_line(x, y, n_sigma_clip=n_sigma_clip, max_iter=max_iter, x_edges=x_edges)
+    prof_x, prof_y = (fit["prof_x"], fit["prof_y"]) if fit else profile_mode(x, y, x_edges=x_edges)[:2]
     ax.plot(prof_x, prof_y, "o", color="white", ms=8, mec="black", mew=1)
 
     if fit is None:
@@ -522,10 +542,11 @@ def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64, x_range=None, y_
     """Per-bin selected/reference ratio on a fixed grid.
 
     ``x_range``/``y_range`` default to the standard hodoscope-plane grid
-    (+/- 32 strip pitches, matching ``plot_effhist2d``'s historical
-    behaviour) -- pass explicit ``(min, max)`` tuples for a reference
-    detector on a different physical scale (e.g. the silicon tracker,
-    whose positions aren't hodoscope-pitch-aligned).
+    (+/- 32 strip pitches, one pitch per bin via
+    ``utils.hodo.hodo_bin_edges``, whatever ``bins`` is) -- pass explicit
+    ``(min, max)`` tuples for a reference detector on a different physical
+    scale (e.g. the silicon tracker, whose positions aren't
+    hodoscope-pitch-aligned); ``bins`` then sets that grid's bin count.
 
     Bins with fewer than ``min_ref_count`` reference hits get ``eff = NaN``
     (not drawn) rather than a real-looking but nearly meaningless ratio --
@@ -540,16 +561,9 @@ def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64, x_range=None, y_
     ``eff`` so callers can distinguish "0% efficiency" from "no reference
     hits landed in this bin" without recomputing the histograms.
     """
-    if x_range is None:
-        x_range = (-PITCH * 32, PITCH * 32)
-    if y_range is None:
-        y_range = (-PITCH * 32, PITCH * 32)
-    # bins+1 edges for `bins` intervals -- `bins` edges would give
-    # bins-1 intervals of width (span)/(bins-1), misaligned with the
-    # hodoscope's actual PITCH-spaced bar positions (same failure mode as
-    # the dead column in plot_profile/draw_fit, see _hist_edges).
-    x_bins = np.linspace(*x_range, bins + 1)
-    y_bins = np.linspace(*y_range, bins + 1)
+    hodo_grid = hodo_bin_edges(-PITCH * 32, PITCH * 32)
+    x_bins = hodo_grid if x_range is None else np.linspace(*x_range, bins + 1)
+    y_bins = hodo_grid if y_range is None else np.linspace(*y_range, bins + 1)
 
     h_ref, xedges, yedges = np.histogram2d(x_ref, y_ref, bins=[x_bins, y_bins])
     h_sel, _, _ = np.histogram2d(x_sel, y_sel, bins=[x_bins, y_bins])

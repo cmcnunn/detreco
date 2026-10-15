@@ -22,7 +22,7 @@ from utils.tracker import (
 )
 from utils.plotting import get_beam_label, get_runs_by_testbeam, draw_fit, fit_profile_line, _hist_edges
 from utils.constants import X_MAPPING, Y_MAPPING
-from utils.hodo import reconstruct_hodoscope
+from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.selectors import get_branch_names, passes_veto, get_counter_branch_names, counter_1cm_hit_mask, counter_3cm_hit_mask
 
 try:
@@ -62,11 +62,12 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
         runtype = get_beam_label(run_id)
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(xh, x1, bins=[_hist_edges(xh), _hist_edges(x1)])
-    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm())
+    xh_edges = hodo_bin_edges(np.min(xh), np.max(xh))
+    H = np.histogram2d(xh, x1, bins=[xh_edges, _hist_edges(x1)])
+    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm(), cmap="RdBu_r")
     cb.cbar.set_label("Events", loc='top')
     tag = f"Run {run_id}" + (f" -- {selection}" if selection else "")
-    draw_fit(ax, xh, x1, tag=tag)
+    draw_fit(ax, xh, x1, tag=tag, x_edges=xh_edges)
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoX vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo X [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker X [mm]", loc='top')
@@ -75,10 +76,11 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(12, 12))
-    H = np.histogram2d(yh, y1, bins=[_hist_edges(yh), _hist_edges(y1)])
-    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm())
+    yh_edges = hodo_bin_edges(np.min(yh), np.max(yh))
+    H = np.histogram2d(yh, y1, bins=[yh_edges, _hist_edges(y1)])
+    cb = mh.hist2dplot(*H, ax=ax, norm=LogNorm(), cmap="RdBu_r")
     cb.cbar.set_label("Events", loc='top')
-    draw_fit(ax, yh, y1, tag=tag)
+    draw_fit(ax, yh, y1, tag=tag, x_edges=yh_edges)
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoY vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo Y [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker Y [mm]", loc='top')
@@ -121,13 +123,12 @@ def load_run_data(run):
         return None
 
     # Tracker and ROOT arrays don't share an index space yet -- align_tracker_to_root_by_timestamp
-    # finds spill boundaries in each stream (using real hardware timestamps), then within each
-    # matched segment fits an actual clock relationship between si_data's timestamp_to_dream and
-    # DREAM's FERS_Board1_tstamp_us, and matches events by nearest real time -- not by counting.
+    # matches each tracker event to the ROOT event at the same clock time (per tracker spill, the
+    # timestamp_to_dream -> DREAM-microsecond line is found by time coincidence), not by counting.
     tracker_mask, root_idx, fit_diagnostics, match_frac = align_tracker_to_root_by_timestamp(si_data, trigger_n, root_tstamp)
     n_rejected = sum(1 for _, _, fit in fit_diagnostics if fit is None)
     print(f"[{run}] Aligned {tracker_mask.sum()}/{len(si_data)} tracker events "
-          f"({len(fit_diagnostics) - n_rejected}/{len(fit_diagnostics)} segments used, "
+          f"({len(fit_diagnostics) - n_rejected}/{len(fit_diagnostics)} spills used, "
           f"match_frac={match_frac:.4%})")
 
     si_aligned = si_data[tracker_mask]
@@ -186,12 +187,12 @@ def process_run(run, run_output_dir):
         plot_sihodocor(xh_good, yh_good, x2, y2, run, trackern="2", selection=plot, OUTPUTDIR=run_output_dir)
 
     # Sanity check that the utils.tracker calibration (fitted from exactly
-    # this kind of Hodo-vs-Tracker correlation, see TRACKER_HODO_SLOPE_MEAN's
-    # docstring) actually does what it claims: redo the same veto-selected
-    # correlation plot as above, but on the calibrated tracker_x/y_mm
-    # positions instead of raw ones -- if calibration is working, the fitted
-    # slope here should come out at m ~= 1.0, unlike the uncalibrated
-    # "Veto_Selection" plot above. This is a diagnostic only; it must NOT
+    # this kind of Hodo-vs-Tracker correlation, see get_run_slopes) actually
+    # does what it claims: redo the same veto-selected correlation plot as
+    # above, but on the calibrated tracker_x/y_mm positions instead of raw
+    # ones -- if calibration is working, the fit here comes out at y = x
+    # (m = 1, b = 0), unlike the uncalibrated "Veto_Selection" plot above.
+    # This is a diagnostic only; it must NOT
     # feed back into get_tracker_hodo_calibration's own measurement (that
     # would be circular -- see this function's raw, uncalibrated x1/x2 above).
     x1_mm, y1_mm, x2_mm, y2_mm = calibrate_tracker_positions(
@@ -220,8 +221,9 @@ MIN_FIT_POINTS = TRACKER_HODO_MIN_FIT_POINTS
 
 def get_run_slopes(run):
     """Fit Hodo-vs-Tracker{1,2}-{x,y} for one run, veto-selected, and return
-    each fit's slope/r/event-count (the tracker/hodoscope conversion
-    coefficient plus enough to judge whether to trust it).
+    each fit's slope/intercept/r/event-count (the tracker -> hodoscope frame
+    calibration, see utils.tracker.calibrate_tracker_positions, plus enough
+    to judge whether to trust it).
 
     Veto-selected (rather than the unselected baseline) since that's the
     selection actually used to judge the tracker/hodoscope correlation in
@@ -242,14 +244,16 @@ def get_run_slopes(run):
         xh_good, yh_good = data["xh_aligned"][mask_plot], data["yh_aligned"][mask_plot]
         n_events = int(mask_plot.sum())
 
+        xh_edges = hodo_bin_edges(np.min(xh_good), np.max(xh_good))
+        yh_edges = hodo_bin_edges(np.min(yh_good), np.max(yh_good))
         for trackern, xt, yt in [("1", x1, y1), ("2", x2, y2)]:
-            fit_x = fit_profile_line(xh_good, xt)
-            fit_y = fit_profile_line(yh_good, yt)
+            fit_x = fit_profile_line(xh_good, xt, x_edges=xh_edges)
+            fit_y = fit_profile_line(yh_good, yt, x_edges=yh_edges)
             if fit_x:
-                slopes[(trackern, "x")] = {"m": fit_x["m"], "r": fit_x["r"],
+                slopes[(trackern, "x")] = {"m": fit_x["m"], "b": fit_x["b"], "r": fit_x["r"],
                                            "n": n_events, "n_points": int(fit_x["keep"].sum())}
             if fit_y:
-                slopes[(trackern, "y")] = {"m": fit_y["m"], "r": fit_y["r"],
+                slopes[(trackern, "y")] = {"m": fit_y["m"], "b": fit_y["b"], "r": fit_y["r"],
                                            "n": n_events, "n_points": int(fit_y["keep"].sum())}
     except Exception as e:
         print(f"Error getting slopes for run {run}: {e}")
@@ -330,8 +334,8 @@ def plot_bigplot_slopes(slopes_by_run, testbeam):
 
 
 def write_bigplot_csv(slopes_by_run, testbeam):
-    """Write the per-run fitted slope/r/event-count/profile-point-count (one
-    row per run, one such column group per tracker/axis) alongside the
+    """Write the per-run fitted slope/intercept/r/event-count/profile-point-count
+    (one row per run, one such column group per tracker/axis) alongside the
     histogram, so individual runs -- including those the MIN_FIT_R/
     MIN_FIT_POINTS quality cut drops from the histogram -- can be inspected
     directly.
@@ -342,7 +346,7 @@ def write_bigplot_csv(slopes_by_run, testbeam):
         writer = csv.writer(f)
         header = ["run"]
         for t, axis in SLOPE_KEYS:
-            header += [f"tracker{t}_{axis}_slope", f"tracker{t}_{axis}_r",
+            header += [f"tracker{t}_{axis}_slope", f"tracker{t}_{axis}_intercept", f"tracker{t}_{axis}_r",
                        f"tracker{t}_{axis}_n", f"tracker{t}_{axis}_n_points"]
         writer.writerow(header)
         for run in sorted(slopes_by_run):
@@ -350,7 +354,7 @@ def write_bigplot_csv(slopes_by_run, testbeam):
             values = []
             for key in SLOPE_KEYS:
                 fit = row[key]
-                values += [fit["m"], fit["r"], fit["n"], fit["n_points"]] if fit else ["", "", "", ""]
+                values += [fit["m"], fit["b"], fit["r"], fit["n"], fit["n_points"]] if fit else [""] * 5
             writer.writerow([run] + values)
     print("Bigplot CSV Saved " + outpath)
 

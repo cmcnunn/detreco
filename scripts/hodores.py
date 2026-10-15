@@ -49,13 +49,15 @@ The width is a 3-sigma-truncated RMS (``truncated_rms``), not a Gaussian
 fit: the calibrated residual is flat-topped (a 0.6mm bar blurred by the
 track's error), which a Gaussian doesn't describe, and pitch/sqrt(12) at the
 lower end of the range below is itself an RMS -- so both ends compare like
-with like. The truncation matters: 15-30% of events sit mm away from the
-peak (tracker-to-ROOT mismatches, a broad flat background), and a looser
-window lets the RMS track alignment quality instead of the hodoscope
-(confirmed: with only the 5*MAD clip, run 1812 at 27% mismatched read
-0.267mm against 0.224mm for run 1817; truncated at 3 sigma both read
-0.197mm). At 160 GeV the 3-sigma window converges to about +/-0.6mm, one
-pitch.
+with like. The truncation matters: under the old counting-based
+tracker-to-ROOT matcher 15-30% of events sat mm away from the peak (whole
+mismatched spills, a broad flat background), and a looser window let the
+RMS track alignment quality instead of the hodoscope (confirmed: with only
+the 5*MAD clip, run 1812 at 27% mismatched read 0.267mm against 0.224mm for
+run 1817; truncated at 3 sigma both read 0.197mm). The time-coincidence
+matcher (2026-10-15) leaves 1-4% there, so the truncation now mostly trims
+scattering tails. At 160 GeV the 3-sigma window converges to about
++/-0.6mm, one pitch.
 
 What remains is
 
@@ -83,14 +85,13 @@ low energy (sigma_R rises from ~0.20mm at 160 GeV to ~0.24mm at 20 GeV)
 and inflates the upper end, so the hodoscope's intrinsic resolution is best
 quoted from high-energy runs.
 
-The tracker-to-ROOT alignment is itself imperfect (see utils/tracker.py's
-module docstring and scan_alignment_correlation): a run can report a high
-match_frac while carrying little genuine per-event correspondence.
+As a backstop against a bad tracker-to-ROOT alignment (see
+utils.tracker.align_tracker_to_root_by_timestamp),
 ``calibrate_track`` refuses a run outright below MIN_ALIGNMENT_CORRELATION
 (its per-run fit would otherwise be fitting noise). Its fit, and the RMS's
 starting window, begin from a MAD-based clip (same approach as
-utils.plotting.draw_fit) so the mismatched events can't drag either off the
-real peak.
+utils.plotting.draw_fit) so the outlier tail can't drag either off the real
+peak.
 
 The hodoscope and tracker each define their own (0, 0), and those origins
 are not surveyed to coincide -- confirmed on real data: residuals sit near

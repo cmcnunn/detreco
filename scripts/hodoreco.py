@@ -9,7 +9,7 @@ import argparse
 import json 
 
 from scripts.sitrackreco import OUTPUTDIR
-from utils.hodo import reconstruct_hodoscope
+from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.constants import (HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH)
 from utils.plotting import get_runtype, plot_profile
 from utils.data import load_run_list
@@ -75,7 +75,8 @@ def main():
         n_events = result["n_events"]
         hgx = result["hgx"]
         hgy = result["hgy"]
-        plot_profile(xh, yh, args.run, OUTPUTDIR=OUTPUTDIR)
+        edges = (hodo_bin_edges(xh.min(), xh.max()), hodo_bin_edges(yh.min(), yh.max()))
+        plot_profile(xh, yh, args.run, OUTPUTDIR=OUTPUTDIR, edges=edges)
         plot_energy_histogram(hgx, hgy, args.run, OUTPUTDIR=OUTPUTDIR)
         # plot_hit_histogram(hgx, hgy, args.run, OUTPUTDIR=OUTPUTDIR)
         print(f"Processed {n_events} events for run {args.run}.")
