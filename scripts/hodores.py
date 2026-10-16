@@ -110,7 +110,6 @@ import argparse
 import csv
 import json
 import os
-import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import matplotlib.pyplot as plt
@@ -519,11 +518,7 @@ def run_resolution(run_id):
     row = {"run": int(run_id), "beam_type": beam_type or "",
            "beam_energy_gev": energy if energy is not None else ""}
     try:
-        # reconstruct_hodoscope's span check warns on every event with an
-        # empty plane -- harmless, but it would bury the progress lines.
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message="All-NaN slice encountered", category=RuntimeWarning)
-            track, match_frac = load_run_data(run_id)
+        track, match_frac = load_run_data(run_id)
     except Exception as e:
         return {**row, "status": "load failed", "detail": str(e)}
     row.update(n_both_stations=len(track["xh"]), match_frac=match_frac)

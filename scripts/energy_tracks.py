@@ -37,13 +37,15 @@ from utils.tracker import (
     SENTINEL_Y1,
     SENTINEL_Y2,
     build_aligned_tracker_branches,
+    calibrate_tracker_positions,
     load_tracker_run,
 )
 from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.constants import VETO_THRESHOLD, X_MAPPING, Y_MAPPING
-from utils.data import get_run_beam, get_run_filepath, get_run_table_position
+from utils.data import get_run_beam, get_run_filepath, get_run_table_position, load_run_list
+from utils.drs import load_drs_energy
 from utils.plotting import get_beam_label, get_runs_by_testbeam, TProfile1d, TProfile2d
-from utils.energy import load_energy_data
+from utils.energy import check_file, load_energy_data
 from utils.selectors import get_branch_names
 
 # One worker per available CPU (respects a SLURM/cgroup allocation, unlike
@@ -357,28 +359,31 @@ def find_significant_peaks(centers, mean, error, counts, pitch=EXPECTED_PITCH_MM
     results.sort(key=lambda r: -r["significance"])
     return results
 
-# Fixed (x_lo, x_hi, y_lo, y_hi) plot bounds (mm) for each detector label,
-# tight around its illuminated veto footprint. These profiles are binned out
-# to the full range of veto-passing hits, but a sparse halo of scattered/
-# mis-tracked hits reaches well beyond the actual beam spot at low
-# per-bin counts, leaving large empty margins around the real, densely
-# populated blob -- unrelated to the oscillation period, so a period-based
-# zoom (the old approach) never addressed it. Measured directly off two
-# TB2026 pi+ 60 GeV runs (1774, 1811) as the >=10-counts/bin pixel bounding
-# box (5 counts/bin, the plots' own display threshold, still included that
-# sparse halo -- 10 was the smallest threshold that consistently excluded
-# it on both runs), padded by ~1.5mm and rounded; both runs agreed closely,
-# so these are hardcoded rather than recomputed per run. If the beam/veto
-# alignment shifts (different testbeam period, veto moved, etc.) these will
-# need remeasuring the same way.
-VETO_PLOT_BOUNDS = {
-    "Hodoscope": {"x": (-15.0, 7.0), "y": (-20.0, 3.0)},
-    "Tracker 1": {"x": (36.0, 60.0), "y": (35.0, 67.0)},
-    "Tracker 2": {"x": (33.0, 56.0), "y": (35.0, 69.0)},
-}
+# Padding (mm) around the selected hits' 1st-99th percentile box in
+# veto_plot_bounds.
+VETO_PLOT_PAD_MM = 1.5
+
+
+def veto_plot_bounds(x, y, pad_mm=VETO_PLOT_PAD_MM):
+    """Plot window {"x": (lo, hi), "y": (lo, hi)} (mm) around one run's
+    illuminated veto footprint: the 1st-99th percentile of the selected
+    (hodo-good, veto-passing) hits, padded by ``pad_mm``.
+
+    The profiles are binned out to the full range of veto-passing hits, but a
+    sparse halo of scattered hits reaches well beyond the beam spot, leaving
+    large empty margins. This used to be one hardcoded box, measured on runs
+    1774/1811 (>=10-counts/bin bounding box, padded ~1.5mm), but the beam moves
+    on the hodoscope between runs: centred at y ~ -10mm on run 1813, ~ +2mm on
+    1851-1920, where that box held only ~53% of the selected hits. The tracker
+    positions are calibrated into the hodoscope's frame
+    (utils.tracker.calibrate_tracker_positions), so all three detectors share
+    the window from the hodoscope's hits.
+    """
+    (x_lo, x_hi), (y_lo, y_hi) = np.percentile(x, [1, 99]), np.percentile(y, [1, 99])
+    return {"x": (x_lo - pad_mm, x_hi + pad_mm), "y": (y_lo - pad_mm, y_hi + pad_mm)}
 
 def _beam_label_with_position(run):
-    """get_beam_label plus the run's table X/Y position, when known.
+    """get_beam_label plus the run's table X/Y position and rotation, when known.
 
     Kept local to this script rather than folded into get_beam_label
     itself, since that helper is shared with scripts (eff.py, hodores.py,
@@ -387,9 +392,17 @@ def _beam_label_with_position(run):
     """
     label = get_beam_label(run)
     table_x, table_y = get_run_table_position(run)
+    table_degree = load_run_list().get(str(run), {}).get("table_degree")
     if table_x is not None and table_y is not None:
-        label = f"{label} (table X={table_x:g}, Y={table_y:g} mm)"
+        rotation = f", {table_degree:g}°" if table_degree is not None else ""
+        label = f"{label} (table X={table_x:g}, Y={table_y:g} mm{rotation})"
     return label
+
+
+def _uses_drs(run):
+    """Runs after utils.energy.check_file's FERS cutoff (1820) take their energy from
+    the DRS waveforms (utils.drs, CaloXDataAnalysis's method), in summed ADC counts."""
+    return not check_file(int(run))
 
 
 def _rescale_y_to_window(ax, x, y, x_lo, x_hi):
@@ -405,13 +418,14 @@ def _rescale_y_to_window(ax, x, y, x_lo, x_hi):
     ax.set_ylim(lo_y - pad_y, hi_y + pad_y)
 
 def _output_dir(run, label, calib):
-    """Raw-HG plots go to output/energy_tracks/, calibrated ones to output/energy_tracks_calib/.
+    """Raw-HG plots go to output/energy_tracks/, calibrated ones to output/energy_tracks_calib/,
+    DRS runs' to output/energy_tracks_drs/.
     label=None gives the run's own directory, for plots not tied to one position detector."""
-    root = "energy_tracks_calib" if calib else "energy_tracks"
+    root = "energy_tracks_drs" if _uses_drs(run) else ("energy_tracks_calib" if calib else "energy_tracks")
     run_dir = os.path.join("output", root, run)
     return run_dir if label is None else os.path.join(run_dir, label.replace(" ", "_"))
 
-def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
+def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False, bounds=None):
     '''
     Plot the energy tracks for a given run.
     Args:
@@ -419,6 +433,7 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
         energy_tracks: Dictionary containing energy track data for scintillator and Cherenkov channels
         label: Label for the plot (default: "Hodoscope")
         calib: energies are calibrated (GeV, EM scale) rather than raw HG sums (ADC)
+        bounds: plot window from veto_plot_bounds; None shows the full binned range
     Will save all plots to /output/energy_tracks{_calib}/{run}/{label}
     '''
     output_dir = _output_dir(run, label, calib)
@@ -426,7 +441,6 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
     os.makedirs(output_dir, exist_ok=True)
     runtype = _beam_label_with_position(run)
     plt.style.use(mh.style.ROOT)
-    bounds = VETO_PLOT_BOUNDS.get(label)
     fft_by_combo = {}
     for ch in ["sci", "cer"]:
         for dim in ["1d", "2d"]:
@@ -444,10 +458,9 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                         print(f"  [{run}] {label} {ch} vs {axis}: no sine fit ({e})")
                         popt = None
                     if popt is not None:
-                        x_fit = np.linspace(centers[fit_mask].min(), centers[fit_mask].max(), 200)
-                        y_fit = sine(x_fit, *popt)
                         fit_label = (f"period={period:.3g}±{period_err:.2g} mm")
-                        ax.plot(x_fit, y_fit, "r-", linewidth=2, label=fit_label)
+                        fit_handle, = ax.plot([], [], " ", label=fit_label)
+                        ax.legend(handles=[fit_handle], fontsize=20, handlelength=0, handletextpad=0, labelcolor="r")
                     ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
                     ax.set_ylabel(f"Average {ch} Energy ({unit})", loc="top")
                     ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
@@ -494,14 +507,6 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                         fig, ax = plt.subplots(figsize=(12, 12))
                         ax.plot(centers_p, refined_1d, "o-", ms=3, label="filtered data")
                         ax.axhline(0, color="grey", linewidth=1, linestyle="--")
-                        # Overlay just the oscillatory term of the sine fit (offset and
-                        # the linear m*x term zeroed out) -- that background is exactly
-                        # what the filter above already subtracted, so this is the
-                        # model's prediction for what's left, on the same footing as
-                        # the model-free filtered data.
-                        x_fit_p = np.linspace(x_lo, x_hi, 200)
-                        y_fit_p = sine(x_fit_p, popt[0], popt[1], popt[2], 0, 0)
-                        ax.plot(x_fit_p, y_fit_p, "r-", linewidth=2, label=fit_label)
                         ax.set_xlabel(f"{label} {axis.upper()} Position (mm)", loc="right")
                         ax.set_ylabel(f"{ch} Energy, background-subtracted ({unit})", loc="top")
                         ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
@@ -511,7 +516,9 @@ def plot_energy_tracks(run, energy_tracks, label="Hodoscope", calib=False):
                             _rescale_y_to_window(ax, centers_p, refined_1d, vx_lo, vx_hi)
                         mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="", data=True, fontsize=24)
                         ax.grid()
-                        ax.legend(fontsize=20)
+                        fit_handle, = ax.plot([], [], " ", label=fit_label)
+                        ax.legend(handles=[fit_handle], fontsize=20, handlelength=0,
+                                  handletextpad=0, labelcolor="r")
                         plt.savefig(os.path.join(output_dir, f"{ch}_{dim}_{axis}_filtered.pdf"))
                         plt.close()
 
@@ -693,9 +700,12 @@ def process_run(run, calib=False):
     Build and save all energy track plots for a single run.
     Args:
         run: Run ID to process (str or int)
-        calib: use calibrated energies (load_energy_data calib_data=True) instead of raw HG sums
+        calib: use calibrated energies (load_energy_data calib_data=True) instead of raw HG sums;
+            ignored for DRS runs (see _uses_drs), which have no calibration
     """
     run = str(run)
+    if _uses_drs(run):
+        calib = False
     try:
         with uproot.open(get_run_filepath(int(run))) as f:
             t = f["EventTree"]
@@ -712,7 +722,10 @@ def process_run(run, calib=False):
         #Load Tracker data
         si_data = load_tracker_run(int(run))
         #Load energy data
-        total_sci_energy, total_cer_energy = load_energy_data(int(run), calib_data=calib)
+        if _uses_drs(run):
+            total_sci_energy, total_cer_energy = load_drs_energy(int(run))
+        else:
+            total_sci_energy, total_cer_energy = load_energy_data(int(run), calib_data=calib)
 
         tracker_branches, match_frac = build_aligned_tracker_branches(si_data, trigger_n, root_tstamp)
         x1_raw, y1_raw = tracker_branches["tracker_x1"], tracker_branches["tracker_y1"]
@@ -722,8 +735,7 @@ def process_run(run, calib=False):
         # so comparing against them after the /10 mm conversion below silently passes
         # every no-hit row through instead of filtering it out.
         si_mask = (x1_raw != SENTINEL_X1) & (y1_raw != SENTINEL_Y1) & (x2_raw != SENTINEL_X2) & (y2_raw != SENTINEL_Y2) & veto_sel
-        x1, y1 = x1_raw * 10, y1_raw * 10
-        x2, y2 = x2_raw * 10, y2_raw * 10
+        x1, y1, x2, y2 = calibrate_tracker_positions(x1_raw, y1_raw, x2_raw, y2_raw, run)
         print(f"  [{run}] Aligned {matched.sum()}/{len(trigger_n)} ROOT events "
           f"(tracker-side match_frac={match_frac:.4%})")
     except Exception as e:
@@ -735,9 +747,10 @@ def process_run(run, calib=False):
         hodo_energy_tracks = build_energy_tracks(hx, hy, total_sci_energy, total_cer_energy, good_hodo & veto_sel, calib_data=calib, is_hodo=True)
         trk1_energy_tracks = build_energy_tracks(x1, y1, total_sci_energy, total_cer_energy, si_mask, calib_data=calib, is_hodo=False)
         trk2_energy_tracks = build_energy_tracks(x2, y2, total_sci_energy, total_cer_energy, si_mask, calib_data=calib, is_hodo=False)
-        plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope", calib=calib)
-        plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1", calib=calib)
-        plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2", calib=calib)
+        bounds = veto_plot_bounds(hx[good_hodo & veto_sel], hy[good_hodo & veto_sel])
+        plot_energy_tracks(run, hodo_energy_tracks, label="Hodoscope", calib=calib, bounds=bounds)
+        plot_energy_tracks(run, trk1_energy_tracks, label="Tracker 1", calib=calib, bounds=bounds)
+        plot_energy_tracks(run, trk2_energy_tracks, label="Tracker 2", calib=calib, bounds=bounds)
     except Exception as e:
         print(f"Error plotting run {run}: {e}")
 

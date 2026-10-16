@@ -88,16 +88,16 @@ def hodo_axis_good_masks(hg_x, hg_y, threshold=HG_THRESHOLD):
     n_hit_x = hit_x.sum(axis=1)
     n_hit_y = hit_y.sum(axis=1)
 
-    idx = np.arange(N_BARS)
-    with np.errstate(all="ignore"):
-        x_idx = np.where(hit_x, idx, np.nan)
-        y_idx = np.where(hit_y, idx, np.nan)
-        span_x = np.nanmax(x_idx, axis=1) - np.nanmin(x_idx, axis=1)
-        span_y = np.nanmax(y_idx, axis=1) - np.nanmin(y_idx, axis=1)
+    # First and last hit bar straight from the boolean pattern (argmax finds the
+    # first True), rather than nanmax/nanmin over NaN-filled indices, which warned
+    # "All-NaN slice encountered" for every event with an empty plane. An empty
+    # plane gives span N_BARS-1 here, which never equals n_hits - 1 = -1.
+    span_x = (N_BARS - 1 - hit_x[:, ::-1].argmax(axis=1)) - hit_x.argmax(axis=1)
+    span_y = (N_BARS - 1 - hit_y[:, ::-1].argmax(axis=1)) - hit_y.argmax(axis=1)
 
-        # Contiguity requirement (no gaps): span == n_hits - 1
-        contiguous_x = span_x == (n_hit_x - 1)
-        contiguous_y = span_y == (n_hit_y - 1)
+    # Contiguity requirement (no gaps): span == n_hits - 1
+    contiguous_x = span_x == (n_hit_x - 1)
+    contiguous_y = span_y == (n_hit_y - 1)
 
     good_x = (n_hit_x >= 1) & contiguous_x
     good_y = (n_hit_y >= 1) & contiguous_y
@@ -163,12 +163,12 @@ def reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH,
         x_rec = calculate_bar_position(x_idx, pitch)
         y_rec = calculate_bar_position(y_idx, pitch)
     elif method == "mean":
+        # Mean hit-bar index; an empty plane is 0/0 = NaN, as nanmean gave, but
+        # without nanmean's "Mean of empty slice" warning.
         idx = np.arange(N_BARS)
-        x_idx_map = np.where(hit_x, idx, np.nan)
-        y_idx_map = np.where(hit_y, idx, np.nan)
-        with np.errstate(all="ignore"):
-            mean_x = np.nanmean(x_idx_map, axis=1)
-            mean_y = np.nanmean(y_idx_map, axis=1)
+        with np.errstate(invalid="ignore"):
+            mean_x = (hit_x * idx).sum(axis=1) / hit_x.sum(axis=1)
+            mean_y = (hit_y * idx).sum(axis=1) / hit_y.sum(axis=1)
         x_rec = calculate_bar_position(mean_x, pitch)
         y_rec = calculate_bar_position(mean_y, pitch)
     else:

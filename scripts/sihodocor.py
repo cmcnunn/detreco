@@ -8,7 +8,6 @@ import uproot
 import mplhep as mh
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from scipy.optimize import curve_fit
 
 from utils.data import get_run_filepath
 from utils.tracker import (
