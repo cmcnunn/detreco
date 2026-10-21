@@ -12,9 +12,10 @@ from scripts.sitrackreco import OUTPUTDIR
 from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.constants import (HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH)
 from utils.plotting import get_runtype, plot_profile
-from utils.data import load_run_list
+from utils.data import get_run_filepath, load_run_list
+from utils.selectors import get_branch_names, passes_veto 
 
-Y_HG = "FERS_Board0_energyHG"
+Y_HG = "FERS_Board0_energyHG" 
 X_HG = "FERS_Board1_energyHG"
 
 def hodoreco(run_data):
@@ -25,13 +26,12 @@ def hodoreco(run_data):
             tree = f["EventTree"]
             hg_x = np.stack(tree[X_HG].array(library="np"))[:, X_MAPPING]
             hg_y = np.stack(tree[Y_HG].array(library="np"))[:, Y_MAPPING]
-
             xh, yh, mask = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, pitch=PITCH, run_id=run_id)
 
             results = {
                 "xh": xh[mask],
                 "yh": yh[mask],
-                "n_events": mask.sum(),
+                "n_events": (mask).sum(),
                 "hgx": hg_x[mask],
                 "hgy": hg_y[mask]
             }
@@ -55,6 +55,22 @@ def plot_energy_histogram(hg_x, hg_y, run_id, OUTPUTDIR=OUTPUTDIR, fname="HG_dis
     print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
     plt.close()
 
+
+def plot_nhits_histogram(hg_x, hg_y, run_id, OUTPUTDIR=OUTPUTDIR, fname="NHits_dist"):
+    runtype = get_runtype(run_id)
+    plt.style.use(mh.style.ROOT)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    h1 = mh.histplot(np.histogram((hg_x > HG_THRESHOLD).sum(axis=1), bins=np.arange(0, 17) - 0.5), ax=ax, label="X Hodoscope Hits", color="blue", density=True)
+    h2 = mh.histplot(np.histogram((hg_y > HG_THRESHOLD).sum(axis=1), bins=np.arange(0, 17) - 0.5), ax=ax, label="Y Hodoscope Hits", color="red", density=True)
+    mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel="Hodoscope Hits", data=True)
+    ax.set_xlabel("Number of Hits")
+    ax.set_ylabel("Fraction of Events")
+    ax.set_ylim(1e-4, 1)
+    ax.legend()
+    plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
+    print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
+    plt.close()
+
 def main(): 
     parser = argparse.ArgumentParser(description="Hodoscope Reconstruction")
     parser.add_argument("--run", type=str, required=True, help="Run ID to process")
@@ -69,6 +85,7 @@ def main():
         sys.exit(1)
 
     result = hodoreco((args.run, run_list[args.run]["file"]))
+    
     if result is not None:
         xh = result["xh"]
         yh = result["yh"]
@@ -78,7 +95,7 @@ def main():
         edges = (hodo_bin_edges(xh.min(), xh.max()), hodo_bin_edges(yh.min(), yh.max()))
         plot_profile(xh, yh, args.run, OUTPUTDIR=OUTPUTDIR, edges=edges)
         plot_energy_histogram(hgx, hgy, args.run, OUTPUTDIR=OUTPUTDIR)
-        # plot_hit_histogram(hgx, hgy, args.run, OUTPUTDIR=OUTPUTDIR)
+        plot_nhits_histogram(hgx, hgy, args.run, OUTPUTDIR=OUTPUTDIR)
         print(f"Processed {n_events} events for run {args.run}.")
     else:
         print(f"Failed to process run {args.run}.")

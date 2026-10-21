@@ -21,6 +21,37 @@ from utils.hodo import hodo_bin_edges
 
 
 # ---------------------------------------------------------------------------
+# Summary-plot style (CMS-like: points with error bars, no lines, dotted grid)
+# ---------------------------------------------------------------------------
+# One fixed colour + marker per beam type, shared by every summary plot
+# (scripts.deteff_scan, scripts.hodores). Black/blue/red keeps the closest pair
+# at dE ~28 (OKLab) even under protanopia, and the marker shape identifies each
+# beam on its own.
+BEAM_ORDER = ("e+", "pi+", "mu+")
+BEAM_LABELS = {"e+": r"$e^{+}$", "pi+": r"$\pi^{+}$", "mu+": r"$\mu^{+}$"}
+BEAM_STYLE = {
+    "e+": dict(color="#000000", marker="o"),
+    "pi+": dict(color="#1f4fd1", marker="^"),
+    "mu+": dict(color="#d62020", marker="s"),
+}
+OTHER_BEAM_STYLE = dict(color="#808080", marker="D")
+# Sideways nudge so beam types measured at the same energy don't hide each other.
+ENERGY_NUDGE_GEV = {"e+": -2.0, "pi+": 0.0, "mu+": 2.0}
+
+
+def ordered_beam_types(beam_types):
+    """BEAM_ORDER first, then anything else alphabetically."""
+    present = set(beam_types)
+    return [b for b in BEAM_ORDER if b in present] + sorted(present - set(BEAM_ORDER))
+
+
+def style_summary_axes(ax):
+    """Dotted major grid behind the data."""
+    ax.grid(which="major", ls=":", lw=0.9, color="0.55")
+    ax.set_axisbelow(True)
+
+
+# ---------------------------------------------------------------------------
 # Binned statistics
 # ---------------------------------------------------------------------------
 def _edges_from_bins(x, bins, x_min, x_max):
@@ -322,11 +353,13 @@ def plot_profile(xh, yh, run_id, runtype="", OUTPUTDIR="/lustre/work/colnunn/det
     if edges is None:
         edges = (_hist_edges(xh), _hist_edges(yh))
     H = np.histogram2d(xh, yh, bins=list(edges))
-    cb = mh.hist2dplot(*H, ax=ax, cmin=0)
+    cb = mh.hist2dplot(*H, ax=ax, cmin=0, cmap= "RdBu_r", rasterized=True)
     cb.cbar.set_label("Events", loc='top')
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=label, data=True)
-    ax.set_xlabel("X [cm]", loc='right')
-    ax.set_ylabel("Y [cm]", loc='top')
+    ax.set_xlabel("X [mm]", loc='right')
+    ax.set_xlim(-15,5)
+    ax.set_ylim(-10,10)
+    ax.set_ylabel("Y [mm]", loc='top')
     plt.savefig(os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"), dpi=300)
     print("Profile Plot Saved " + os.path.join(OUTPUTDIR, f"{fname}_{run_id}.png"))
 
@@ -534,7 +567,7 @@ def draw_fit(ax, x, y, n_sigma_clip=3.0, max_iter=5, tag=None, x_edges=None):
     if n_rejected:
         ax.plot(prof_x[~keep], prof_y[~keep], "x", color="red", ms=12, mew=2.5)
 
-    ax.legend(loc="lower right", fontsize=16, facecolor="black", edgecolor="white",
+    ax.legend(loc="lower right", fontsize=24, facecolor="black", edgecolor="white",
               labelcolor="black", framealpha=0.75)
 
 def compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins=64, x_range=None, y_range=None,

@@ -70,8 +70,8 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoX vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo X [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker X [mm]", loc='top')
-    plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_x_{run_id}_{selection}.png"), dpi=300)
-    print("Hodo vs Tracker Plot Saved " + os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_x_{run_id}_{selection}.png"))
+    plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_x_{run_id}_{selection}.pdf"), dpi=300)
+    print("Hodo vs Tracker Plot Saved " + os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_x_{run_id}_{selection}.pdf"))
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -83,8 +83,8 @@ def plot_sihodocor(xh, yh, x1, y1, run_id, trackern, selection="", runtype="", O
     mh.label.exp_label(ax=ax, exp="CaloX", text=runtype, rlabel=f"HodoY vs Tracker{trackern}", data=True)
     ax.set_xlabel("Hodo Y [mm]", loc='right')
     ax.set_ylabel("Silicon Tracker Y [mm]", loc='top')
-    plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_y_{run_id}_{selection}.png"), dpi=300)
-    print("Hodo vs Tracker Plot Saved " + os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_y_{run_id}_{selection}.png"))
+    plt.savefig(os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_y_{run_id}_{selection}.pdf"), dpi=300)
+    print("Hodo vs Tracker Plot Saved " + os.path.join(OUTPUTDIR, f"sihodocor_{trackern}_y_{run_id}_{selection}.pdf"))
     plt.close(fig)
 
 
@@ -326,7 +326,7 @@ def plot_bigplot_slopes(slopes_by_run, testbeam):
     ax.text(0.02, 0.97, f"quality cut: |r| $\\geq$ {MIN_FIT_R}, $\\geq${MIN_FIT_POINTS} profile pts",
             transform=ax.transAxes, ha="left", va="top", fontsize=13)
     plt.tight_layout()
-    outpath = os.path.join(BIGPLOT_OUTPUTDIR, f"{testbeam_tag}_slopes.png")
+    outpath = os.path.join(BIGPLOT_OUTPUTDIR, f"{testbeam_tag}_slopes.pdf")
     plt.savefig(outpath, dpi=300)
     print("Bigplot Saved " + outpath)
     plt.close(fig)

@@ -28,7 +28,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import matplotlib.pyplot as plt
 import mplhep as mh
 import numpy as np
-from matplotlib.lines import Line2D
 
 try:
     from tqdm import tqdm
@@ -51,18 +50,26 @@ from scipy.stats import beta
 
 from utils.data import get_runs_by_beam, list_beam_energies, list_beam_types
 from utils.io import ensure_output_dir
+from utils.plotting import (BEAM_LABELS, BEAM_STYLE, ENERGY_NUDGE_GEV, OTHER_BEAM_STYLE,
+                            ordered_beam_types, style_summary_axes)
 from utils.si_efficiency import MIN_EVENTS_FOR_SCAN, load_si_and_hodo, run_event_count
 
 OUTPUT_DIR = ensure_output_dir("deteff_scan")
 
-MARKERS = {"e+": "o", "pi+": "s", "mu+": "^"}
+# Plot style, after the CMS efficiency plots (see utils.plotting's summary-plot
+# style): points with error bars, no connecting lines. The beam-type summary
+# uses one colour + marker per detector, in the same black/blue/red scheme the
+# per-detector energy plots use for beam types.
+STATIONS = ("si1", "si2", "hodo")
 STATION_STYLE = {
-    "si1": dict(ls="-", fillstyle="full"),
-    "si2": dict(ls="--", fillstyle="none"),
-    "hodo": dict(ls=":", fillstyle="full"),
+    "si1": dict(color="#000000", marker="o"),
+    "si2": dict(color="#1f4fd1", marker="^"),
+    "hodo": dict(color="#d62020", marker="s"),
 }
-STATION_COLORS = {"si1": "blue", "si2": "green", "hodo": "red"}
 STATION_LABELS = {"si1": "Si Tracker 1", "si2": "Si Tracker 2", "hodo": "Hodoscope"}
+# Si1 and Si2 often sit on top of each other: a small sideways nudge per category
+# keeps every point visible (beam types at one energy use ENERGY_NUDGE_GEV).
+CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo": 0.15}
 
 # One worker per available CPU (respects a SLURM/cgroup allocation, unlike
 # os.cpu_count()); bump your job's cpu allocation and this picks it up
@@ -194,79 +201,77 @@ def hodo_efficiency(n_hodo_good, n_events):
     return _binomial_efficiency(n_hodo_good, n_events)
 
 
+def _ordered_beam_types(rows):
+    return ordered_beam_types(r["beam_type"] for r in rows)
+
+
+def _plot_station(ax, x, rows, station_key, label=None, style=None):
+    ax.errorbar(x, [r[f"eff_{station_key}"] for r in rows],
+                yerr=[r[f"eff_{station_key}_unc"] or 0 for r in rows],
+                ls="none", ms=9, elinewidth=1.5, capsize=0, label=label, **(style or STATION_STYLE[station_key]))
+
+
+def _style_efficiency_axes(ax):
+    ax.set_ylim(0, 1.05)
+    style_summary_axes(ax)
+
+
 def plot_eff_vs_beamtype(rows, filename):
+    """Efficiency per beam type (pooled over energy), one point per detector."""
     if not rows:
         print("No beam-type rows to plot.")
         return
-    beam_types = [r["beam_type"] for r in rows]
+    by_type = {r["beam_type"]: r for r in rows}
+    beam_types = _ordered_beam_types(rows)
+    ordered = [by_type[b] for b in beam_types]
     x = np.arange(len(beam_types))
-    width = 0.25
 
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(10, 8))
-    ax.bar(x - width, [r["eff_si1"] for r in rows], width,
-          yerr=[r["eff_si1_unc"] or 0 for r in rows], capsize=4, label="Si Tracker 1", color=STATION_COLORS["si1"])
-    ax.bar(x, [r["eff_si2"] for r in rows], width,
-          yerr=[r["eff_si2_unc"] or 0 for r in rows], capsize=4, label="Si Tracker 2", color=STATION_COLORS["si2"])
-    ax.bar(x + width, [r["eff_hodo"] for r in rows], width,
-          yerr=[r["eff_hodo_unc"] or 0 for r in rows], capsize=4, label="Hodoscope", color=STATION_COLORS["hodo"])
+    for station_key in STATIONS:
+        _plot_station(ax, x + CATEGORY_NUDGE[station_key], ordered, station_key, STATION_LABELS[station_key])
     ax.set_xticks(x)
-    ax.set_xticklabels(beam_types)
-    ax.set_ylabel("Detector efficiency", loc="top")
-    ax.set_ylim(0, 1.05)
-    ax.legend()
-    mh.label.exp_label(exp="CaloX", data=True, rlabel="Tracker Efficiency by Beam Type", ax=ax)
+    ax.set_xticklabels([BEAM_LABELS.get(b, b) for b in beam_types], fontsize=26)
+    ax.set_xlim(-0.6, len(beam_types) - 0.4)
+    ax.set_xlabel("Beam particle", loc="right")
+    ax.set_ylabel("Efficiency", loc="top")
+    _style_efficiency_axes(ax)
+    ax.xaxis.set_minor_locator(plt.NullLocator())  # categories: no minor ticks or gridlines between them
+    ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+    mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel="", ax=ax)
     plt.tight_layout()
-    plt.savefig(filename)
+    plt.savefig(filename, dpi=150)
     print(f"Efficiency-vs-beam-type plot saved {filename}")
     plt.close()
 
 
-def plot_eff_vs_energy(rows, filename):
-    """Efficiency vs. energy, broken out by beam type.
-
-    Beam type is encoded as marker shape and station as color/linestyle, so
-    a 3-beam-type x 2-station grid needs only two small legends (3 + 2
-    entries) instead of one combined 6-entry legend.
-    """
+def plot_eff_vs_energy(rows, output_dir):
+    """Efficiency vs. beam energy, one figure per detector
+    (eff_vs_energy_<si1|si2|hodo>.png), with the beam types overlaid."""
     if not rows:
         print("No energy rows to plot.")
         return
-    beam_types = sorted({r["beam_type"] for r in rows})
+    beam_types = _ordered_beam_types(rows)
 
     plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(10, 8))
-    for beam_type in beam_types:
-        sub = sorted((r for r in rows if r["beam_type"] == beam_type),
-                    key=lambda r: r["beam_energy_gev"])
-        energies = [r["beam_energy_gev"] for r in sub]
-        for station_key in ("si1", "si2", "hodo"):
-            eff = [r[f"eff_{station_key}"] for r in sub]
-            unc = [r[f"eff_{station_key}_unc"] or 0 for r in sub]
-            ax.errorbar(energies, eff, yerr=unc, capsize=3,
-                       marker=MARKERS.get(beam_type, "o"), color=STATION_COLORS[station_key],
-                       ls=STATION_STYLE[station_key]["ls"])
-
-    beamtype_handles = [
-        Line2D([], [], marker=MARKERS.get(bt, "o"), color="black", ls="none", ms=10, label=bt)
-        for bt in beam_types
-    ]
-    station_handles = [
-        Line2D([], [], color=STATION_COLORS[sk], ls=STATION_STYLE[sk]["ls"], label=STATION_LABELS[sk])
-        for sk in ("si1", "si2", "hodo")
-    ]
-    beamtype_legend = ax.legend(handles=beamtype_handles, title="Beam type", loc="lower left")
-    ax.add_artist(beamtype_legend)
-    ax.legend(handles=station_handles, loc="lower right")
-
-    ax.set_xlabel("Beam energy [GeV]", loc="right")
-    ax.set_ylabel("Detector efficiency", loc="top")
-    ax.set_ylim(0, 1.05)
-    mh.label.exp_label(exp="CaloX", data=True, rlabel="Tracker Efficiency vs Energy", ax=ax)
-    plt.tight_layout()
-    plt.savefig(filename)
-    print(f"Efficiency-vs-energy plot saved {filename}")
-    plt.close()
+    for station_key in STATIONS:
+        fig, ax = plt.subplots(figsize=(10, 8))
+        for beam_type in beam_types:
+            sub = sorted((r for r in rows if r["beam_type"] == beam_type), key=lambda r: r["beam_energy_gev"])
+            energies = np.array([r["beam_energy_gev"] for r in sub], dtype=float)
+            _plot_station(ax, energies + ENERGY_NUDGE_GEV.get(beam_type, 0.0), sub, station_key,
+                          label=BEAM_LABELS.get(beam_type, beam_type), style=BEAM_STYLE.get(beam_type, OTHER_BEAM_STYLE))
+        ax.set_xlim(0, 180)
+        ax.set_xlabel("Beam energy [GeV]", loc="right")
+        ax.set_ylabel("Efficiency", loc="top")
+        _style_efficiency_axes(ax)
+        ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+        mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel=STATION_LABELS[station_key], ax=ax)
+        plt.tight_layout()
+        filename = os.path.join(output_dir, f"eff_vs_energy_{station_key}.png")
+        plt.savefig(filename, dpi=150)
+        print(f"Efficiency-vs-energy plot saved {filename}")
+        plt.close(fig)
 
 
 def write_summary(rows, filename):
@@ -367,7 +372,7 @@ def main():
         })
 
     plot_eff_vs_beamtype(beamtype_rows, os.path.join(OUTPUT_DIR, "eff_vs_beamtype.png"))
-    plot_eff_vs_energy(energy_rows, os.path.join(OUTPUT_DIR, "eff_vs_energy.png"))
+    plot_eff_vs_energy(energy_rows, OUTPUT_DIR)
     write_summary(energy_rows, os.path.join(OUTPUT_DIR, "summary_by_energy.csv"))
     write_summary(beamtype_rows, os.path.join(OUTPUT_DIR, "summary_by_beamtype.csv"))
 

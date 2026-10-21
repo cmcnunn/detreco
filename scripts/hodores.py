@@ -117,13 +117,14 @@ import mplhep as mh
 import numpy as np
 import uproot
 from matplotlib.colors import LogNorm
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import FormatStrFormatter, MaxNLocator, MultipleLocator
 
 from utils.constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING, Z_H, Z_Si1, Z_Si2
 from utils.data import RUN_LIST_PATH, get_run_filepath, load_run_list
 from utils.hodo import reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import get_beam_label, get_run_beam, get_runs_by_testbeam
+from utils.plotting import (BEAM_LABELS, BEAM_STYLE, ENERGY_NUDGE_GEV, OTHER_BEAM_STYLE, get_beam_label,
+                            get_run_beam, get_runs_by_testbeam, ordered_beam_types, style_summary_axes)
 from utils.selectors import get_branch_names, passes_veto
 from utils.tracker import (
     MIN_ALIGNMENT_CORRELATION,
@@ -160,9 +161,6 @@ SIGMA_HODO_FLOOR_MM = PITCH / np.sqrt(12)  # 0.173
 TRACK_LABELS = {"x": "Track X", "y": "Track Y"}
 # x residual / y residual, in every plot.
 AXIS_COLORS = {"x": "#2a78d6", "y": "#eb6834"}
-# --testbeam's resolution-vs-energy plot: colour + marker per beam type,
-# kept off the x/y blue and orange so neither reads as an axis.
-BEAM_STYLES = {"pi+": ("#1baf7a", "o"), "mu+": ("#eda100", "s"), "e+": ("#e87ba4", "^")}
 
 # One CSV row per run for --testbeam (see run_resolution).
 TESTBEAM_CSV_FIELDS = [
@@ -583,41 +581,55 @@ def plot_testbeam_distribution(rows, testbeam, filename):
 
 
 def plot_testbeam_vs_energy(rows, testbeam, filename):
-    """Per-run resolution against beam energy, one panel per axis, coloured by beam type.
+    """Per-run resolution against beam energy, one figure per axis
+    (``<filename stem>_x<ext>``, ``_y``), beam types overlaid in the shared
+    summary-plot style (utils.plotting: points with error bars, no lines).
 
     Explains most of the distribution's spread: multiple scattering grows as
     1/E, so the low-energy runs sit well above the high-energy plateau.
     """
     ok = [row for row in _ok_rows(rows) if row["beam_energy_gev"] not in ("", None)]
-    plt.style.use(mh.style.ROOT)
-    fig, axes = plt.subplots(1, 2, figsize=(22, 10), sharey=True)
-    beam_types = sorted({row["beam_type"] for row in ok}, key=lambda b: (b not in BEAM_STYLES, b))
-    # Same 0 to twice-the-median window as plot_testbeam_distribution, so a
-    # run with no real residual peak can't flatten every other point.
+    beam_types = ordered_beam_types(row["beam_type"] for row in ok)
+    # Leave out runs above twice the median, as plot_testbeam_distribution does,
+    # so a run with no real residual peak can't flatten every other point.
     hi = 2 * np.median([row[f"rms_{axis}_mm"] for row in ok for axis in TRACK_LABELS]) if ok else 1.0
-    for ax, axis in zip(axes, TRACK_LABELS):
-        above = [row["run"] for row in ok if row[f"rms_{axis}_mm"] > hi]
-        for i, beam in enumerate(beam_types):
-            color, marker = BEAM_STYLES.get(beam, ("gray", "D"))
+    stem, ext = os.path.splitext(filename)
+    plt.style.use(mh.style.ROOT)
+    for axis in TRACK_LABELS:
+        fig, ax = plt.subplots(figsize=(10, 8))
+        shown_max = SIGMA_HODO_FLOOR_MM
+        for beam in beam_types:
             sel = [row for row in ok if row["beam_type"] == beam and row[f"rms_{axis}_mm"] <= hi]
-            # Small per-beam offset so runs at the same energy don't hide each other.
-            energy = np.array([float(row["beam_energy_gev"]) for row in sel]) + 1.5 * (i - (len(beam_types) - 1) / 2)
-            ax.errorbar(energy, [row[f"rms_{axis}_mm"] for row in sel], yerr=[row[f"rms_{axis}_err_mm"] for row in sel],
-                        fmt=marker, ms=10, mew=1.5, color=color, mec="black", ecolor=color, capsize=2,
-                        label=f"{beam} ({len(sel)} runs)", zorder=5)
-        ax.axhline(SIGMA_HODO_FLOOR_MM, color="gray", lw=2, ls="--",
+            if not sel:
+                continue
+            res = [row[f"rms_{axis}_mm"] for row in sel]
+            shown_max = max(shown_max, max(res))
+            energy = np.array([float(row["beam_energy_gev"]) for row in sel]) + ENERGY_NUDGE_GEV.get(beam, 0.0)
+            ax.errorbar(energy, res, yerr=[row[f"rms_{axis}_err_mm"] for row in sel],
+                        ls="none", ms=9, elinewidth=1.5, capsize=0, label=f"{BEAM_LABELS.get(beam, beam)} ({len(sel)} runs)",
+                        **BEAM_STYLE.get(beam, OTHER_BEAM_STYLE))
+        ax.axhline(SIGMA_HODO_FLOOR_MM, color="0.4", lw=2, ls="--",
                    label=f"pitch/$\\sqrt{{12}}$ = {SIGMA_HODO_FLOOR_MM:.3f} mm")
+        ax.set_xlim(0, 180)
+        ax.set_xticks(np.arange(0, 181, 20))
+        # Zoomed to the data rather than from 0: the story is the approach to the
+        # pitch/sqrt(12) floor, which the dashed line marks.
+        ax.set_ylim(0.15, 1.08 * shown_max)
+        ax.yaxis.set_major_locator(MultipleLocator(0.05))
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         ax.set_xlabel("Beam energy [GeV]", loc="right")
         ax.set_ylabel(f"Hodoscope {axis.upper()} resolution, upper end [mm]", loc="top")
-        ax.set_ylim(0, hi)
+        style_summary_axes(ax)
+        above = [row["run"] for row in ok if row[f"rms_{axis}_mm"] > hi]
         title = f"not shown, above {hi:.2f} mm: run {', '.join(map(str, above))}" if above else None
-        ax.legend(loc="lower right", fontsize=16, title=title, title_fontsize=15,
+        ax.legend(loc="upper right", title=title, title_fontsize=14,
                   frameon=True, facecolor="white", edgecolor="none", framealpha=1)
-        mh.label.exp_label(ax=ax, exp="CaloX", text=testbeam, rlabel=f"Hodoscope {axis.upper()}", data=True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=300)
-    plt.close(fig)
-    print(f"Resolution vs energy saved {filename}")
+        mh.label.exp_label(ax=ax, exp="CaloX", text="Preliminary", rlabel=testbeam, data=True)
+        plt.tight_layout()
+        out = f"{stem}_{axis}{ext}"
+        plt.savefig(out, dpi=300)
+        plt.close(fig)
+        print(f"Resolution vs energy saved {out}")
 
 
 def _testbeam_summary(rows, testbeam):
@@ -688,8 +700,8 @@ def run_testbeam(testbeam, workers=N_WORKERS):
         writer.writerows(rows)
     print(f"\nPer-run CSV saved {csv_path}")
 
-    plot_testbeam_distribution(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution.png"))
-    plot_testbeam_vs_energy(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution_vs_energy.png"))
+    plot_testbeam_distribution(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution.pdf"))
+    plot_testbeam_vs_energy(rows, testbeam, os.path.join(TESTBEAM_OUTPUT_DIR, f"{tag}_resolution_vs_energy.pdf"))
 
     summary = _testbeam_summary(rows, testbeam)
     print()
@@ -879,7 +891,7 @@ def main():
         print(line)
         summary_lines.append(line)
 
-        filename = os.path.join(OUTPUT_DIR, f"hodores_track_residual_{axis}_{run_label}.png")
+        filename = os.path.join(OUTPUT_DIR, f"hodores_track_residual_{axis}_{run_label}.pdf")
         plot_track_residual(res_shift, rms_shift, res_cal, rms_cal, axis, f"{label} Residual", filename,
                             runtype=runtype)
 
@@ -907,14 +919,14 @@ def main():
     summary_lines += quote
 
     if args.run and last_cal is not None:
-        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_{run_label}.png")
+        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_{run_label}.pdf")
         plot_rotation_signature(last_cal, filename, runtype=runtype, rlabel=rlabel)
 
         # Same panels after calibration, fit on even events and shown on odd
         # ones -- interleaved in time, so both halves see the same conditions.
         odd = np.arange(len(last_track["xh"])) % 2 == 1
         holdout_cal, _ = calibrate_track(last_track, fit_mask=~odd)
-        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_calibrated_{run_label}.png")
+        filename = os.path.join(OUTPUT_DIR, f"hodores_rotation_calibrated_{run_label}.pdf")
         plot_rotation_signature(holdout_cal, filename, runtype=runtype, rlabel=rlabel, test_mask=odd)
 
     summary_path = os.path.join(OUTPUT_DIR, f"hodores_{run_label}.txt")
