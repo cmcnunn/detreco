@@ -1,26 +1,42 @@
-"""Si-tracker efficiency scan across beam type, then beam energy.
+"""Si-tracker and hodoscope efficiency scan across beam type, then beam energy.
 
 For each beam type (e+, pi+, mu+, ...) and each energy within it, pools
-every matching run's hodoscope-referenced hits and computes the intrinsic
-efficiency of each si-tracker station, plus the hodoscope's own veto-gated
-reconstruction rate (n_good_hodo / n_events, both restricted to
-veto-passing events -- the same reference selection si1/si2 use, minus
-their tracker-alignment requirement). The hodoscope numbers are pooled over
-every run with a readable ROOT file, independent of whether that run's
-tracker data is available or aligns cleanly (see
-utils.si_efficiency.load_si_and_hodo) -- si1/si2 still necessarily need a
-working tracker, so they're pooled over the smaller subset that provides. Produces two summary plots -- efficiency vs. beam type
+every matching run's counts and computes each detector's efficiency with
+the same definition: events with a hit on that detector over veto-passing
+events. For si1/si2 a hit is a station hit (x and y); for the hodoscope it
+is a good hit (one contiguous cluster in each plane). Neither is gated on
+the other (see utils.si_efficiency.load_si_and_hodo). The hodoscope numbers
+are pooled over every run with a readable ROOT file, independent of whether
+that run's tracker data is available or aligns cleanly -- si1/si2
+necessarily need a working tracker, so they're pooled over the smaller
+subset that provides. Produces two summary plots -- efficiency vs. beam type
 (pooled over energy) and efficiency vs. beam energy (one line per beam
 type) -- plus the underlying numbers as CSVs.
+
+The plotted hodoscope efficiency is fiducial (hodo_fid): only reference
+events whose Si track lands inside its bars count, since the e+/mu+ beams
+sat on its Y edge and ~10% of their tracks miss it -- events it couldn't
+have reconstructed (see utils.si_efficiency._hodo_fiducial_mask). That
+needs a tracker, so it pools over the si runs; the CSVs keep the plain
+veto-referenced rate as eff_hodo alongside it.
+
+The nominal beams are mixed (e+ 120-160 GeV is 75-90% muons, pi+ 160 GeV
+~23% muons; see scripts/beam_composition.py). With --pid each run's
+reference is narrowed to the events the beam-line PID tags as its nominal
+beam's own particle -- electrons for e+, pions or protons for pi+, muons for
+mu+ (utils.pid.BEAM_PARTICLES) -- and the outputs get a "_pid" suffix, so
+the nominal-beam results aren't overwritten. This reads three more DRS
+channels per run.
 
 Runs are loaded in parallel (one process per run, sized to the node's
 available CPUs) since each run's ROOT + tracker load/alignment is
 independent and this is normally the bottleneck.
 
 Usage:
-    python scripts/deteff_scan.py
+    python3 -m scripts.deteff_scan [--pid]
 """
 
+import argparse
 import csv
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -48,7 +64,7 @@ except ImportError:  # pragma: no cover
 
 from scipy.stats import beta
 
-from utils.data import get_runs_by_beam, list_beam_energies, list_beam_types
+from utils.data import get_run_beam, get_runs_by_beam, list_beam_energies, list_beam_types
 from utils.io import ensure_output_dir
 from utils.plotting import (BEAM_LABELS, BEAM_STYLE, ENERGY_NUDGE_GEV, OTHER_BEAM_STYLE,
                             ordered_beam_types, style_summary_axes)
@@ -59,17 +75,18 @@ OUTPUT_DIR = ensure_output_dir("deteff_scan")
 # Plot style, after the CMS efficiency plots (see utils.plotting's summary-plot
 # style): points with error bars, no connecting lines. The beam-type summary
 # uses one colour + marker per detector, in the same black/blue/red scheme the
-# per-detector energy plots use for beam types.
-STATIONS = ("si1", "si2", "hodo")
+# per-detector energy plots use for beam types. The hodoscope is plotted
+# fiducial (hodo_fid; see module docstring).
+STATIONS = ("si1", "si2", "hodo_fid")
 STATION_STYLE = {
     "si1": dict(color="#000000", marker="o"),
     "si2": dict(color="#1f4fd1", marker="^"),
-    "hodo": dict(color="#d62020", marker="s"),
+    "hodo_fid": dict(color="#d62020", marker="s"),
 }
-STATION_LABELS = {"si1": "Si Tracker 1", "si2": "Si Tracker 2", "hodo": "Hodoscope"}
+STATION_LABELS = {"si1": "Si Tracker 1", "si2": "Si Tracker 2", "hodo_fid": "Hodoscope (fiducial)"}
 # Si1 and Si2 often sit on top of each other: a small sideways nudge per category
 # keeps every point visible (beam types at one energy use ENERGY_NUDGE_GEV).
-CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo": 0.15}
+CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo_fid": 0.15}
 
 # One worker per available CPU (respects a SLURM/cgroup allocation, unlike
 # os.cpu_count()); bump your job's cpu allocation and this picks it up
@@ -77,10 +94,12 @@ CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo": 0.15}
 N_WORKERS = len(os.sched_getaffinity(0))
 
 
-def _load_one(run_id):
-    """Picklable per-run worker for the process pool."""
+def _load_one(run_id, pid=False):
+    """Picklable per-run worker for the process pool. With ``pid``, the
+    reference is the run's own nominal beam particle (see module docstring)."""
     try:
-        return run_id, load_si_and_hodo(str(run_id)), None
+        pid_beam_type = get_run_beam(run_id)[0] if pid else None
+        return run_id, load_si_and_hodo(str(run_id), pid_beam_type=pid_beam_type), None
     except Exception as e:
         return run_id, None, str(e)
 
@@ -114,8 +133,8 @@ def filter_scannable_runs(run_ids):
     return keep, skipped
 
 
-def load_all_runs(run_ids):
-    """Load every run in ``run_ids`` in parallel.
+def load_all_runs(run_ids, pid=False):
+    """Load every run in ``run_ids`` in parallel (PID-selected if ``pid``).
 
     Returns ``(results, skipped)``: ``results`` is ``{run_id: result}`` for
     runs that loaded successfully; ``skipped`` is ``{run_id: reason}`` for
@@ -125,7 +144,7 @@ def load_all_runs(run_ids):
     skipped = {}
     with tqdm(total=len(run_ids), desc="Scanning runs", unit="run") as pbar, \
         ProcessPoolExecutor(max_workers=N_WORKERS) as ex:
-        futures = {ex.submit(_load_one, run_id): run_id for run_id in run_ids}
+        futures = {ex.submit(_load_one, run_id, pid): run_id for run_id in run_ids}
         for fut in as_completed(futures):
             run_id, result, err = fut.result()
             pbar.set_postfix_str(f"run {run_id}")
@@ -141,27 +160,25 @@ def load_all_runs(run_ids):
 def pool_group(run_ids, results_by_run):
     """Pool already-loaded results for ``run_ids``.
 
-    Returns ``(xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2, n_hodo_good,
-    n_events, n_hodo_runs, n_si_runs)`` or ``None`` if none of the runs in
-    the group loaded successfully.
+    Returns ``(n_si1, n_si2, n_si_events, n_hodo_good, n_events, n_fid_events,
+    n_hodo_good_fid, n_hodo_runs, n_si_runs)`` or ``None`` if none of the
+    runs in the group loaded successfully.
 
-    The hodoscope counts are summed over every loaded run regardless of
-    whether its tracker aligned (``load_si_and_hodo`` returns valid
-    n_hodo_good/n_events straight from ROOT even when tracker_error is set)
-    -- ``n_hodo_runs`` is how many runs that covers. The six position arrays
-    only get a real contribution from runs whose tracker did align (a
-    tracker_error run contributes empty arrays), so si1/si2 efficiency is
+    The veto-referenced hodoscope counts are summed over every loaded run
+    regardless of whether its tracker aligned (``load_si_and_hodo`` returns
+    valid n_hodo_good/n_events straight from ROOT even when tracker_error is
+    set) -- ``n_hodo_runs`` is how many runs that covers. The si and
+    fiducial hodoscope counts only get a real contribution from runs whose
+    tracker did align (a tracker_error run contributes zeros), so they're
     unaffected by tracker-unavailable runs; ``n_si_runs`` is that smaller
     count.
     """
     parts = [results_by_run[r] for r in run_ids if r in results_by_run]
     if not parts:
         return None
-    arrays = tuple(np.concatenate(arrs) for arrs in zip(*(p[:6] for p in parts)))
-    n_hodo_good = sum(p[6] for p in parts)
-    n_events = sum(p[7] for p in parts)
-    n_si_runs = sum(1 for p in parts if p[8] is None)
-    return arrays + (n_hodo_good, n_events, len(parts), n_si_runs)
+    counts = tuple(sum(c) for c in zip(*(p[:-1] for p in parts)))
+    n_si_runs = sum(1 for p in parts if p[-1] is None)
+    return counts + (len(parts), n_si_runs)
 
 
 # 1-sigma equivalent, matching the previous normal-approximation's implicit
@@ -170,9 +187,9 @@ _CL = 0.6827
 
 
 def _binomial_efficiency(n_pass, n_total):
-    """Plain event-count ratio (numerator = ref events with a hit on the
-    station, denominator = all ref events), same as sieff.py's main() -- no
-    binning or geometric-footprint masking.
+    """Plain event-count ratio (numerator = veto-passing events with a hit
+    on the detector, denominator = all veto-passing events) -- no binning or
+    geometric-footprint masking.
 
     Uncertainty is the Clopper-Pearson exact interval rather than the normal
     (Wald) approximation: the latter collapses to +/-0 at eff == 0 or 1,
@@ -190,10 +207,9 @@ def _binomial_efficiency(n_pass, n_total):
     return eff, unc
 
 
-def station_efficiencies(xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2):
-    n_ref = len(xh_ref)
-    eff1_mean, eff1_unc = _binomial_efficiency(len(xh_sel1), n_ref)
-    eff2_mean, eff2_unc = _binomial_efficiency(len(xh_sel2), n_ref)
+def station_efficiencies(n_si1, n_si2, n_si_events):
+    eff1_mean, eff1_unc = _binomial_efficiency(n_si1, n_si_events)
+    eff2_mean, eff2_unc = _binomial_efficiency(n_si2, n_si_events)
     return eff1_mean, eff1_unc, eff2_mean, eff2_unc
 
 
@@ -216,8 +232,9 @@ def _style_efficiency_axes(ax):
     style_summary_axes(ax)
 
 
-def plot_eff_vs_beamtype(rows, filename):
-    """Efficiency per beam type (pooled over energy), one point per detector."""
+def plot_eff_vs_beamtype(rows, filename, pid=False):
+    """Efficiency per beam type (pooled over energy), one point per detector;
+    ``pid`` only labels the plot as PID-tagged."""
     if not rows:
         print("No beam-type rows to plot.")
         return
@@ -238,16 +255,16 @@ def plot_eff_vs_beamtype(rows, filename):
     _style_efficiency_axes(ax)
     ax.xaxis.set_minor_locator(plt.NullLocator())  # categories: no minor ticks or gridlines between them
     ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
-    mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel="", ax=ax)
+    mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel="PID-tagged" if pid else "", ax=ax)
     plt.tight_layout()
     plt.savefig(filename, dpi=150)
     print(f"Efficiency-vs-beam-type plot saved {filename}")
     plt.close()
 
 
-def plot_eff_vs_energy(rows, output_dir):
+def plot_eff_vs_energy(rows, output_dir, pid=False):
     """Efficiency vs. beam energy, one figure per detector
-    (eff_vs_energy_<si1|si2|hodo>.png), with the beam types overlaid."""
+    (eff_vs_energy_<si1|si2|hodo>[_pid].png), with the beam types overlaid."""
     if not rows:
         print("No energy rows to plot.")
         return
@@ -266,9 +283,10 @@ def plot_eff_vs_energy(rows, output_dir):
         ax.set_ylabel("Efficiency", loc="top")
         _style_efficiency_axes(ax)
         ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
-        mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel=STATION_LABELS[station_key], ax=ax)
+        rlabel = STATION_LABELS[station_key] + (", PID" if pid else "")
+        mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel=rlabel, ax=ax)
         plt.tight_layout()
-        filename = os.path.join(output_dir, f"eff_vs_energy_{station_key}.png")
+        filename = os.path.join(output_dir, f"eff_vs_energy_{station_key}{'_pid' if pid else ''}.png")
         plt.savefig(filename, dpi=150)
         print(f"Efficiency-vs-energy plot saved {filename}")
         plt.close(fig)
@@ -286,6 +304,12 @@ def write_summary(rows, filename):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--pid", action="store_true",
+                        help="Only count events the beam-line PID tags as each run's nominal beam particle.")
+    args = parser.parse_args()
+    suffix = "_pid" if args.pid else ""
+
     beam_types = [b for b in list_beam_types() if b != "pedestal"]
 
     # Resolve the full (beam_type, energy, run_ids) plan up front, then load
@@ -302,11 +326,11 @@ def main():
               f"{MIN_EVENTS_FOR_SCAN} events (too short to align) before loading.")
     print(f"Loading {len(scannable_run_ids)} run(s) across {len(plan)} (beam type, energy) groups "
           f"using {N_WORKERS} worker process(es)...")
-    results_by_run, skipped_load = load_all_runs(scannable_run_ids)
+    results_by_run, skipped_load = load_all_runs(scannable_run_ids, pid=args.pid)
 
     skipped_all = {**skipped_short, **skipped_load}
     if skipped_all:
-        skip_log_path = os.path.join(OUTPUT_DIR, "skipped_runs.log")
+        skip_log_path = os.path.join(OUTPUT_DIR, f"skipped_runs{suffix}.log")
         with open(skip_log_path, "w") as f:
             for run_id, reason in sorted(skipped_all.items()):
                 f.write(f"{run_id}: {reason}\n")
@@ -328,53 +352,56 @@ def main():
             if result is None:
                 print(f"  {energy} GeV: no usable runs (of {len(run_ids)}), skipping.")
                 continue
-            xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2, n_hodo_good, n_events, n_hodo_runs, n_si_runs = result
-            pooled_parts.append((xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2,
-                                n_hodo_good, n_events))
+            (n_si1, n_si2, n_si_events, n_hodo_good, n_events, n_fid_events, n_hodo_good_fid,
+             n_hodo_runs, n_si_runs) = result
+            pooled_parts.append(result[:-2])
 
-            eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(
-                xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2)
+            eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(n_si1, n_si2, n_si_events)
             hodo_eff, hodo_unc = hodo_efficiency(n_hodo_good, n_events)
+            fid_eff, fid_unc = hodo_efficiency(n_hodo_good_fid, n_fid_events)
             print(f"  {energy} GeV: n_hodo_runs={n_hodo_runs}/{len(run_ids)}  n_si_runs={n_si_runs}  "
-                  f"n_ref={len(xh_ref)}  "
+                  f"n_si_events={n_si_events}  n_events={n_events}  n_fid_events={n_fid_events}  "
                   f"si1={eff1_mean:.3f}±{(eff1_unc or 0):.3f}  "
                   f"si2={eff2_mean:.3f}±{(eff2_unc or 0):.3f}  "
-                  f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}")
+                  f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}  "
+                  f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}")
 
             energy_rows.append({
                 "beam_type": beam_type, "beam_energy_gev": energy,
                 "n_candidate_runs": len(run_ids), "n_hodo_runs": n_hodo_runs, "n_si_runs": n_si_runs,
-                "n_ref_events": len(xh_ref), "n_events": n_events,
+                "n_si_events": n_si_events, "n_events": n_events, "n_fid_events": n_fid_events,
                 "eff_si1": eff1_mean, "eff_si1_unc": eff1_unc,
                 "eff_si2": eff2_mean, "eff_si2_unc": eff2_unc,
                 "eff_hodo": hodo_eff, "eff_hodo_unc": hodo_unc,
+                "eff_hodo_fid": fid_eff, "eff_hodo_fid_unc": fid_unc,
             })
 
         if not pooled_parts:
             continue
-        xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2 = (
-            np.concatenate(arrs) for arrs in zip(*(p[:6] for p in pooled_parts))
-        )
-        n_hodo_good_total = sum(p[6] for p in pooled_parts)
-        n_events_total = sum(p[7] for p in pooled_parts)
-        eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(
-            xh_ref, yh_ref, xh_sel1, yh_sel1, xh_sel2, yh_sel2)
+        (n_si1, n_si2, n_si_events, n_hodo_good_total, n_events_total, n_fid_total,
+         n_hodo_good_fid_total) = (sum(c) for c in zip(*pooled_parts))
+        eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(n_si1, n_si2, n_si_events)
         hodo_eff, hodo_unc = hodo_efficiency(n_hodo_good_total, n_events_total)
-        print(f"  [{beam_type} all energies] n_ref={len(xh_ref)}  "
+        fid_eff, fid_unc = hodo_efficiency(n_hodo_good_fid_total, n_fid_total)
+        print(f"  [{beam_type} all energies] n_si_events={n_si_events}  n_events={n_events_total}  "
+              f"n_fid_events={n_fid_total}  "
               f"si1={eff1_mean:.3f}±{(eff1_unc or 0):.3f}  "
               f"si2={eff2_mean:.3f}±{(eff2_unc or 0):.3f}  "
-              f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}")
+              f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}  "
+              f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}")
         beamtype_rows.append({
-            "beam_type": beam_type, "n_ref_events": len(xh_ref), "n_events": n_events_total,
+            "beam_type": beam_type, "n_si_events": n_si_events, "n_events": n_events_total,
+            "n_fid_events": n_fid_total,
             "eff_si1": eff1_mean, "eff_si1_unc": eff1_unc,
             "eff_si2": eff2_mean, "eff_si2_unc": eff2_unc,
             "eff_hodo": hodo_eff, "eff_hodo_unc": hodo_unc,
+            "eff_hodo_fid": fid_eff, "eff_hodo_fid_unc": fid_unc,
         })
 
-    plot_eff_vs_beamtype(beamtype_rows, os.path.join(OUTPUT_DIR, "eff_vs_beamtype.png"))
-    plot_eff_vs_energy(energy_rows, OUTPUT_DIR)
-    write_summary(energy_rows, os.path.join(OUTPUT_DIR, "summary_by_energy.csv"))
-    write_summary(beamtype_rows, os.path.join(OUTPUT_DIR, "summary_by_beamtype.csv"))
+    plot_eff_vs_beamtype(beamtype_rows, os.path.join(OUTPUT_DIR, f"eff_vs_beamtype{suffix}.png"), pid=args.pid)
+    plot_eff_vs_energy(energy_rows, OUTPUT_DIR, pid=args.pid)
+    write_summary(energy_rows, os.path.join(OUTPUT_DIR, f"summary_by_energy{suffix}.csv"))
+    write_summary(beamtype_rows, os.path.join(OUTPUT_DIR, f"summary_by_beamtype{suffix}.csv"))
 
 
 if __name__ == "__main__":

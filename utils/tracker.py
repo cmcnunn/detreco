@@ -39,6 +39,7 @@ import os
 
 import numpy as np
 
+from utils.constants import Z_H, Z_Si1, Z_Si2
 from utils.io import project_root
 from utils.plotting import get_runtype
 
@@ -52,6 +53,11 @@ SENTINEL_X1, SENTINEL_Y1, SENTINEL_X2, SENTINEL_Y2 = -1000.0, -2000.0, -3000.0, 
 # unit conversion, not calibration-scaled, so they stay exact/checkable.
 SENTINEL_X1_MM, SENTINEL_Y1_MM = 10 * SENTINEL_X1, 10 * SENTINEL_Y1
 SENTINEL_X2_MM, SENTINEL_Y2_MM = 10 * SENTINEL_X2, 10 * SENTINEL_Y2
+
+# Straight-line weights putting the two-station track at the hodoscope's z
+# (see scripts.hodores's module docstring): x_track = TRACK_W1 * x1 + TRACK_W2 * x2.
+TRACK_W1 = (Z_H - Z_Si2) / (Z_Si1 - Z_Si2)  # -0.915
+TRACK_W2 = (Z_Si1 - Z_H) / (Z_Si1 - Z_Si2)  # +1.915
 
 # Column indices (0-based) into each whitespace-split line.
 _COL_X1, _COL_Y1, _COL_X2, _COL_Y2 = 0, 1, 2, 3
@@ -122,6 +128,11 @@ def station1_hit_mask(data: np.ndarray) -> np.ndarray:
 def station2_hit_mask(data: np.ndarray) -> np.ndarray:
     """Events where station 2 actually recorded a hit (no sentinel)."""
     return (data["x2"] != SENTINEL_X2) & (data["y2"] != SENTINEL_Y2)
+
+
+def extrapolate_to_hodo(t1, t2):
+    """Straight line through the two station hits, evaluated at the hodoscope's z (``Z_H``)."""
+    return TRACK_W1 * np.asarray(t1) + TRACK_W2 * np.asarray(t2)
 
 
 def _unwrap_counter(counter, modulus: int = 2 ** 31):

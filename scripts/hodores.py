@@ -132,7 +132,10 @@ from utils.tracker import (
     SENTINEL_X2,
     SENTINEL_Y1,
     SENTINEL_Y2,
+    TRACK_W1,
+    TRACK_W2,
     build_aligned_tracker_branches,
+    extrapolate_to_hodo,
     load_tracker_run,
 )
 
@@ -181,11 +184,8 @@ MAX_NON_ORTHOGONALITY_DEVIATION_MRAD = 10.0
 # stretch (TB2026's 160 tracker-less runs after 1882).
 N_NEAREST_TRUSTED = 5
 
-# Straight-line weights putting the two-station track at the hodoscope's z
-# (see module docstring): x_track = TRACK_W1 * x1 + TRACK_W2 * x2.
-TRACK_W1 = (Z_H - Z_Si2) / (Z_Si1 - Z_Si2)  # -0.915
-TRACK_W2 = (Z_Si1 - Z_H) / (Z_Si1 - Z_Si2)  # +1.915
-# Per-station tracker error -> error on x_track, propagated through the weights.
+# Per-station tracker error -> error on x_track, propagated through the
+# straight-line weights (utils.tracker.TRACK_W1/TRACK_W2, see module docstring).
 TRACK_ERR_GAIN = float(np.hypot(TRACK_W1, TRACK_W2))  # 2.12
 
 
@@ -324,11 +324,6 @@ def truncated_rms(values, n_sigma=RMS_TRUNCATION_SIGMA, max_iter=100):
     m4 = np.mean((kept - mean) ** 4)
     rms_err = np.sqrt(max(m4 - rms ** 4, 0.0) / (4 * rms ** 2 * len(kept)))
     return mean, rms, rms_err, len(kept), n_total, keep
-
-
-def extrapolate_to_hodo(t1, t2):
-    """Straight line through the two station hits, evaluated at the hodoscope's z (``Z_H``)."""
-    return TRACK_W1 * np.asarray(t1) + TRACK_W2 * np.asarray(t2)
 
 
 def calibrate_track(track, fit_mask=None):
