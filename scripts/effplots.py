@@ -16,7 +16,7 @@ from utils.constants import HG_THRESHOLD, X_MAPPING, Y_MAPPING, PITCH, VETO_THRE
 from utils.data import get_run_filepath
 from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import get_beam_label, intrinsic_efficiency, plot_effhist2d
+from utils.plotting import intrinsic_efficiency, plot_effhist2d, run_header_label
 from utils.selectors import (
     COUNTER_1CM_3CM_FIRST_RUN,
     counter_1cm_hit_mask,
@@ -26,6 +26,7 @@ from utils.selectors import (
     get_mcp_pulse_window_ns,
     passes_veto,
 )
+from utils.si_efficiency import hodo_track_masks
 from utils.tracker import (
     SENTINEL_X1,
     SENTINEL_X2,
@@ -54,6 +55,11 @@ MCP_MIN_PULSE_FWHM_NS = 1.0
 SAMPLE_NS = 0.2
 
 OUTPUT_DIR = ensure_output_dir("effplots")
+
+# Display names for the efficiency maps' colorbars.
+DETECTOR_LABELS = {"mcp1": "MCP 1", "mcp2": "MCP 2", "veto": "Veto", "hodoscope": "Hodoscope",
+                   "hodoscope_trk": "Tracker-referenced hodoscope",
+                   "1cm_counter": "1 cm counter", "3cm_counter": "3 cm counter"}
 
 
 
@@ -224,7 +230,7 @@ def process_tracker_referenced_run(run_id, output_dir):
     print(f"  [{run_id}] Aligned {matched.sum()}/{len(trigger_n)} ROOT events "
           f"(tracker-side match_frac={match_frac:.4%})")
 
-    runtype = get_beam_label(run_id)
+    rlabel = run_header_label(run_id)
     # Both quantities live in ROOT-event space now (build_aligned_tracker_branches
     # already re-indexed the tracker onto it), so no more root_idx bookkeeping --
     # a plain sentinel check replaces station1_hit_mask/station2_hit_mask +
@@ -234,6 +240,12 @@ def process_tracker_referenced_run(run_id, output_dir):
         1: (10 * x1, 10 * y1, (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)),
         2: (10 * x2, 10 * y2, (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)),
     }
+    # Tracker-referenced hodoscope: a cluster on the two-station track in each
+    # plane, even alongside secondaries' clusters (see
+    # utils.si_efficiency.hodo_track_masks). Needs both stations, which miss
+    # together almost always, so it barely shrinks either station's reference.
+    both_stations = station_data[1][2] & station_data[2][2]
+    _, hodo_on_track = hodo_track_masks(run_id, xh, yh, good_hodo, hg_x, hg_y, both_stations, x1, y1, x2, y2)
     for n, (x_tr, y_tr, ref) in station_data.items():
         x_ref, y_ref = x_tr[ref], y_tr[ref]
         if len(x_ref) == 0:
@@ -241,7 +253,7 @@ def process_tracker_referenced_run(run_id, output_dir):
             continue
         x_range, y_range = (x_ref.min(), x_ref.max()), (y_ref.min(), y_ref.max())
 
-        selections = [("hodoscope", good_hodo), ("veto", veto_sel),
+        selections = [("hodoscope", good_hodo), ("hodoscope_trk", hodo_on_track), ("veto", veto_sel),
                       ("mcp1", mcp1_hit), ("mcp2", mcp2_hit)]
         if has_counters:
             selections += [("1cm_counter", one_cm_hit), ("3cm_counter", three_cm_hit)]
@@ -252,9 +264,9 @@ def process_tracker_referenced_run(run_id, output_dir):
             filename = os.path.join(output_dir, f"tracker{n}_{name}effmap_{run_id}.png")
             eff, h_ref, *_ = plot_effhist2d(
                 x_ref, y_ref, x_sel, y_sel, 120,
-                "Silicon Tracker X [mm]", "Silicon Tracker Y [mm]",
-                f"{name.replace('_', ' ').title()} vs Tracker{n}",
-                filename, runtype=runtype, x_range=x_range, y_range=y_range,
+                f"Si tracker {n} X [mm]", f"Si tracker {n} Y [mm]",
+                f"{DETECTOR_LABELS[name]} efficiency",
+                filename, rlabel=rlabel, x_range=x_range, y_range=y_range,
             )
             mean, unc = intrinsic_efficiency(eff, h_ref)
             print(f"  [{run_id}] Tracker{n} ref -> {name}: n_ref={len(x_ref)} "
@@ -310,7 +322,7 @@ def main():
                   f"{COUNTER_1CM_3CM_FIRST_RUN} in this selection); skipping")
             continue
         filename = os.path.join(OUTPUT_DIR, f"hodo_{key}effmap_{runs_label}.png")
-        runtype = get_beam_label(args.run)
+        rlabel = run_header_label(args.run) if args.run is not None else f"{len(runs)} runs"
         # Deliberately *not* passing x_range/y_range here: x_ref/y_ref are
         # hodoscope positions quantized to PITCH/2 (reconstruct_hodoscope's
         # "mean" method). Binning them into 64 bins over the empirical
@@ -325,8 +337,8 @@ def main():
         eff, h_ref, *_ = plot_effhist2d(
                 x_ref, y_ref, x_sel, y_sel, 64,
                 "Hodoscope X [mm]", "Hodoscope Y [mm]",
-                f"{key.replace('_', ' ').title()} vs Hodoscope",
-                filename, runtype=runtype
+                f"{DETECTOR_LABELS[key]} efficiency",
+                filename, rlabel=rlabel
         )
         print(f"Efficiency map for {label} saved to {filename}")
 

@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 import mplhep as mh
+from matplotlib.colors import Normalize
 from scipy.optimize import curve_fit
 
 from utils.fit_funcs import line
@@ -49,6 +50,23 @@ def style_summary_axes(ax):
     """Dotted major grid behind the data."""
     ax.grid(which="major", ls=":", lw=0.9, color="0.55")
     ax.set_axisbelow(True)
+
+
+# Colormap for 2D maps (efficiency, occupancy, correlation): the red-blue scale
+# plot_profile, scripts.sihodocor and scripts.energy_tracks use.
+MAP_CMAP = "RdBu_r"
+# Background for bins with no data on MAP_CMAP maps: its midpoint is white, so
+# an empty bin would otherwise read as 50%.
+NO_DATA_COLOR = "0.85"
+
+
+def run_header_label(run_id):
+    """Right-hand header for a one-run plot, e.g. ``"Run 1832, $\\pi^{+}$ 120 GeV"``
+    (just ``"Run 1832"`` when the run's beam isn't known)."""
+    beam_type, energy = get_run_beam(run_id)
+    if beam_type and energy is not None:
+        return f"Run {run_id}, {BEAM_LABELS.get(beam_type, beam_type)} {energy:g} GeV"
+    return f"Run {run_id}"
 
 
 # ---------------------------------------------------------------------------
@@ -621,25 +639,51 @@ def intrinsic_efficiency(eff, h_ref, min_eff=0.5):
     return mean, uncertainty
 
 
-def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, title, filename, runtype="",
+# Margin (mm) around the reference detector's occupied bins in plot_effhist2d.
+EFF_MAP_MARGIN_MM = 2.0
+
+
+def _square_window(occupied, xedges, yedges, margin):
+    """Square ``(xlim, ylim)`` around the ``occupied`` bins plus ``margin``,
+    the shorter side widened to match the longer about its own center, so
+    under set_aspect("equal") every map comes out the same shape."""
+    ix, iy = np.nonzero(occupied)
+    if ix.size == 0:
+        return (xedges[0], xedges[-1]), (yedges[0], yedges[-1])
+    lo = np.array([xedges[ix.min()], yedges[iy.min()]]) - margin
+    hi = np.array([xedges[ix.max() + 1], yedges[iy.max() + 1]]) + margin
+    center, half = (lo + hi) / 2, (hi - lo).max() / 2
+    return (center[0] - half, center[0] + half), (center[1] - half, center[1] + half)
+
+
+def plot_effhist2d(x_ref, y_ref, x_sel, y_sel, bins, xlabel, ylabel, zlabel, filename, rlabel="",
                    x_range=None, y_range=None, min_ref_count=10):
+    """Efficiency map (see compute_efficiency_map) on MAP_CMAP, cropped to a
+    square around the reference detector's occupied bins. ``zlabel`` labels
+    the colorbar (e.g. "1 cm counter efficiency"), ``rlabel`` the header's
+    right side (e.g. run_header_label(run))."""
     eff, h_ref, xedges, yedges = compute_efficiency_map(x_ref, y_ref, x_sel, y_sel, bins,
                                                          x_range=x_range, y_range=y_range,
                                                          min_ref_count=min_ref_count)
 
     plt.style.use(mh.style.ROOT)
-    fig, ax = plt.subplots(figsize=(12, 12))
-    pc = mh.hist2dplot(eff, xedges, yedges, ax=ax, cmin=0, cmax=1, rasterized=True)
-    cb = pc.cbar
-    if cb:
-        cb.set_label("Efficiency", loc='top')
-    mh.label.exp_label(exp="CaloX", text=runtype, data=True, rlabel=title, ax=ax)
-    ax.set_xlabel(xlabel, loc='right')
-    ax.set_ylabel(ylabel, loc='top')
-    plt.tight_layout()
-    plt.savefig(filename)
+    fig, ax = plt.subplots(figsize=(12, 10))
+    # cbarextend=False: hist2dplot's default of widening the figure for the
+    # colorbar collapses the axes once set_aspect("equal") is applied.
+    pc = mh.hist2dplot(eff, xedges, yedges, ax=ax, cmap=MAP_CMAP, norm=Normalize(0, 1),
+                       flow=None, cbarextend=False, rasterized=True)
+    pc.cbar.set_label(zlabel, loc="top")
+    ax.set_facecolor(NO_DATA_COLOR)
+    xlim, ylim = _square_window(h_ref >= min_ref_count, xedges, yedges, EFF_MAP_MARGIN_MM)
+    ax.set_xlim(*xlim)
+    ax.set_ylim(*ylim)
+    ax.set_aspect("equal")
+    mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel=rlabel, ax=ax)
+    ax.set_xlabel(xlabel, loc="right")
+    ax.set_ylabel(ylabel, loc="top")
+    plt.savefig(filename, dpi=200, bbox_inches="tight", pad_inches=0.05)
     print("Efficiency Plot Saved " + filename)
-    plt.close()
+    plt.close(fig)
     return eff, h_ref, xedges, yedges
 
 

@@ -126,6 +126,7 @@ from utils.io import ensure_output_dir
 from utils.plotting import (BEAM_LABELS, BEAM_STYLE, ENERGY_NUDGE_GEV, OTHER_BEAM_STYLE, get_beam_label,
                             get_run_beam, get_runs_by_testbeam, ordered_beam_types, style_summary_axes)
 from utils.selectors import get_branch_names, passes_veto
+from utils.stats import RMS_TRUNCATION_SIGMA, robust_clip_mask, truncated_rms
 from utils.tracker import (
     MIN_ALIGNMENT_CORRELATION,
     SENTINEL_X1,
@@ -147,9 +148,6 @@ TESTBEAM_OUTPUT_DIR = ensure_output_dir("hodores/testbeam")
 # one run's ROOT file in memory, so pass fewer on a shared login node.
 N_WORKERS = len(os.sched_getaffinity(0))
 
-MAD_CLIP = 5.0  # sigma-equivalent clip: calibration fit sample, and truncated_rms's starting window
-RMS_TRUNCATION_SIGMA = 3.0  # truncated_rms keeps events within this many RMS of the mean
-MIN_RMS_EVENTS = 20
 MIN_CALIBRATION_EVENTS = 200
 
 # Residual plots only: +/-1.5mm in 100 bins (30 um).
@@ -238,94 +236,6 @@ def load_run_data(run_id):
     return track, match_frac
 
 
-# (half-range, z) pairs for _robust_clip's percentile-widening fallback:
-# z is the standard-normal quantile with P(-z < Z < z) = (hi - lo) / 100,
-# so spread / (2*z) estimates a Gaussian sigma from that pair the same way
-# IQR / 1.349 does for the 25/75 pair (1.349 == 2 * 0.6745, included here
-# as the first, tightest rung of the same ladder).
-_ROBUST_PERCENTILES = ((25, 75, 0.6745), (10, 90, 1.2816), (5, 95, 1.6449), (1, 99, 2.3263))
-
-
-def _robust_clip_mask(values, n_mad=MAD_CLIP):
-    """Boolean mask marking which points to keep, robust to a dominant spike value.
-
-    Guards against the broad mismatch tail a partially-wrong tracker
-    alignment produces (see module docstring), the same MAD-based approach
-    ``utils.plotting.draw_fit`` uses for its line fit -- with a fallback for
-    when MAD itself collapses to 0.
-    """
-    values = np.asarray(values)
-    if len(values) == 0:
-        return np.zeros(0, dtype=bool)
-    median = np.median(values)
-    mad = np.median(np.abs(values - median))
-    if mad > 0:
-        scale = mad * 1.4826
-        return np.abs(values - median) <= n_mad * scale
-
-    # MAD collapses to exactly 0 whenever at least half the sample sits on
-    # one exact value -- e.g. a single dominant hodoscope bar. A single
-    # fixed fallback percentile pair isn't safe here either: confirmed on
-    # real data (run 1774, si1/hodoY, in a narrow 0.3mm tracker-position
-    # slice) that the dominant bar alone can hold *more* than 50% of the
-    # sample, which pins the 25th/75th percentiles to that same exact value
-    # too (IQR == 0), so a plain IQR fallback would clip away the genuinely
-    # real, immediately-adjacent bars along with the actual outlier tail --
-    # 1205 events collapsed to the 673 sitting exactly on the mode,
-    # discarding 217 + 198 events one bar to either side that are real
-    # hodoscope smearing, not mismatches. Instead, widen the percentile pair
-    # step by step until one finds a nonzero spread; if even the 1st/99th
-    # percentiles coincide (essentially everything on one value), there's
-    # nothing meaningful left to clip against, so keep everything and let
-    # the downstream estimate (and its own truncation) handle it instead.
-    for lo, hi, z in _ROBUST_PERCENTILES:
-        q_lo, q_hi = np.percentile(values, [lo, hi])
-        spread = q_hi - q_lo
-        if spread > 0:
-            scale = spread / (2 * z)
-            return np.abs(values - median) <= n_mad * scale
-    return np.ones(len(values), dtype=bool)
-
-
-def truncated_rms(values, n_sigma=RMS_TRUNCATION_SIGMA, max_iter=100):
-    """RMS of ``values`` within +/- ``n_sigma`` RMS of their mean, iterated until stable.
-
-    Starts from ``_robust_clip_mask``'s window, so the iteration begins on
-    the real peak rather than the broad mismatch background (see module
-    docstring), then repeatedly recomputes the mean and RMS of the kept
-    events and keeps everything within ``n_sigma`` RMS of that mean, until
-    the kept set stops changing.
-
-    The uncertainty uses the kept sample's own fourth moment,
-    var(RMS) ~= (m4 - RMS^4) / (4 RMS^2 N), rather than the Gaussian
-    RMS / sqrt(2N): the residual is flat-topped, so the two differ. It is
-    statistical only -- the truncation itself is a choice, not a fluctuation.
-
-    Returns ``(mean, rms, rms_err, n_used, n_total, keep)``, or ``None`` if
-    fewer than MIN_RMS_EVENTS survive.
-    """
-    values = np.asarray(values)
-    n_total = len(values)
-    keep = _robust_clip_mask(values)
-    for _ in range(max_iter):
-        if keep.sum() < MIN_RMS_EVENTS:
-            return None
-        mean, rms = values[keep].mean(), values[keep].std()
-        new_keep = np.abs(values - mean) <= n_sigma * rms
-        if np.array_equal(new_keep, keep):
-            break
-        keep = new_keep
-    kept = values[keep]
-    if len(kept) < MIN_RMS_EVENTS:
-        return None
-    mean, rms = kept.mean(), kept.std()
-    if rms <= 0:
-        return None
-    m4 = np.mean((kept - mean) ** 4)
-    rms_err = np.sqrt(max(m4 - rms ** 4, 0.0) / (4 * rms ** 2 * len(kept)))
-    return mean, rms, rms_err, len(kept), n_total, keep
-
-
 def calibrate_track(track, fit_mask=None):
     """Per-run shift + rotation calibration of the extrapolated track into the hodoscope frame.
 
@@ -367,7 +277,7 @@ def calibrate_track(track, fit_mask=None):
     if not r >= MIN_ALIGNMENT_CORRELATION:  # nan-safe
         return None, f"hodoscope-vs-track correlation r={r:.2f} < {MIN_ALIGNMENT_CORRELATION}"
 
-    keep = _robust_clip_mask(xh - px) & _robust_clip_mask(yh - py)
+    keep = robust_clip_mask(xh - px) & robust_clip_mask(yh - py)
     fit = keep if fit_mask is None else keep & fit_mask
     a, cx = np.polyfit(py[fit], (xh - px)[fit], 1)
     b, cy = np.polyfit(px[fit], (yh - py)[fit], 1)

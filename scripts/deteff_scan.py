@@ -13,12 +13,18 @@ subset that provides. Produces two summary plots -- efficiency vs. beam type
 (pooled over energy) and efficiency vs. beam energy (one line per beam
 type) -- plus the underlying numbers as CSVs.
 
-The plotted hodoscope efficiency is fiducial (hodo_fid): only reference
-events whose Si track lands inside its bars count, since the e+/mu+ beams
-sat on its Y edge and ~10% of their tracks miss it -- events it couldn't
-have reconstructed (see utils.si_efficiency._hodo_fiducial_mask). That
-needs a tracker, so it pools over the si runs; the CSVs keep the plain
-veto-referenced rate as eff_hodo alongside it.
+The hodoscope is plotted as two Si-track-based series, both over reference
+events whose Si track lands inside its bars, since the e+/mu+ beams sat on
+its Y edge and ~10% of their tracks miss it -- events it couldn't have
+reconstructed (see utils.si_efficiency.hodo_track_masks):
+
+  hodo_fid  fiducial: a good hit (one contiguous cluster per plane)
+  hodo_trk  tracker-referenced: each plane has a cluster on the track, even
+            alongside secondaries' clusters (EM conversions for e+, upstream
+            nuclear interactions for pi+)
+
+They need a tracker, so they pool over the si runs; the CSVs keep the plain
+veto-referenced rate as eff_hodo alongside them.
 
 The nominal beams are mixed (e+ 120-160 GeV is 75-90% muons, pi+ 160 GeV
 ~23% muons; see scripts/beam_composition.py). With --pid each run's
@@ -33,7 +39,7 @@ available CPUs) since each run's ROOT + tracker load/alignment is
 independent and this is normally the bottleneck.
 
 Usage:
-    python3 -m scripts.deteff_scan [--pid]
+    python3 -m scripts.deteff_scan [--pid] [--replot] [--hodo {both,fid,trk}]
 """
 
 import argparse
@@ -42,6 +48,8 @@ import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.ticker import MultipleLocator
 import mplhep as mh
 import numpy as np
 
@@ -75,18 +83,27 @@ OUTPUT_DIR = ensure_output_dir("deteff_scan")
 # Plot style, after the CMS efficiency plots (see utils.plotting's summary-plot
 # style): points with error bars, no connecting lines. The beam-type summary
 # uses one colour + marker per detector, in the same black/blue/red scheme the
-# per-detector energy plots use for beam types. The hodoscope is plotted
-# fiducial (hodo_fid; see module docstring).
-STATIONS = ("si1", "si2", "hodo_fid")
+# per-detector energy plots use for beam types.
+STATIONS = ("si1", "si2", "hodo")
 STATION_STYLE = {
     "si1": dict(color="#000000", marker="o"),
     "si2": dict(color="#1f4fd1", marker="^"),
-    "hodo_fid": dict(color="#d62020", marker="s"),
+    "hodo": dict(color="#d62020", marker="s"),
 }
-STATION_LABELS = {"si1": "Si Tracker 1", "si2": "Si Tracker 2", "hodo_fid": "Hodoscope (fiducial)"}
+STATION_LABELS = {"si1": "Si Tracker 1", "si2": "Si Tracker 2", "hodo": "Hodoscope"}
 # Si1 and Si2 often sit on top of each other: a small sideways nudge per category
 # keeps every point visible (beam types at one energy use ENERGY_NUDGE_GEV).
-CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo_fid": 0.15}
+CATEGORY_NUDGE = {"si1": -0.15, "si2": 0.0, "hodo": 0.15}
+# The hodoscope is drawn as its two track-based series (see module
+# docstring), each point with a horizontal bar through it: solid -o- for
+# fiducial, dashed with an open marker for tracker-referenced. Bar
+# half-widths per x axis; the dash is short enough that a gap still shows
+# beside the marker and in the legend handle.
+HODO_SERIES = {"hodo_fid": "Fiducial", "hodo_trk": "Tracker-referenced"}
+HODO_BAR_HALF_WIDTH = {"energy": 4.0, "category": 0.1}
+HODO_TRK_DASHES = (0, (2.5, 1.5))
+# Room below the lowest point on the zoomed y axis, for the lower-right legend.
+EFF_YLIM_MARGIN = 0.12
 
 # One worker per available CPU (respects a SLURM/cgroup allocation, unlike
 # os.cpu_count()); bump your job's cpu allocation and this picks it up
@@ -161,14 +178,14 @@ def pool_group(run_ids, results_by_run):
     """Pool already-loaded results for ``run_ids``.
 
     Returns ``(n_si1, n_si2, n_si_events, n_hodo_good, n_events, n_fid_events,
-    n_hodo_good_fid, n_hodo_runs, n_si_runs)`` or ``None`` if none of the
-    runs in the group loaded successfully.
+    n_hodo_good_fid, n_hodo_trk_fid, n_hodo_runs, n_si_runs)`` or ``None``
+    if none of the runs in the group loaded successfully.
 
     The veto-referenced hodoscope counts are summed over every loaded run
     regardless of whether its tracker aligned (``load_si_and_hodo`` returns
     valid n_hodo_good/n_events straight from ROOT even when tracker_error is
     set) -- ``n_hodo_runs`` is how many runs that covers. The si and
-    fiducial hodoscope counts only get a real contribution from runs whose
+    track-based hodoscope counts only get a real contribution from runs whose
     tracker did align (a tracker_error run contributes zeros), so they're
     unaffected by tracker-unavailable runs; ``n_si_runs`` is that smaller
     count.
@@ -227,14 +244,61 @@ def _plot_station(ax, x, rows, station_key, label=None, style=None):
                 ls="none", ms=9, elinewidth=1.5, capsize=0, label=label, **(style or STATION_STYLE[station_key]))
 
 
-def _style_efficiency_axes(ax):
-    ax.set_ylim(0, 1.05)
+def _hodo_series(rows, hodo="both"):
+    """The HODO_SERIES keys to draw: ``hodo`` is "both", or "fid"/"trk" for
+    just that series -- of those, the ones ``rows`` carry (CSVs written
+    before hodo_trk lack it)."""
+    wanted = HODO_SERIES if hodo == "both" else [f"hodo_{hodo}"]
+    return [key for key in wanted if rows and f"eff_{key}" in rows[0]]
+
+
+def _plotted_keys(rows, hodo="both"):
+    """Every efficiency column a figure set draws, for the shared y range."""
+    return [key for key in STATIONS if key != "hodo"] + _hodo_series(rows, hodo)
+
+
+def _plot_hodo_series(ax, x, rows, series_key, half_width, style, label=None):
+    """One of the hodoscope's series (HODO_SERIES), each point with a
+    +/- ``half_width`` horizontal bar through it: solid for fiducial, dashed
+    with an open marker for tracker-referenced."""
+    tracker_referenced = series_key == "hodo_trk"
+    container = ax.errorbar(x, [r[f"eff_{series_key}"] for r in rows], xerr=half_width,
+                            yerr=[r[f"eff_{series_key}_unc"] or 0 for r in rows],
+                            ls="none", ms=9, elinewidth=1.5, capsize=0, label=label, markeredgewidth=1.5,
+                            markerfacecolor="white" if tracker_referenced else style["color"], **style)
+    if tracker_referenced:
+        container.lines[2][0].set_linestyle(HODO_TRK_DASHES)  # the horizontal (xerr) bars; error bars stay solid
+
+
+def _hodo_series_legend(ax, series_keys):
+    """Legend keyed by line style alone: which hodoscope series is which."""
+    handles = []
+    for key in series_keys:
+        trk = key == "hodo_trk"
+        handles.append(Line2D([], [], color="black", marker="o", ms=9, mew=1.5, lw=1.5,
+                              ls=HODO_TRK_DASHES if trk else "-", markerfacecolor="white" if trk else "black",
+                              label=HODO_SERIES[key]))
+    ax.legend(handles=handles, loc="lower left", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+
+
+def _style_efficiency_axes(ax, rows, station_keys):
+    """Zoom y to the plotted points (every efficiency sits in 0.6-1.0, so a
+    0-1 axis leaves most of the plot empty): from the lowest point minus its
+    error, less EFF_YLIM_MARGIN for the legend, rounded down to a 0.05 grid
+    line, up to just above 1."""
+    lows = [r[f"eff_{k}"] - (r[f"eff_{k}_unc"] or 0) for r in rows for k in station_keys
+            if r.get(f"eff_{k}_unc") is not None]
+    lo = max(0.0, np.floor((min(lows, default=0.0) - EFF_YLIM_MARGIN) / 0.05) * 0.05)
+    ax.set_ylim(lo, 1.02)
+    ax.yaxis.set_major_locator(MultipleLocator(0.05 if 1 - lo <= 0.4 else 0.1))
+    ax.yaxis.set_minor_locator(MultipleLocator(0.01))
     style_summary_axes(ax)
 
 
-def plot_eff_vs_beamtype(rows, filename, pid=False):
+def plot_eff_vs_beamtype(rows, filename, pid=False, hodo="both"):
     """Efficiency per beam type (pooled over energy), one point per detector;
-    ``pid`` only labels the plot as PID-tagged."""
+    ``pid`` only labels the plot as PID-tagged. ``hodo`` picks the hodoscope
+    series (see _hodo_series); a single one is drawn like the Si stations."""
     if not rows:
         print("No beam-type rows to plot.")
         return
@@ -246,13 +310,24 @@ def plot_eff_vs_beamtype(rows, filename, pid=False):
     plt.style.use(mh.style.ROOT)
     fig, ax = plt.subplots(figsize=(10, 8))
     for station_key in STATIONS:
-        _plot_station(ax, x + CATEGORY_NUDGE[station_key], ordered, station_key, STATION_LABELS[station_key])
+        x_station = x + CATEGORY_NUDGE[station_key]
+        if station_key == "hodo":
+            series = _hodo_series(ordered, hodo)
+            for series_key in series:
+                label = f"{STATION_LABELS['hodo']} ({HODO_SERIES[series_key].lower()})"
+                if len(series) == 1:
+                    _plot_station(ax, x_station, ordered, series_key, label, style=STATION_STYLE["hodo"])
+                else:
+                    _plot_hodo_series(ax, x_station, ordered, series_key, HODO_BAR_HALF_WIDTH["category"],
+                                      STATION_STYLE["hodo"], label=label)
+        else:
+            _plot_station(ax, x_station, ordered, station_key, STATION_LABELS[station_key])
     ax.set_xticks(x)
     ax.set_xticklabels([BEAM_LABELS.get(b, b) for b in beam_types], fontsize=26)
     ax.set_xlim(-0.6, len(beam_types) - 0.4)
     ax.set_xlabel("Beam particle", loc="right")
     ax.set_ylabel("Efficiency", loc="top")
-    _style_efficiency_axes(ax)
+    _style_efficiency_axes(ax, ordered, _plotted_keys(ordered, hodo))
     ax.xaxis.set_minor_locator(plt.NullLocator())  # categories: no minor ticks or gridlines between them
     ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
     mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel="PID-tagged" if pid else "", ax=ax)
@@ -262,13 +337,19 @@ def plot_eff_vs_beamtype(rows, filename, pid=False):
     plt.close()
 
 
-def plot_eff_vs_energy(rows, output_dir, pid=False):
+def plot_eff_vs_energy(rows, output_dir, pid=False, hodo="both"):
     """Efficiency vs. beam energy, one figure per detector
-    (eff_vs_energy_<si1|si2|hodo>[_pid].png), with the beam types overlaid."""
+    (eff_vs_energy_<si1|si2|hodo>[_pid][_<hodo>].png), with the beam types
+    overlaid. With ``hodo`` "both" the hodoscope figure carries both series
+    (HODO_SERIES), told apart by a second, line-style legend; with "fid" or
+    "trk" just that one, drawn like the Si stations and named in the legend
+    title."""
     if not rows:
         print("No energy rows to plot.")
         return
     beam_types = _ordered_beam_types(rows)
+    hodo_series = _hodo_series(rows, hodo)
+    single = len(hodo_series) == 1
 
     plt.style.use(mh.style.ROOT)
     for station_key in STATIONS:
@@ -276,17 +357,33 @@ def plot_eff_vs_energy(rows, output_dir, pid=False):
         for beam_type in beam_types:
             sub = sorted((r for r in rows if r["beam_type"] == beam_type), key=lambda r: r["beam_energy_gev"])
             energies = np.array([r["beam_energy_gev"] for r in sub], dtype=float)
-            _plot_station(ax, energies + ENERGY_NUDGE_GEV.get(beam_type, 0.0), sub, station_key,
-                          label=BEAM_LABELS.get(beam_type, beam_type), style=BEAM_STYLE.get(beam_type, OTHER_BEAM_STYLE))
+            x = energies + ENERGY_NUDGE_GEV.get(beam_type, 0.0)
+            label = BEAM_LABELS.get(beam_type, beam_type)
+            style = BEAM_STYLE.get(beam_type, OTHER_BEAM_STYLE)
+            if station_key == "hodo" and single:
+                _plot_station(ax, x, sub, hodo_series[0], label=label, style=style)
+            elif station_key == "hodo":
+                for series_key in hodo_series:
+                    _plot_hodo_series(ax, x, sub, series_key, HODO_BAR_HALF_WIDTH["energy"], style,
+                                      label=label if series_key == hodo_series[0] else None)
+            else:
+                _plot_station(ax, x, sub, station_key, label=label, style=style)
         ax.set_xlim(0, 180)
         ax.set_xlabel("Beam energy [GeV]", loc="right")
         ax.set_ylabel("Efficiency", loc="top")
-        _style_efficiency_axes(ax)
-        ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1)
+        # Same y range on every detector's figure, so they compare side by side.
+        _style_efficiency_axes(ax, rows, _plotted_keys(rows, hodo))
+        legend_title = HODO_SERIES[hodo_series[0]] if station_key == "hodo" and single else None
+        beam_legend = ax.legend(loc="lower right", frameon=True, facecolor="white", edgecolor="none", framealpha=1,
+                                title=legend_title)
+        if station_key == "hodo" and not single:
+            ax.add_artist(beam_legend)
+            _hodo_series_legend(ax, hodo_series)
         rlabel = STATION_LABELS[station_key] + (", PID" if pid else "")
         mh.label.exp_label(exp="CaloX", text="Preliminary", data=True, rlabel=rlabel, ax=ax)
         plt.tight_layout()
-        filename = os.path.join(output_dir, f"eff_vs_energy_{station_key}{'_pid' if pid else ''}.png")
+        tag = f"_{hodo}" if station_key == "hodo" and hodo != "both" else ""
+        filename = os.path.join(output_dir, f"eff_vs_energy_{station_key}{'_pid' if pid else ''}{tag}.png")
         plt.savefig(filename, dpi=150)
         print(f"Efficiency-vs-energy plot saved {filename}")
         plt.close(fig)
@@ -303,12 +400,37 @@ def write_summary(rows, filename):
     print(f"Summary written to {filename}")
 
 
+def read_summary(filename):
+    """Rows of a write_summary CSV, numbers back as floats (an uncertainty
+    written as None/empty comes back as None)."""
+    with open(filename, newline="") as f:
+        rows = list(csv.DictReader(f))
+    for row in rows:
+        for key, value in row.items():
+            if key != "beam_type":
+                row[key] = None if value in ("", "None") else float(value)
+    return rows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--pid", action="store_true",
                         help="Only count events the beam-line PID tags as each run's nominal beam particle.")
+    parser.add_argument("--replot", action="store_true",
+                        help="Only redraw the plots from this mode's existing summary CSVs (no run loading).")
+    parser.add_argument("--hodo", choices=("both", "fid", "trk"), default="both",
+                        help="Hodoscope series to plot: both (default), or only fiducial / tracker-referenced "
+                             "(those figures get a _fid/_trk suffix).")
     args = parser.parse_args()
     suffix = "_pid" if args.pid else ""
+    beamtype_png = os.path.join(OUTPUT_DIR, f"eff_vs_beamtype{suffix}{'' if args.hodo == 'both' else '_' + args.hodo}.png")
+
+    if args.replot:
+        energy_rows = read_summary(os.path.join(OUTPUT_DIR, f"summary_by_energy{suffix}.csv"))
+        beamtype_rows = read_summary(os.path.join(OUTPUT_DIR, f"summary_by_beamtype{suffix}.csv"))
+        plot_eff_vs_beamtype(beamtype_rows, beamtype_png, pid=args.pid, hodo=args.hodo)
+        plot_eff_vs_energy(energy_rows, OUTPUT_DIR, pid=args.pid, hodo=args.hodo)
+        return
 
     beam_types = [b for b in list_beam_types() if b != "pedestal"]
 
@@ -353,18 +475,20 @@ def main():
                 print(f"  {energy} GeV: no usable runs (of {len(run_ids)}), skipping.")
                 continue
             (n_si1, n_si2, n_si_events, n_hodo_good, n_events, n_fid_events, n_hodo_good_fid,
-             n_hodo_runs, n_si_runs) = result
+             n_hodo_trk_fid, n_hodo_runs, n_si_runs) = result
             pooled_parts.append(result[:-2])
 
             eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(n_si1, n_si2, n_si_events)
             hodo_eff, hodo_unc = hodo_efficiency(n_hodo_good, n_events)
             fid_eff, fid_unc = hodo_efficiency(n_hodo_good_fid, n_fid_events)
+            trk_eff, trk_unc = hodo_efficiency(n_hodo_trk_fid, n_fid_events)
             print(f"  {energy} GeV: n_hodo_runs={n_hodo_runs}/{len(run_ids)}  n_si_runs={n_si_runs}  "
                   f"n_si_events={n_si_events}  n_events={n_events}  n_fid_events={n_fid_events}  "
                   f"si1={eff1_mean:.3f}±{(eff1_unc or 0):.3f}  "
                   f"si2={eff2_mean:.3f}±{(eff2_unc or 0):.3f}  "
                   f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}  "
-                  f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}")
+                  f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}  "
+                  f"hodo_trk={trk_eff:.3f}±{(trk_unc or 0):.3f}")
 
             energy_rows.append({
                 "beam_type": beam_type, "beam_energy_gev": energy,
@@ -374,21 +498,24 @@ def main():
                 "eff_si2": eff2_mean, "eff_si2_unc": eff2_unc,
                 "eff_hodo": hodo_eff, "eff_hodo_unc": hodo_unc,
                 "eff_hodo_fid": fid_eff, "eff_hodo_fid_unc": fid_unc,
+                "eff_hodo_trk": trk_eff, "eff_hodo_trk_unc": trk_unc,
             })
 
         if not pooled_parts:
             continue
         (n_si1, n_si2, n_si_events, n_hodo_good_total, n_events_total, n_fid_total,
-         n_hodo_good_fid_total) = (sum(c) for c in zip(*pooled_parts))
+         n_hodo_good_fid_total, n_hodo_trk_fid_total) = (sum(c) for c in zip(*pooled_parts))
         eff1_mean, eff1_unc, eff2_mean, eff2_unc = station_efficiencies(n_si1, n_si2, n_si_events)
         hodo_eff, hodo_unc = hodo_efficiency(n_hodo_good_total, n_events_total)
         fid_eff, fid_unc = hodo_efficiency(n_hodo_good_fid_total, n_fid_total)
+        trk_eff, trk_unc = hodo_efficiency(n_hodo_trk_fid_total, n_fid_total)
         print(f"  [{beam_type} all energies] n_si_events={n_si_events}  n_events={n_events_total}  "
               f"n_fid_events={n_fid_total}  "
               f"si1={eff1_mean:.3f}±{(eff1_unc or 0):.3f}  "
               f"si2={eff2_mean:.3f}±{(eff2_unc or 0):.3f}  "
               f"hodo={hodo_eff:.3f}±{(hodo_unc or 0):.3f}  "
-              f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}")
+              f"hodo_fid={fid_eff:.3f}±{(fid_unc or 0):.3f}  "
+              f"hodo_trk={trk_eff:.3f}±{(trk_unc or 0):.3f}")
         beamtype_rows.append({
             "beam_type": beam_type, "n_si_events": n_si_events, "n_events": n_events_total,
             "n_fid_events": n_fid_total,
@@ -396,10 +523,11 @@ def main():
             "eff_si2": eff2_mean, "eff_si2_unc": eff2_unc,
             "eff_hodo": hodo_eff, "eff_hodo_unc": hodo_unc,
             "eff_hodo_fid": fid_eff, "eff_hodo_fid_unc": fid_unc,
+            "eff_hodo_trk": trk_eff, "eff_hodo_trk_unc": trk_unc,
         })
 
-    plot_eff_vs_beamtype(beamtype_rows, os.path.join(OUTPUT_DIR, f"eff_vs_beamtype{suffix}.png"), pid=args.pid)
-    plot_eff_vs_energy(energy_rows, OUTPUT_DIR, pid=args.pid)
+    plot_eff_vs_beamtype(beamtype_rows, beamtype_png, pid=args.pid, hodo=args.hodo)
+    plot_eff_vs_energy(energy_rows, OUTPUT_DIR, pid=args.pid, hodo=args.hodo)
     write_summary(energy_rows, os.path.join(OUTPUT_DIR, f"summary_by_energy{suffix}.csv"))
     write_summary(beamtype_rows, os.path.join(OUTPUT_DIR, f"summary_by_beamtype{suffix}.csv"))
 

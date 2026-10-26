@@ -66,7 +66,7 @@ from utils.data import get_run_filepath
 from utils.fit_funcs import erf_box, erf_disk
 from utils.hodo import hodo_bin_edges, reconstruct_hodoscope
 from utils.io import ensure_output_dir
-from utils.plotting import _FIT_OUTLINE, _hist_edges, get_beam_label
+from utils.plotting import MAP_CMAP, NO_DATA_COLOR, _hist_edges, get_beam_label, run_header_label
 from utils.selectors import (
     COUNTER_1CM_3CM_FIRST_RUN,
     counter_1cm_hit_mask,
@@ -267,10 +267,16 @@ def _param_str(name, value, err, nominal):
     return f"{name}={value:.2f}+/-{err:.2f} mm (nominal {nominal:.1f} mm, pull {pull:+.1f} sigma)"
 
 
-def _legend_value(value, err):
+def _legend_value(name, value, err):
+    """One legend line, e.g. "R = 10.07 +/- 0.02 mm" -- or, for a parameter the
+    data don't constrain, no (meaningless) number at all."""
     if not _is_constrained(err):
-        return f"{value:.2f} mm (unconstrained)"
-    return f"{value:.2f} $\\pm$ {err:.2f} mm"
+        return f"{name}: edge outside beam"
+    return f"{name} = {value:.2f} $\\pm$ {err:.2f} mm"
+
+
+# Axis-label names for the references (filenames keep the short tags).
+REF_DISPLAY = {"Tracker1": "Si tracker 1", "Tracker2": "Si tracker 2", "Hodoscope": "Hodoscope"}
 
 
 def _plot_window(h_ref, xedges, yedges, center, half_span):
@@ -296,12 +302,13 @@ def _legend_loc(center, xlim, ylim):
 
 
 def plot_fit_diagnostic(model, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
-                        beam_label, rlabel, ref_label, center, xlim, ylim):
+                        rlabel, name, ref_label, center, xlim, ylim):
     """Save the data, fit and residual (data - fit) maps as three separate
     plots, ``<filename_stem>_{data,model,residual}.png``, each overlaid with
     the fitted shape's ``outline`` (an (xs, ys) closed curve) and a legend
-    reading ``fit_label``, in the same CaloX style as the correlation plots
-    (``utils.plotting.draw_fit``).
+    reading ``fit_label`` in the corner farthest from the shape (``_legend_loc``).
+    ``name`` (e.g. "Veto") labels the colorbar. Same CaloX style and MAP_CMAP
+    scale as the other 2D maps.
     """
     xc = 0.5 * (xedges[:-1] + xedges[1:])
     yc = 0.5 * (yedges[:-1] + yedges[1:])
@@ -314,9 +321,9 @@ def plot_fit_diagnostic(model, popt, eff, xedges, yedges, outline, fit_label, fi
                          0.5 * (fine_yedges[:-1] + fine_yedges[1:]), indexing="ij")
     model_eff = model((FX, FY), *popt)
 
-    panels = [("data", eff, xedges, yedges, "Efficiency (data)", "viridis", (0, 1)),
-              ("model", model_eff, fine_xedges, fine_yedges, "Efficiency (fit)", "viridis", (0, 1)),
-              ("residual", residual, xedges, yedges, "Data $-$ Fit", "coolwarm", (-0.3, 0.3))]
+    panels = [("data", eff, xedges, yedges, f"{name} efficiency (data)", (0, 1)),
+              ("model", model_eff, fine_xedges, fine_yedges, f"{name} efficiency (fit)", (0, 1)),
+              ("residual", residual, xedges, yedges, "Data $-$ Fit", (-0.3, 0.3))]
 
     # Figure height scaled to the window's aspect so that, under
     # set_aspect("equal"), the axes keep the same width for any window --
@@ -325,19 +332,20 @@ def plot_fit_diagnostic(model, popt, eff, xedges, yedges, outline, fit_label, fi
     figsize = (10, 10 * (ylim[1] - ylim[0]) / (xlim[1] - xlim[0]))
 
     plt.style.use(mh.style.ROOT)
-    for suffix, values, xe, ye, zlabel, cmap, (vmin, vmax) in panels:
+    for suffix, values, xe, ye, zlabel, (vmin, vmax) in panels:
         fig, ax = plt.subplots(figsize=figsize)
         # cbarextend=False: hist2dplot's default of widening the figure for
         # the colorbar collapses the axes once set_aspect("equal") is applied.
-        cb = mh.hist2dplot(values, xe, ye, ax=ax, cmap=cmap, norm=Normalize(vmin, vmax),
-                           flow=None, cbarextend=False)
+        cb = mh.hist2dplot(values, xe, ye, ax=ax, cmap=MAP_CMAP, norm=Normalize(vmin, vmax),
+                           flow=None, cbarextend=False, rasterized=True)
         cb.cbar.set_label(zlabel, loc="top")
-        ax.plot(*outline, color="white", lw=2, path_effects=_FIT_OUTLINE, label=fit_label)
-        ax.legend(loc=_legend_loc(center, xlim, ylim), fontsize=16, frameon=True,
-                  facecolor="white", edgecolor="black", framealpha=0.8)
-        mh.label.exp_label(ax=ax, exp="CaloX", text=beam_label, rlabel=rlabel, data=True)
-        ax.set_xlabel(f"{ref_label} X [mm]", loc="right")
-        ax.set_ylabel(f"{ref_label} Y [mm]", loc="top")
+        ax.set_facecolor(NO_DATA_COLOR)
+        ax.plot(*outline, color="black", lw=2.5, label=fit_label)
+        ax.legend(loc=_legend_loc(center, xlim, ylim), fontsize=18, frameon=True,
+                  facecolor="white", edgecolor="none", framealpha=0.9)
+        mh.label.exp_label(ax=ax, exp="CaloX", text="Preliminary", rlabel=rlabel, data=True)
+        ax.set_xlabel(f"{REF_DISPLAY.get(ref_label, ref_label)} X [mm]", loc="right")
+        ax.set_ylabel(f"{REF_DISPLAY.get(ref_label, ref_label)} Y [mm]", loc="top")
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_aspect("equal")
@@ -347,7 +355,7 @@ def plot_fit_diagnostic(model, popt, eff, xedges, yedges, outline, fit_label, fi
     print(f"  Diagnostic plots saved to {filename_stem}_{{data,model,residual}}.png")
 
 
-def report_veto(ref_label, result, output_dir, run_id, beam_label):
+def report_veto(ref_label, result, output_dir, run_id):
     if result is None:
         print(f"  {ref_label} veto: no data, skipping")
         return
@@ -362,16 +370,14 @@ def report_veto(ref_label, result, output_dir, run_id, beam_label):
     filename_stem = os.path.join(output_dir, f"veto_fit_{tag}")
     t = np.linspace(0, 2 * np.pi, 400)
     outline = (x0 + r * np.cos(t), y0 + r * np.sin(t))
-    fit_label = (f"Veto vs {ref_label}\n"
-                 f"R = {_legend_value(r, r_err)}\n"
-                 f"$\\sigma$ = {_legend_value(sigma, sigma_err)}")
+    fit_label = f"Fit: {_legend_value('R', r, r_err)}\n" + _legend_value("$\\sigma$", sigma, sigma_err)
     half_span = r + FIT_PLOT_MARGIN_MM
     xlim, ylim = _plot_window(h_ref, xedges, yedges, (x0, y0), (half_span, half_span))
     plot_fit_diagnostic(erf_disk, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
-                        beam_label, f"Run {run_id}", ref_label, (x0, y0), xlim, ylim)
+                        run_header_label(run_id), "Veto", ref_label, (x0, y0), xlim, ylim)
 
 
-def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_id, beam_label):
+def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_id):
     if result is None:
         print(f"  {ref_label} {name}: no data, skipping")
         return
@@ -388,24 +394,23 @@ def _report_counter(name, nominal_half_side, result, ref_label, output_dir, run_
           f"plateau eff = {eff0:.3f}")
     eff, h_ref, xedges, yedges = maps
     tag = ref_label.lower().replace(" ", "_")
-    slug = name.replace(" ", "_").lower()
+    slug = name.replace(" cm", "cm").replace(" ", "_").lower()  # "1 cm counter" -> 1cm_counter_fit_*.png
     filename_stem = os.path.join(output_dir, f"{slug}_fit_{tag}")
     outline = (x0 + hx * np.array([-1, 1, 1, -1, -1]), y0 + hy * np.array([-1, -1, 1, 1, -1]))
-    fit_label = (f"{name} vs {ref_label}\n"
-                 f"Side X = {_legend_value(side_x, side_x_err)}\n"
-                 f"Side Y = {_legend_value(side_y, side_y_err)}")
+    fit_label = (f"Fit: {_legend_value('X side', side_x, side_x_err)}\n"
+                 f"{_legend_value('Y side', side_y, side_y_err)}")
     xlim, ylim = _plot_window(h_ref, xedges, yedges, (x0, y0),
                               (hx + FIT_PLOT_MARGIN_MM, hy + FIT_PLOT_MARGIN_MM))
     plot_fit_diagnostic(erf_box, popt, eff, xedges, yedges, outline, fit_label, filename_stem,
-                        beam_label, f"Run {run_id}", ref_label, (x0, y0), xlim, ylim)
+                        run_header_label(run_id), name[0].upper() + name[1:], ref_label, (x0, y0), xlim, ylim)
 
 
-def report_counter_1cm(ref_label, result, output_dir, run_id, beam_label):
-    _report_counter("1cm counter", COUNTER_1CM_HALF_SIDE_MM, result, ref_label, output_dir, run_id, beam_label)
+def report_counter_1cm(ref_label, result, output_dir, run_id):
+    _report_counter("1 cm counter", COUNTER_1CM_HALF_SIDE_MM, result, ref_label, output_dir, run_id)
 
 
-def report_counter_3cm(ref_label, result, output_dir, run_id, beam_label):
-    _report_counter("3cm counter", COUNTER_3CM_HALF_SIDE_MM, result, ref_label, output_dir, run_id, beam_label)
+def report_counter_3cm(ref_label, result, output_dir, run_id):
+    _report_counter("3 cm counter", COUNTER_3CM_HALF_SIDE_MM, result, ref_label, output_dir, run_id)
 
 
 def process_run(run_id):
@@ -479,7 +484,7 @@ def process_run(run_id):
 
         sel = ref & veto_sel
         result = fit_veto(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
-        report_veto(ref_label, result, output_dir, run_id, beam_label)
+        report_veto(ref_label, result, output_dir, run_id)
 
         if not has_counters:
             print(f"  {ref_label} 1cm/3cm counter: no counter data for run {run_id} "
@@ -488,11 +493,11 @@ def process_run(run_id):
 
         sel = ref & one_cm_hit
         result = fit_counter_1cm(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
-        report_counter_1cm(ref_label, result, output_dir, run_id, beam_label)
+        report_counter_1cm(ref_label, result, output_dir, run_id)
 
         sel = ref & three_cm_hit
         result = fit_counter_3cm(x_ref, y_ref, x_r[sel], y_r[sel], hodo=hodo)
-        report_counter_3cm(ref_label, result, output_dir, run_id, beam_label)
+        report_counter_3cm(ref_label, result, output_dir, run_id)
 
 
 def main():

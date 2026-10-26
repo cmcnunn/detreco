@@ -11,9 +11,10 @@ import uproot
 
 from .constants import HG_THRESHOLD, PITCH, X_MAPPING, Y_MAPPING
 from .data import get_run_filepath, get_run_hodo_rotation
-from .hodo import N_BARS, hodo_axis_good_masks, reconstruct_hodoscope
+from .hodo import N_BARS, calculate_bar_position, hodo_axis_good_masks, reconstruct_hodoscope
 from .pid import load_beam_particle_mask
 from .selectors import get_branch_names, passes_veto
+from .stats import truncated_rms
 from .tracker import (
     SENTINEL_X1,
     SENTINEL_X2,
@@ -34,12 +35,16 @@ from .tracker import (
 # aren't close to this boundary.
 MIN_EVENTS_FOR_SCAN = 500
 
-# The hodoscope's fiducial region (see _hodo_fiducial_mask): the Si track must
+# The hodoscope's fiducial region (see hodo_track_masks): the Si track must
 # land at least this far inside the bar area (+/- N_BARS * PITCH / 2 = 19.2 mm
 # in each plane), so its 0.2-0.35 mm extrapolation error can't count a track
 # that really missed the bars. TB2026's e+/mu+ beams sat on the Y edge: ~10%
 # of their tracks land outside, against 1-5% for pi+.
 FIDUCIAL_MARGIN_MM = 1.0
+# Tracker-referenced match window, in units of the run's own track-vs-hodoscope
+# residual RMS: ~1.0 mm at 160 GeV, ~1.7 mm at 10 GeV, where multiple
+# scattering widens the extrapolation.
+TRACK_MATCH_NSIGMA = 5.0
 
 
 def _read_branches(filepaths, branch_names, stack_names=()):
@@ -88,8 +93,8 @@ def run_event_count(run_id):
 
 def _read_hodo_and_timing(run_id):
     """ROOT-only per-run read: hodoscope positions/goodness, veto pass mask,
-    and the timing branches the tracker aligner needs -- no tracker
-    dependency at all.
+    the timing branches the tracker aligner needs, and the raw per-bar HG
+    amplitudes (bar order) -- no tracker dependency at all.
 
     A run's tracker ``.dat`` files can be missing for reasons that have
     nothing to do with the hodoscope measurement itself (most commonly:
@@ -108,13 +113,13 @@ def _read_hodo_and_timing(run_id):
     )
     trigger_n = arrs["trigger_n"]
     root_tstamp = arrs["FERS_Board1_tstamp_us"]
-    xh = arrs["FERS_Board1_energyHG"][:, X_MAPPING]
-    yh = arrs["FERS_Board0_energyHG"][:, Y_MAPPING]
+    hg_x = arrs["FERS_Board1_energyHG"][:, X_MAPPING]
+    hg_y = arrs["FERS_Board0_energyHG"][:, Y_MAPPING]
     veto_wf = arrs[veto_branch]
 
     mask_v = passes_veto(veto_wf)
-    xh, yh, good_hodo = reconstruct_hodoscope(xh, yh, threshold=HG_THRESHOLD, run_id=run_id)
-    return trigger_n, root_tstamp, xh, yh, good_hodo, mask_v
+    xh, yh, good_hodo = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD, run_id=run_id)
+    return trigger_n, root_tstamp, xh, yh, good_hodo, mask_v, hg_x, hg_y
 
 
 def load_hodo_eff_counts(run_id):
@@ -126,7 +131,7 @@ def load_hodo_eff_counts(run_id):
     ``load_si_and_hodo``'s hodo counts before this split) doesn't require
     the tracker to have any data for this run at all.
     """
-    _, _, _, _, good_hodo, _ = _read_hodo_and_timing(run_id)
+    good_hodo = _read_hodo_and_timing(run_id)[4]
     return int(np.sum(good_hodo)), len(good_hodo)
 
 
@@ -198,7 +203,7 @@ def _load_si_event_data(run_id):
     Raises on any failure (missing ROOT/tracker file, bad tracker-to-ROOT
     alignment, etc.) so callers can decide how to handle it per run.
     """
-    trigger_n, root_tstamp, xh, yh, good_hodo, mask_v = _read_hodo_and_timing(run_id)
+    trigger_n, root_tstamp, xh, yh, good_hodo, mask_v, _, _ = _read_hodo_and_timing(run_id)
     root_mask1, root_mask2 = _tracker_hit_masks(run_id, trigger_n, root_tstamp,
                                                 x_root=xh, good_root=good_hodo)
     ref = good_hodo & mask_v
@@ -231,31 +236,72 @@ def load_si_hit_masks(run_id):
     return root_mask1[ref], root_mask2[ref]
 
 
-def _hodo_fiducial_mask(run_id, xh, yh, good_hodo, track, x1, y1, x2, y2):
-    """The ``track`` events (both Si stations hit; ``x1``..``y2`` in cm, as
-    the tracker writes them) whose extrapolated track lands inside the
-    hodoscope's bars, FIDUCIAL_MARGIN_MM in from the edge in both planes --
-    the events the hodoscope could have reconstructed.
-
-    ``xh``/``yh`` come rotated into the tracker frame (reconstruct_hodoscope
-    with run_id), so all that separates them from the two-station track is
-    an offset -- the hodoscope's origin was never surveyed to the tracker's
-    -- taken as the median residual over good-hodoscope track events. The
-    offset track is then rotated back into the bar frame (hodo = M @ track
-    + c, see utils.hodo.rotate_to_tracker_frame), where the bar edges sit at
-    +/- N_BARS * PITCH / 2.
+def _plane_matched(hg, predicted, window, events):
+    """Per event, whether any of one plane's clusters sits within ``window``
+    mm of ``predicted`` -- a cluster being a contiguous run of bars above
+    threshold, placed at its strongest bar as ``reconstruct_hodoscope``
+    places a single-cluster hit. Only evaluated where ``events`` is True.
     """
+    hit = hg > HG_THRESHOLD
+    matched = np.zeros(len(hg), dtype=bool)
+    for i in np.flatnonzero(events & hit.any(axis=1)):
+        bars = np.flatnonzero(hit[i])
+        for cluster in np.split(bars, np.flatnonzero(np.diff(bars) > 1) + 1):
+            peak = cluster[np.argmax(hg[i, cluster])]
+            if abs(calculate_bar_position(peak, PITCH) - predicted[i]) < window:
+                matched[i] = True
+                break
+    return matched
+
+
+def hodo_track_masks(run_id, xh, yh, good_hodo, hg_x, hg_y, track, x1, y1, x2, y2):
+    """Si-track-based hodoscope masks over the ``track`` events (both Si
+    stations hit; ``x1``..``y2`` in cm, as the tracker writes them).
+
+    Returns ``(fid, matched)``, per ROOT event:
+
+    - ``fid``: the extrapolated track lands inside the bars,
+      FIDUCIAL_MARGIN_MM in from the edge in both planes -- the events the
+      hodoscope could have reconstructed.
+    - ``matched``: each plane has *some* cluster within TRACK_MATCH_NSIGMA of
+      the track, even alongside others -- tracker-referenced, keeping events
+      where secondaries add clusters next to the primary's (EM conversions
+      for e+, upstream nuclear interactions for pi+). Evaluated over all of
+      ``track``, so maps can show the bars' edge too.
+
+    Both are all False if too few good-hodoscope track events exist to
+    calibrate the track. ``xh``/``yh`` come rotated into the tracker frame
+    (reconstruct_hodoscope with run_id), so all that separates them from the
+    two-station track is an offset -- the hodoscope's origin was never
+    surveyed to the tracker's -- taken as the median residual over
+    good-hodoscope track events. The offset track is then rotated back into
+    the bar frame (hodo = M @ track + c, see utils.hodo.rotate_to_tracker_frame),
+    where the bar edges sit at +/- N_BARS * PITCH / 2 and the clusters are.
+    The match window per plane is TRACK_MATCH_NSIGMA times the truncated RMS
+    of the good-hodoscope residual there: ~0.19 mm at 160 GeV, ~0.34 mm at
+    10 GeV.
+    """
+    none = np.zeros_like(track)
     track_x = extrapolate_to_hodo(10 * x1, 10 * x2)
     track_y = extrapolate_to_hodo(10 * y1, 10 * y2)
     cal = track & good_hodo
     if not cal.any():
-        return np.zeros_like(track)
+        return none, none
     track_x = track_x + np.median(xh[cal] - track_x[cal])
     track_y = track_y + np.median(yh[cal] - track_y[cal])
     dx_dy, dy_dx = get_run_hodo_rotation(run_id) or (0.0, 0.0)
     bar_x, bar_y = track_x + dx_dy * track_y, track_y + dy_dx * track_x
     half_width = N_BARS * PITCH / 2 - FIDUCIAL_MARGIN_MM
-    return track & (np.abs(bar_x) < half_width) & (np.abs(bar_y) < half_width)
+    fid = track & (np.abs(bar_x) < half_width) & (np.abs(bar_y) < half_width)
+
+    hodo_x, hodo_y, _ = reconstruct_hodoscope(hg_x, hg_y, threshold=HG_THRESHOLD)  # bar frame
+    res_x = truncated_rms(hodo_x[cal] - bar_x[cal])
+    res_y = truncated_rms(hodo_y[cal] - bar_y[cal])
+    if res_x is None or res_y is None:
+        return fid, none
+    matched = (_plane_matched(hg_x, bar_x + res_x[0], TRACK_MATCH_NSIGMA * res_x[1], track)
+               & _plane_matched(hg_y, bar_y + res_y[0], TRACK_MATCH_NSIGMA * res_y[1], track))
+    return fid, matched
 
 
 def load_si_and_hodo(run_id, pid_beam_type=None):
@@ -277,25 +323,27 @@ def load_si_and_hodo(run_id, pid_beam_type=None):
     them ~3-5 points above the ungated hodoscope number: 92-93% vs 87-90%
     on runs 1774/1809/1817/1832.)
 
-    The hodoscope also gets a fiducial count: the reference events whose Si
-    track lands inside its bars (``_hodo_fiducial_mask``), so beam that
-    missed the hodoscope isn't counted against it. The tracker apparently
-    writes a row only when every plane has a single cluster, so this sample
-    is also cleaner than the full reference -- events with one Si track.
+    The hodoscope also gets Si-track-based counts (``hodo_track_masks``):
+    the reference events whose track lands inside its bars, so beam that
+    missed the hodoscope isn't counted against it; how many of those have a
+    good hit; and how many have a cluster on the track in each plane
+    (tracker-referenced). The tracker apparently writes a row only when
+    every plane has a single cluster, so this sample is also cleaner than
+    the full reference -- events with one Si track.
 
     Returns ``(n_si1, n_si2, n_si_events, n_hodo_good, n_events,
-    n_fid_events, n_hodo_good_fid, tracker_error)``. ``n_events`` is the
-    reference (veto-passing, PID-tagged if asked) event count and
-    ``n_hodo_good`` how many of those have a good hodoscope hit -- always
-    valid, straight from ROOT. ``n_si_events`` is the same reference count
-    when the tracker aligned, and ``n_si1``/``n_si2`` how many of those have
-    a hit on station 1/2. ``n_fid_events`` is the fiducial count and
-    ``n_hodo_good_fid`` how many of those have a good hodoscope hit. Every
-    tracker-derived count is 0 when the tracker didn't align, and
-    ``tracker_error`` is then the reason (see ``_aligned_tracker_positions``),
-    otherwise ``None``.
+    n_fid_events, n_hodo_good_fid, n_hodo_trk_fid, tracker_error)``.
+    ``n_events`` is the reference (veto-passing, PID-tagged if asked) event
+    count and ``n_hodo_good`` how many of those have a good hodoscope hit --
+    always valid, straight from ROOT. ``n_si_events`` is the same reference
+    count when the tracker aligned, and ``n_si1``/``n_si2`` how many of
+    those have a hit on station 1/2. ``n_fid_events``, ``n_hodo_good_fid``
+    and ``n_hodo_trk_fid`` are the fiducial, good-within-fiducial and
+    tracker-matched-within-fiducial counts. Every tracker-derived count is 0
+    when the tracker didn't align, and ``tracker_error`` is then the reason
+    (see ``_aligned_tracker_positions``), otherwise ``None``.
     """
-    trigger_n, root_tstamp, xh, yh, good_hodo, mask_v = _read_hodo_and_timing(run_id)
+    trigger_n, root_tstamp, xh, yh, good_hodo, mask_v, hg_x, hg_y = _read_hodo_and_timing(run_id)
     ref = mask_v
     if pid_beam_type is not None:
         ref = mask_v & load_beam_particle_mask(run_id, pid_beam_type)
@@ -305,15 +353,17 @@ def load_si_and_hodo(run_id, pid_beam_type=None):
         x1, y1, x2, y2 = _aligned_tracker_positions(run_id, trigger_n, root_tstamp,
                                                     x_root=xh, good_root=good_hodo)
     except Exception as e:
-        return 0, 0, 0, n_hodo_good, n_events, 0, 0, str(e)
+        return 0, 0, 0, n_hodo_good, n_events, 0, 0, 0, str(e)
 
     # Station hit masks, as _tracker_hit_masks builds them.
     root_mask1 = (x1 != SENTINEL_X1) & (y1 != SENTINEL_Y1)
     root_mask2 = (x2 != SENTINEL_X2) & (y2 != SENTINEL_Y2)
     n_si1, n_si2 = int(np.sum(root_mask1 & ref)), int(np.sum(root_mask2 & ref))
     n_si_events = n_events
-    fid = _hodo_fiducial_mask(run_id, xh, yh, good_hodo, ref & root_mask1 & root_mask2, x1, y1, x2, y2)
-    return n_si1, n_si2, n_si_events, n_hodo_good, n_events, int(fid.sum()), int((fid & good_hodo).sum()), None
+    fid, matched = hodo_track_masks(run_id, xh, yh, good_hodo, hg_x, hg_y,
+                                    ref & root_mask1 & root_mask2, x1, y1, x2, y2)
+    n_fid, n_good_fid, n_trk_fid = int(fid.sum()), int((fid & good_hodo).sum()), int((fid & matched).sum())
+    return n_si1, n_si2, n_si_events, n_hodo_good, n_events, n_fid, n_good_fid, n_trk_fid, None
 
 
 def load_axis_report(run_id):
